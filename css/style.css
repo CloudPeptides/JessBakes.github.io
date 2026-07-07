@@ -256,3 +256,20 @@ footer {
     flex-direction: column;
   }
 }
+
+.facebook-btn {
+  display: inline-block;
+  margin-top: 10px;
+  padding: 12px 22px;
+  background-color: #4267B2;
+  color: white;
+  text-decoration: none;
+  border-radius: 999px;
+  font-weight: 700;
+  transition: all 0.2s ease;
+}
+
+.facebook-btn:hover {
+  background-color: #365899;
+  transform: translateY(-2px);
+}
