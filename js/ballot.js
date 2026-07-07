@@ -135,7 +135,7 @@ function renderStats() {
 
                 return `
                     <p>
-                        <strong>${CATEGORY_LABELS[category]}:</strong>
+                        <strong>${CATEGORY_LABELS[category]}</strong>
                         ${leader.name}
                     </p>
                 `;
