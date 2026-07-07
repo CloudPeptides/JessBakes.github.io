@@ -1,1 +1,197 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
+  <title>Reviews | Jess Bakes Sourdough</title>
+  <meta name="description" content="Read reviews from past orders and share your own experience.">
+
+  <link rel="stylesheet" href="css/style.css">
+</head>
+
+<body>
+
+<header class="site-header">
+  <nav class="navbar">
+    <a class="logo-link" href="index.html" aria-label="Jess Bakes Sourdough Home">
+      <img src="images/jess-bakes-logo.png" alt="Jess Bakes Sourdough" class="logo-mark">
+    </a>
+
+    <button class="mobile-toggle" aria-label="Open navigation">☰</button>
+
+    <div class="nav-links">
+      <a href="index.html">Home</a>
+      <a href="menu.html">Menu</a>
+      <a class="active" href="reviews.html">Reviews</a>
+      <a href="contact.html">Contact</a>
+      <a
+        class="order-btn"
+        href="https://docs.google.com/forms/d/e/1FAIpQLSfuEGmiq00cFFlRzpesfFOHnPEKbFo3kYNZUM7qQoeg7IamzQ/viewform?usp=dialog"
+        target="_blank"
+        rel="noopener">
+        Order
+      </a>
+    </div>
+  </nav>
+</header>
+
+<main>
+
+  <section class="hero">
+    <p class="eyebrow">Reviews</p>
+
+    <h1>See what others have to say.</h1>
+
+    <p>
+      Read reviews from past orders and share your own experience.
+    </p>
+  </section>
+
+  <div class="divider">✦</div>
+
+  <section class="section">
+    <article class="story-card review-form-card">
+
+      <p class="eyebrow">Leave a Review</p>
+
+      <h2>Loved your order?</h2>
+
+      <p>
+        I'd love to hear what you thought. Thank you for taking a minute
+        to leave a review.
+      </p>
+
+      <form id="reviewForm">
+
+        <div class="review-grid">
+          <div class="form-group">
+            <label for="reviewName">Your Name</label>
+
+            <input
+              type="text"
+              id="reviewName"
+              placeholder="First name or first name & last initial"
+              required>
+          </div>
+
+          <div class="form-group">
+            <label for="reviewProduct">What did you order?</label>
+
+            <select id="reviewProduct" required>
+              <option value="">Select an item</option>
+              <option>Classic Sourdough Boule</option>
+              <option>Jalapeño Cheddar Boule</option>
+              <option>Blueberry Lemon Boule</option>
+              <option>Blueberries and Cream Boule</option>
+              <option>Brown Butter Sea Salt Cookie</option>
+              <option>Cookie 6-Pack</option>
+              <option>Cookie 12-Pack</option>
+              <option>Coffee Cake</option>
+              <option>Other</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>Rating</label>
+
+          <div class="star-rating" id="starRating" aria-label="Rating">
+            <button type="button" data-rating="1">☆</button>
+            <button type="button" data-rating="2">☆</button>
+            <button type="button" data-rating="3">☆</button>
+            <button type="button" data-rating="4">☆</button>
+            <button type="button" data-rating="5">☆</button>
+          </div>
+
+          <input type="hidden" id="reviewRating" value="0" required>
+        </div>
+
+        <div class="form-group">
+          <label for="reviewText">Your Review</label>
+
+          <textarea
+            id="reviewText"
+            rows="6"
+            placeholder="Tell others what you enjoyed..."
+            required></textarea>
+        </div>
+
+        <button class="primary-btn" type="submit">
+          Share Your Review
+        </button>
+
+      </form>
+
+      <div id="reviewSuccess" class="review-success" style="display:none;">
+        <h3>Thank you!</h3>
+
+        <p>
+          Your review has been submitted and will appear after it's been approved.
+        </p>
+      </div>
+
+    </article>
+  </section>
+
+  <section class="section">
+    <div class="section-heading">
+      <p class="eyebrow">Customer Love</p>
+
+      <h2>Customer Reviews</h2>
+    </div>
+
+    <div id="reviewSummary"></div>
+
+    <div id="reviewList"></div>
+  </section>
+
+</main>
+
+<footer class="footer">
+  <div class="footer-inner">
+    <div>
+      <img class="footer-logo" src="images/jess-bakes-logo.png" alt="Jess Bakes Sourdough">
+    </div>
+
+    <div>
+      <h3>Menu</h3>
+      <p><a href="menu.html">Bread</a></p>
+      <p><a href="menu.html">Cookies</a></p>
+      <p>
+        <a
+          href="https://docs.google.com/forms/d/e/1FAIpQLSfuEGmiq00cFFlRzpesfFOHnPEKbFo3kYNZUM7qQoeg7IamzQ/viewform?usp=dialog"
+          target="_blank"
+          rel="noopener">
+          Order Form
+        </a>
+      </p>
+    </div>
+
+    <div>
+      <h3>Contact</h3>
+      <p>
+        <a
+          href="https://www.facebook.com/share/1UYBMv8Kds/?mibextid=wwXIfr"
+          target="_blank"
+          rel="noopener noreferrer">
+          Facebook
+        </a>
+      </p>
+      <p>jessica.holsopple3@gmail.com</p>
+      <p>+1 (443) 470-0714</p>
+    </div>
+  </div>
+
+  <div class="footer-bottom">
+    © 2026 Jess Bakes Sourdough.
+  </div>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="js/supabase.js"></script>
+<script src="js/reviews.js"></script>
+<script src="js/script.js"></script>
+
+</body>
+</html>
