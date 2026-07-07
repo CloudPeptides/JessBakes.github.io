@@ -716,6 +716,40 @@ h3 {
     }
 }
 
+.review-message{
+
+    display:none;
+
+    margin-bottom:20px;
+
+    padding:14px 18px;
+
+    border-radius:12px;
+
+    font-weight:600;
+
+}
+
+.review-message.error{
+
+    background:#fff3f3;
+
+    color:#8d1b1b;
+
+    border:1px solid #f2c6c6;
+
+}
+
+.review-message.success{
+
+    background:#f4fbf5;
+
+    color:#1f6b33;
+
+    border:1px solid #c7e6cf;
+
+}
+
 @media (max-width:900px) {
   .navbar {
     height:76px;
