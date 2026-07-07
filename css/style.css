@@ -467,11 +467,23 @@ h3 {
 
     border-radius:24px;
 
-    padding: 22px 30px;
+    padding:22px 30px;
 
     box-shadow:var(--shadow);
 
     text-align:center;
+
+    transition:
+        transform .25s ease,
+        box-shadow .25s ease;
+
+}
+
+.stat-card:hover{
+
+    transform: translateY(-4px);
+
+    box-shadow: 0 18px 40px rgba(60, 25, 15, 0.14);
 
 }
 
