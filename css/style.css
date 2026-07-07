@@ -119,9 +119,9 @@ h3 {
 .nav-side {
     display: flex;
     align-items: center;
-    gap: 26px;
+    gap: 36px;
     font-size: 0.82rem;
-    font-weight: 700;
+    font-weight: 600;
     letter-spacing: 0.12em;
     text-transform: uppercase;
 }
@@ -134,20 +134,14 @@ h3 {
     position: relative;
 }
 
-.nav-side a:not(.order-btn)::after {
-    content: "";
-    position: absolute;
-    left: 0;
-    bottom: -6px;
-    width: 0;
-    height: 1px;
-    background: var(--deep-burgundy);
-    transition: width 0.25s ease;
+.nav-side a {
+    transition: color 0.25s ease, opacity 0.25s ease;
 }
 
-.nav-side a:not(.order-btn):hover::after,
-.nav-side a.active::after {
-    width: 100%;
+.nav-side a:hover,
+.nav-side a.active {
+    color: var(--deep-burgundy);
+    opacity: 0.7;
 }
 
 .logo-mark {
