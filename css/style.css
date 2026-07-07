@@ -515,7 +515,75 @@ h3 {
 
     display:grid;
 
+    grid-template-columns:repeat(3,1fr);
+
     gap:28px;
+
+    margin-top:20px;
+
+}
+
+.ballot-card{
+
+    background:var(--surface);
+
+    border:1px solid var(--line);
+
+    border-radius:24px;
+
+    padding:32px;
+
+    box-shadow:var(--shadow);
+
+}
+
+.ballot-card h3{
+
+    margin-bottom:8px;
+
+}
+
+.ballot-card small{
+
+    display:block;
+
+    margin-bottom:22px;
+
+    color:var(--text-light);
+
+    letter-spacing:.08em;
+
+    text-transform:uppercase;
+
+}
+
+.ballot-option{
+
+    display:flex;
+
+    align-items:center;
+
+    gap:12px;
+
+    padding:12px 0;
+
+}
+
+.ballot-option input{
+
+    accent-color:var(--deep-burgundy);
+
+    transform:scale(1.15);
+
+}
+
+.submit-vote{
+
+    grid-column:1/-1;
+
+    text-align:center;
+
+    margin-top:20px;
 
 }
 
