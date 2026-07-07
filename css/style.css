@@ -1,14 +1,14 @@
 @import url("https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap");
 
 :root {
-  --background:#efe2d5;
-  --surface:#fbf4ec;
-  --burgundy:#5a170f;
-  --burgundy-light:#762017;
-  --text:#2e201b;
-  --muted:#73584d;
-  --line:rgba(90,23,15,.18);
-  --shadow:0 18px 45px rgba(46,32,27,.10);
+  --background: #D9C2B0;
+  --surface: #F5E8DC;
+  --burgundy: #5E1811;
+  --burgundy-light: #742118;
+  --text: #3B2A24;
+  --muted: #6E554A;
+  --line: rgba(94, 24, 17, 0.15);
+  --shadow: 0 16px 38px rgba(60,40,30,.14);
   --radius:24px;
   --max-width:1120px;
 }
@@ -20,8 +20,16 @@ body {
   font-family:"Inter", sans-serif;
   color:var(--text);
   background:
-    radial-gradient(circle at top left, rgba(255,249,241,.7), transparent 32rem),
-    linear-gradient(180deg,#f6ede4 0%,var(--background) 100%);
+    background:
+    radial-gradient(circle at top left,
+        rgba(255,255,255,.18),
+        transparent 38rem),
+    linear-gradient(
+        180deg,
+        #E3CEC0 0%,
+        #D9C2B0 45%,
+        #D3BAA8 100%
+    );
   line-height:1.6;
 }
 
@@ -59,7 +67,7 @@ h3 {
   z-index:50;
   width:min(calc(100% - 32px),var(--max-width));
   margin:16px auto 0;
-  background:rgba(251,244,236,.94);
+  background: rgba(248,239,231,.92);
   border:1px solid var(--line);
   border-radius:999px;
   box-shadow:var(--shadow);
@@ -372,9 +380,9 @@ h3 {
 }
 
 .footer {
-  margin-top:38px;
-  background:var(--burgundy);
-  color:#fff8ef;
+    margin-top: 38px;
+    background: #D8C0AE;
+    color: var(--burgundy);
 }
 
 .footer-inner {
@@ -393,7 +401,7 @@ h3 {
 }
 
 .footer h3 {
-  color:#fff8ef;
+  color: var(--burgundy);
   font-family:"Inter",sans-serif;
   font-size:.78rem;
   font-weight:700;
@@ -403,14 +411,14 @@ h3 {
 
 .footer p,
 .footer a {
-  color:rgba(255,248,239,.82);
+  color: var(--text);;
 }
 
 .footer-bottom {
-  border-top:1px solid rgba(255,248,239,.18);
+  border-top: 1px solid rgba(90,23,15,.15);
   padding:18px 22px;
   text-align:center;
-  color:rgba(255,248,239,.72);
+  olor: var(--muted);
   font-size:.86rem;
 }
 
