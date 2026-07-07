@@ -821,6 +821,141 @@ h3 {
 
 }
 
+/* ======================================
+   REVIEW FORM
+====================================== */
+
+.review-form-card{
+
+    max-width:900px;
+
+    margin:0 auto;
+
+    background:#fbf2ea;
+
+    border:1px solid #e7cdbd;
+
+    border-radius:28px;
+
+    padding:60px;
+
+    box-shadow:0 18px 45px rgba(0,0,0,.08);
+
+}
+
+.review-form-card .eyebrow{
+
+    text-align:center;
+
+}
+
+.review-form-card h2{
+
+    text-align:center;
+
+    margin:12px 0;
+
+}
+
+.review-form-card > p{
+
+    text-align:center;
+
+    max-width:600px;
+
+    margin:0 auto 45px;
+
+}
+
+.review-grid{
+
+    display:grid;
+
+    grid-template-columns:1fr 1fr;
+
+    gap:24px;
+
+    margin-bottom:30px;
+
+}
+
+.form-group{
+
+    display:flex;
+
+    flex-direction:column;
+
+    margin-bottom:28px;
+
+}
+
+.form-group label{
+
+    font-size:.82rem;
+
+    text-transform:uppercase;
+
+    letter-spacing:.12em;
+
+    color:#7b2b22;
+
+    margin-bottom:10px;
+
+    font-weight:700;
+
+}
+
+.form-group input,
+.form-group select,
+.form-group textarea{
+
+    width:100%;
+
+    padding:16px 18px;
+
+    border-radius:14px;
+
+    border:1px solid #dcc3b5;
+
+    background:#fffdfa;
+
+    font-size:1rem;
+
+    font-family:inherit;
+
+    transition:border-color .2s ease,
+               box-shadow .2s ease;
+
+}
+
+.form-group input:focus,
+.form-group select:focus,
+.form-group textarea:focus{
+
+    outline:none;
+
+    border-color:#7b2b22;
+
+    box-shadow:0 0 0 3px rgba(123,43,34,.12);
+
+}
+
+.form-group textarea{
+
+    resize:vertical;
+
+    min-height:180px;
+
+}
+
+.review-submit{
+
+    width:100%;
+
+    margin-top:12px;
+
+}
+
 @media (max-width:900px) {
   .navbar {
     height:76px;
@@ -859,6 +994,18 @@ h3 {
   .footer-inner {
     grid-template-columns:1fr;
   }
+
+  .review-form-card{
+
+    padding:35px 25px;
+
+}
+
+.review-grid{
+
+    grid-template-columns:1fr;
+
+}
 }
 
 @media (max-width:560px) {
