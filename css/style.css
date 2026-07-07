@@ -499,15 +499,50 @@ h3 {
 
 }
 
-#leaders,
 #voteTotal,
 #countdown {
 
-    font-size:2rem;
+    font-size: 2rem;
 
-    font-weight:700;
+    font-weight: 700;
 
-    color:var(--deep-burgundy);
+    color: var(--deep-burgundy);
+
+}
+
+#leaders {
+
+    font-size: 1rem;
+
+    font-weight: 500;
+
+    line-height: 1.7;
+
+    color: var(--text);
+
+}
+
+#leaders p {
+
+    margin: 14px 0;
+
+}
+
+#leaders strong {
+
+    display: block;
+
+    font-size: .72rem;
+
+    text-transform: uppercase;
+
+    letter-spacing: .12em;
+
+    color: var(--text-light);
+
+    font-weight: 700;
+
+    margin-bottom: 4px;
 
 }
 
