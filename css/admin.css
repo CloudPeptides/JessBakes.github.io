@@ -512,3 +512,60 @@ body{
     opacity:.9;
 
 }
+
+
+/* ==========================================
+   MODAL
+========================================== */
+
+.modal{
+
+    position:fixed;
+
+    inset:0;
+
+    background:rgba(0,0,0,.45);
+
+    display:none;
+
+    justify-content:center;
+
+    align-items:center;
+
+    z-index:1000;
+
+}
+
+.modal-card{
+
+    background:white;
+
+    width:100%;
+
+    max-width:500px;
+
+    border-radius:24px;
+
+    padding:32px;
+
+    box-shadow:0 20px 60px rgba(0,0,0,.2);
+
+}
+
+.modal-card h2{
+
+    margin-top:0;
+
+}
+
+.modal-buttons{
+
+    display:flex;
+
+    justify-content:flex-end;
+
+    gap:12px;
+
+    margin-top:30px;
+
+}
