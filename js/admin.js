@@ -122,6 +122,10 @@ function showDashboard() {
     loadBallotManager();
 }
 
+/* =========================
+   REVIEWS
+========================= */
+
 async function loadPendingReviews() {
     const { data, error } = await supabaseClient
         .from("reviews")
@@ -152,8 +156,8 @@ function renderPendingReviews(reviews) {
         <article class="admin-review-card">
             <div class="admin-review-top">
                 <div>
-                    <h3>${review.name}</h3>
-                    <p class="admin-product">${review.product}</p>
+                    <h3>${escapeHtml(review.name)}</h3>
+                    <p class="admin-product">${escapeHtml(review.product)}</p>
                 </div>
 
                 <div class="admin-stars">
@@ -162,7 +166,7 @@ function renderPendingReviews(reviews) {
             </div>
 
             <p class="admin-review-text">
-                "${review.review}"
+                "${escapeHtml(review.review)}"
             </p>
 
             <div class="admin-review-actions">
@@ -214,6 +218,10 @@ async function deleteReview(id) {
     loadPendingReviews();
 }
 
+/* =========================
+   BALLOT MANAGER
+========================= */
+
 async function loadBallotManager() {
     const [settingsResult, optionsResult, votesResult] = await Promise.all([
         supabaseClient
@@ -264,120 +272,394 @@ async function loadBallotManager() {
 }
 
 function renderBallotManager(settings, options, votes) {
-
     const container = document.getElementById("ballotManager");
 
-    const bread = options.filter(option => option.category.toLowerCase() === "bread");
+    if (!settings) {
+        container.innerHTML = `
+            <div class="ballot-admin-actions">
+                <p>No active ballot found.</p>
+                <button class="approve-btn" onclick="startNewBallot()">Start New Ballot</button>
+            </div>
+        `;
+        return;
+    }
 
-    const cookies = options.filter(option => option.category.toLowerCase() === "cookie");
-
-    const desserts = options.filter(option => option.category.toLowerCase() === "dessert");
+    const bread = options.filter((option) => option.category === "bread");
+    const cookies = options.filter((option) => option.category === "cookie");
+    const desserts = options.filter((option) => option.category === "dessert");
 
     container.innerHTML = `
-
         <div class="ballot-admin-overview">
-
             <div>
-
                 <strong>Status</strong>
-
                 <p>${settings.active ? "Active" : "Closed"}</p>
-
             </div>
 
             <div>
-
                 <strong>Voting Ends</strong>
-
                 <p>${formatDate(settings.end_date)}</p>
-
             </div>
 
             <div>
-
                 <strong>Total Votes</strong>
-
                 <p>${votes.length}</p>
-
             </div>
+        </div>
 
+        <div class="ballot-date-editor">
+            <label for="ballotEndDate">Change Voting End Date</label>
+            <input type="date" id="ballotEndDate" value="${formatDateForInput(settings.end_date)}">
+            <button class="edit-option-btn" onclick="saveBallotEndDate('${settings.id}')">
+                Save Date
+            </button>
+        </div>
+
+        <div class="ballot-admin-controls">
+            <button class="delete-btn" onclick="endCurrentBallot('${settings.id}')">
+                End Current Ballot
+            </button>
+
+            <button class="approve-btn" onclick="startNewBallot()">
+                Start New Ballot
+            </button>
         </div>
 
         <div class="ballot-admin-grid">
-
-            ${renderBallotCategory("Bread", bread, votes)}
-
-            ${renderBallotCategory("Cookies", cookies, votes)}
-
-            ${renderBallotCategory("Desserts", desserts, votes)}
-
+            ${renderBallotCategory("Bread", "bread", bread, votes)}
+            ${renderBallotCategory("Cookies", "cookie", cookies, votes)}
+            ${renderBallotCategory("Desserts", "dessert", desserts, votes)}
         </div>
-
     `;
-
 }
 
-function renderBallotCategory(title, options, votes) {
-
+function renderBallotCategory(title, category, options, votes) {
     return `
-
         <div class="ballot-admin-category">
 
             <div class="ballot-category-header">
-
                 <h3>${title}</h3>
 
                 <button
                     class="add-option-btn"
-                    onclick="openNewOptionModal('${title.toLowerCase()}')">
-
+                    onclick="openNewOptionModal('${category}')">
                     + Add
-
                 </button>
-
             </div>
 
             ${
                 !options.length
                     ? "<p>No options yet.</p>"
-                    : options.map(option => {
-
+                    : options.map((option) => {
                         const voteCount = votes.filter(
-                            vote => vote.option_id === option.id
+                            (vote) => vote.option_id === option.id
                         ).length;
 
                         return `
-
                             <div class="ballot-option-row">
-
                                 <div>
-
-                                    <strong>${option.name}</strong>
-
+                                    <strong>${escapeHtml(option.name)}</strong>
                                     <small>${voteCount} vote${voteCount === 1 ? "" : "s"}</small>
-
                                 </div>
 
-                                <button
-                                    class="edit-option-btn"
-                                    onclick="editBallotOption('${option.id}')">
+                                <div class="ballot-row-actions">
+                                    <button
+                                        class="edit-option-btn"
+                                        onclick="editBallotOption('${option.id}')">
+                                        Edit
+                                    </button>
 
-                                    Edit
-
-                                </button>
-
+                                    <button
+                                        class="remove-option-btn"
+                                        onclick="removeBallotOption('${option.id}', '${escapeHtml(option.name)}')">
+                                        Remove
+                                    </button>
+                                </div>
                             </div>
-
                         `;
-
                     }).join("")
             }
 
         </div>
-
     `;
-
 }
+
+function openNewOptionModal(category) {
+    document.getElementById("optionModalTitle").textContent = "Add Ballot Option";
+    document.getElementById("editOptionId").value = "";
+    document.getElementById("editOptionName").value = "";
+    document.getElementById("editOptionCategory").value = category;
+    document.getElementById("editOptionActive").checked = true;
+    document.getElementById("editOptionModal").style.display = "flex";
+}
+
+async function editBallotOption(id) {
+    const { data, error } = await supabaseClient
+        .from("ballot_options")
+        .select("*")
+        .eq("id", id)
+        .single();
+
+    if (error) {
+        console.error(error);
+        alert(error.message);
+        return;
+    }
+
+    document.getElementById("optionModalTitle").textContent = "Edit Ballot Option";
+    document.getElementById("editOptionId").value = data.id;
+    document.getElementById("editOptionName").value = data.name;
+    document.getElementById("editOptionCategory").value = data.category;
+    document.getElementById("editOptionActive").checked = data.active;
+    document.getElementById("editOptionModal").style.display = "flex";
+}
+
+function closeEditModal() {
+    document.getElementById("editOptionModal").style.display = "none";
+}
+
+async function saveBallotOption() {
+    const id = document.getElementById("editOptionId").value;
+    const name = document.getElementById("editOptionName").value.trim();
+    const category = document.getElementById("editOptionCategory").value;
+    const active = document.getElementById("editOptionActive").checked;
+
+    if (!name) {
+        alert("Please enter a ballot option name.");
+        return;
+    }
+
+    let error;
+
+    if (id) {
+        ({ error } = await supabaseClient
+            .from("ballot_options")
+            .update({
+                name,
+                category,
+                active
+            })
+            .eq("id", id));
+    } else {
+        ({ error } = await supabaseClient
+            .from("ballot_options")
+            .insert({
+                name,
+                category,
+                active
+            }));
+    }
+
+    if (error) {
+        console.error(error);
+        alert(error.message);
+        return;
+    }
+
+    closeEditModal();
+    loadBallotManager();
+}
+
+async function removeBallotOption(id, name) {
+    if (!confirm(`Remove "${name}" from the ballot?`)) return;
+
+    const { error } = await supabaseClient
+        .from("ballot_options")
+        .update({ active: false })
+        .eq("id", id);
+
+    if (error) {
+        console.error(error);
+        alert(error.message);
+        return;
+    }
+
+    loadBallotManager();
+}
+
+async function saveBallotEndDate(settingsId) {
+    const endDate = document.getElementById("ballotEndDate").value;
+
+    if (!endDate) {
+        alert("Please choose an end date.");
+        return;
+    }
+
+    const { error } = await supabaseClient
+        .from("ballot_settings")
+        .update({
+            end_date: endDate
+        })
+        .eq("id", settingsId);
+
+    if (error) {
+        console.error(error);
+        alert(error.message);
+        return;
+    }
+
+    loadBallotManager();
+}
+
+async function endCurrentBallot(settingsId) {
+    if (!confirm("End the current ballot? Voting will close.")) return;
+
+    const { error } = await supabaseClient
+        .from("ballot_settings")
+        .update({ active: false })
+        .eq("id", settingsId);
+
+    if (error) {
+        console.error(error);
+        alert(error.message);
+        return;
+    }
+
+    loadBallotManager();
+}
+
+async function startNewBallot() {
+    const confirmed = confirm(
+        "Start a new ballot? This will archive current winners, reset all votes, and create a new active ballot."
+    );
+
+    if (!confirmed) return;
+
+    const [settingsResult, optionsResult, votesResult] = await Promise.all([
+        supabaseClient
+            .from("ballot_settings")
+            .select("*")
+            .eq("active", true)
+            .limit(1)
+            .maybeSingle(),
+
+        supabaseClient
+            .from("ballot_options")
+            .select("*")
+            .eq("active", true),
+
+        supabaseClient
+            .from("votes")
+            .select("*")
+    ]);
+
+    if (settingsResult.error || optionsResult.error || votesResult.error) {
+        console.error(settingsResult.error || optionsResult.error || votesResult.error);
+        alert("Could not start a new ballot.");
+        return;
+    }
+
+    const currentSettings = settingsResult.data;
+    const options = optionsResult.data || [];
+    const votes = votesResult.data || [];
+
+    if (currentSettings && votes.length) {
+        const historyRows = buildHistoryRows(currentSettings, options, votes);
+
+        if (historyRows.length) {
+            const { error: historyError } = await supabaseClient
+                .from("ballot_history")
+                .insert(historyRows);
+
+            if (historyError) {
+                console.error(historyError);
+                alert(historyError.message);
+                return;
+            }
+        }
+    }
+
+    if (currentSettings) {
+        const { error: closeError } = await supabaseClient
+            .from("ballot_settings")
+            .update({ active: false })
+            .eq("id", currentSettings.id);
+
+        if (closeError) {
+            console.error(closeError);
+            alert(closeError.message);
+            return;
+        }
+    }
+
+    const { error: deleteVotesError } = await supabaseClient
+        .from("votes")
+        .delete()
+        .neq("id", "00000000-0000-0000-0000-000000000000");
+
+    if (deleteVotesError) {
+        console.error(deleteVotesError);
+        alert(deleteVotesError.message);
+        return;
+    }
+
+    const today = new Date();
+    const endDate = new Date();
+    endDate.setDate(today.getDate() + 30);
+
+    const title = prompt("New ballot title:", "Bakery Ballot");
+
+    if (!title) return;
+
+    const { error: newSettingsError } = await supabaseClient
+        .from("ballot_settings")
+        .insert({
+            title,
+            description: "Vote for the next bread, cookie, and dessert you would like to see.",
+            start_date: today.toISOString(),
+            end_date: endDate.toISOString(),
+            active: true,
+            show_results: true
+        });
+
+    if (newSettingsError) {
+        console.error(newSettingsError);
+        alert(newSettingsError.message);
+        return;
+    }
+
+    loadBallotManager();
+}
+
+function buildHistoryRows(settings, options, votes) {
+    const categories = ["bread", "cookie", "dessert"];
+
+    return categories
+        .map((category) => {
+            const categoryOptions = options.filter((option) => option.category === category);
+            const categoryVotes = votes.filter((vote) => vote.category === category);
+
+            if (!categoryOptions.length || !categoryVotes.length) {
+                return null;
+            }
+
+            const ranked = categoryOptions
+                .map((option) => {
+                    const count = categoryVotes.filter((vote) => vote.option_id === option.id).length;
+
+                    return {
+                        name: option.name,
+                        votes: count
+                    };
+                })
+                .sort((a, b) => b.votes - a.votes);
+
+            const winner = ranked[0];
+
+            return {
+                ballot_title: settings.title || "Bakery Ballot",
+                category,
+                winner: winner.name,
+                votes: winner.votes,
+                total_votes: categoryVotes.length,
+                ended_at: new Date().toISOString()
+            };
+        })
+        .filter(Boolean);
+}
+
+/* =========================
+   HELPERS
+========================= */
 
 function formatDate(dateString) {
     if (!dateString) return "Not set";
@@ -389,117 +671,21 @@ function formatDate(dateString) {
     });
 }
 
-async function editBallotOption(id) {
+function formatDateForInput(dateString) {
+    if (!dateString) return "";
 
-    const { data, error } = await supabaseClient
-        .from("ballot_options")
-        .select("*")
-        .eq("id", id)
-        .single();
-
-    if (error) {
-
-        console.error(error);
-        alert(error.message);
-
-        return;
-
-    }
-
-    document.getElementById("editOptionId").value = data.id;
-
-    document.getElementById("editOptionName").value = data.name;
-
-    document.getElementById("editOptionCategory").value = data.category;
-
-    document.getElementById("editOptionActive").checked = data.active;
-
-    document.getElementById("editOptionModal").style.display = "flex";
-
+    return new Date(dateString).toISOString().split("T")[0];
 }
 
-function openNewOptionModal(category) {
-
-    document.getElementById("optionModalTitle").textContent =
-        "Add Ballot Option";
-
-    document.getElementById("editOptionId").value = "";
-
-    document.getElementById("editOptionName").value = "";
-
-    document.getElementById("editOptionCategory").value = category;
-
-    document.getElementById("editOptionActive").checked = true;
-
-    document.getElementById("editOptionModal").style.display = "flex";
-
+function escapeHtml(value) {
+    return String(value || "")
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#039;");
 }
 
-function closeEditModal() {
-
-    document.getElementById("editOptionModal").style.display = "none";
-
-}
-
-async function saveBallotOption() {
-
-    const id = document.getElementById("editOptionId").value;
-
-    const name = document.getElementById("editOptionName").value.trim();
-
-    const category = document.getElementById("editOptionCategory").value;
-
-    const active = document.getElementById("editOptionActive").checked;
-
-    let error;
-
-    if (id) {
-
-        ({ error } = await supabaseClient
-
-            .from("ballot_options")
-
-            .update({
-
-                name,
-                category,
-                active
-
-            })
-
-            .eq("id", id));
-
-    } else {
-
-        ({ error } = await supabaseClient
-
-            .from("ballot_options")
-
-            .insert({
-
-                name,
-                category,
-                active
-
-            }));
-
-    }
-
-    if (error) {
-
-        console.error(error);
-
-        alert(error.message);
-
-        return;
-
-    }
-
-    closeEditModal();
-
-    await loadBallotManager();
-
-}
 async function logout() {
     await supabaseClient.auth.signOut();
     location.reload();
