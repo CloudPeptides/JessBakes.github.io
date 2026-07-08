@@ -304,31 +304,63 @@ function renderBallotManager(settings, options, votes) {
 }
 
 function renderBallotCategory(title, options, votes) {
+
     if (!options.length) {
+
         return `
+
             <div class="ballot-admin-category">
+
                 <h3>${title}</h3>
+
                 <p>No options yet.</p>
+
             </div>
+
         `;
+
     }
 
     return `
+
         <div class="ballot-admin-category">
+
             <h3>${title}</h3>
 
-            ${options.map((option) => {
-                const voteCount = votes.filter((vote) => vote.option_id === option.id).length;
+            ${options.map(option => {
+
+                const voteCount = votes.filter(vote => vote.option_id === option.id).length;
 
                 return `
-                    <div class="ballot-admin-option">
-                        <span>${option.name}</span>
-                        <strong>${voteCount}</strong>
+
+                    <div class="ballot-option-row">
+
+                        <div>
+
+                            <strong>${option.name}</strong>
+
+                            <small>${voteCount} vote${voteCount === 1 ? "" : "s"}</small>
+
+                        </div>
+
+                        <button
+                            class="edit-option-btn"
+                            onclick="editBallotOption('${option.id}')">
+
+                            Edit
+
+                        </button>
+
                     </div>
+
                 `;
+
             }).join("")}
+
         </div>
+
     `;
+
 }
 
 function formatDate(dateString) {
@@ -339,6 +371,12 @@ function formatDate(dateString) {
         day: "numeric",
         year: "numeric"
     });
+}
+
+function editBallotOption(id) {
+
+    alert("Editing ballot option: " + id);
+
 }
 
 async function logout() {
