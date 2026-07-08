@@ -159,9 +159,9 @@ function renderMenuItemCard(item) {
 
                     </div>
 
-                    <p class="menu-item-description">
-                        ${escapeHtml(item.description || "No description yet.")}
-                    </p>
+                    <p class="menu-description">
+    ${escapeHtml(item.description || "")}
+</p>
 
                     <div class="menu-item-meta">
 
