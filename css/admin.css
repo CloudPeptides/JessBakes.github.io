@@ -1,3 +1,19 @@
+.eyebrow{
+
+    margin:0;
+
+    text-transform:uppercase;
+
+    letter-spacing:.18em;
+
+    font-size:.8rem;
+
+    font-weight:700;
+
+    color:#7b2b22;
+
+}
+
 :root{
 
     --background:#f7f3ee;
