@@ -373,9 +373,80 @@ function formatDate(dateString) {
     });
 }
 
-function editBallotOption(id) {
+async function editBallotOption(id) {
 
-    alert("Editing ballot option: " + id);
+    const { data, error } = await supabaseClient
+        .from("ballot_options")
+        .select("*")
+        .eq("id", id)
+        .single();
+
+    if (error) {
+
+        console.error(error);
+        alert(error.message);
+
+        return;
+
+    }
+
+    document.getElementById("editOptionId").value = data.id;
+
+    document.getElementById("editOptionName").value = data.name;
+
+    document.getElementById("editOptionCategory").value = data.category;
+
+    document.getElementById("editOptionActive").checked = data.active;
+
+    document.getElementById("editOptionModal").style.display = "flex";
+
+}
+
+function closeEditModal() {
+
+    document.getElementById("editOptionModal").style.display = "none";
+
+}
+
+async function saveBallotOption() {
+
+    const id = document.getElementById("editOptionId").value;
+
+    const name = document.getElementById("editOptionName").value.trim();
+
+    const category = document.getElementById("editOptionCategory").value;
+
+    const active = document.getElementById("editOptionActive").checked;
+
+    const { error } = await supabaseClient
+
+        .from("ballot_options")
+
+        .update({
+
+            name,
+
+            category,
+
+            active
+
+        })
+
+        .eq("id", id);
+
+    if (error) {
+
+        console.error(error);
+
+        alert(error.message);
+
+        return;
+
+    }
+
+    closeEditModal();
+
+    loadBallotManager();
 
 }
 
