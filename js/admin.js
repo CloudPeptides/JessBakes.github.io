@@ -88,15 +88,17 @@ function showDashboard(user) {
 
             </header>
 
-            <div class="dashboard-grid">
+            <div class="dashboard-card">
 
-                <div class="dashboard-card">
+    <h3>Pending Reviews</h3>
 
-                    <h3>Pending Reviews</h3>
+    <div id="pendingReviews">
 
-                    <p>Loading...</p>
+        Loading...
 
-                </div>
+    </div>
+
+</div>
 
                 <div class="dashboard-card">
 
@@ -131,6 +133,32 @@ function showDashboard(user) {
     document
         .getElementById("logoutBtn")
         .addEventListener("click", logout);
+   
+    loadPendingReviews();
+
+}
+
+async function loadPendingReviews() {
+
+    const { data, error } = await supabaseClient
+
+        .from("reviews")
+
+        .select("*")
+
+        .eq("approved", false)
+
+        .order("created_at", { ascending: true });
+
+    if (error) {
+
+        console.error(error);
+
+        return;
+
+    }
+
+    renderPendingReviews(data || []);
 
 }
 
