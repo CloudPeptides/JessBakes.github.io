@@ -290,18 +290,20 @@ async function approveReview(id) {
 
 async function deleteReview(id) {
 
-    const confirmed = confirm("Delete this review?");
+    if (!confirm("Delete this review?")) return;
 
-    if (!confirmed) return;
-
-    const { error } = await supabaseClient
+    const { data, error } = await supabaseClient
         .from("reviews")
         .delete()
-        .eq("id", id);
+        .eq("id", id)
+        .select();
+
+    console.log("Delete result:", data);
+    console.log("Delete error:", error);
 
     if (error) {
 
-        console.error(error);
+        alert(error.message);
 
         return;
 
