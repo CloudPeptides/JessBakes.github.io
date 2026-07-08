@@ -1,1 +1,143 @@
+const loginScreen = document.getElementById("loginScreen");
+const dashboard = document.getElementById("dashboard");
+const loginForm = document.getElementById("loginForm");
+const loginError = document.getElementById("loginError");
 
+document.addEventListener("DOMContentLoaded", async () => {
+
+    const { data } = await supabaseClient.auth.getSession();
+
+    if (data.session) {
+
+        showDashboard(data.session.user);
+
+    }
+
+});
+
+loginForm.addEventListener("submit", async (e) => {
+
+    e.preventDefault();
+
+    loginError.textContent = "";
+
+    const email = document.getElementById("email").value.trim();
+
+    const password = document.getElementById("password").value;
+
+    const { data, error } = await supabaseClient.auth.signInWithPassword({
+
+        email,
+        password
+
+    });
+
+    if (error) {
+
+        loginError.textContent = error.message;
+
+        return;
+
+    }
+
+    showDashboard(data.user);
+
+});
+
+function showDashboard(user) {
+
+    loginScreen.style.display = "none";
+
+    dashboard.style.display = "block";
+
+    dashboard.innerHTML = `
+
+        <div class="dashboard-container">
+
+            <header class="dashboard-header">
+
+                <div>
+
+                    <p class="eyebrow">
+
+                        Jess Bakes Sourdough
+
+                    </p>
+
+                    <h1>
+
+                        Admin Dashboard
+
+                    </h1>
+
+                    <p>
+
+                        Welcome back, Jess.
+
+                    </p>
+
+                </div>
+
+                <button
+                    class="logout-btn"
+                    id="logoutBtn">
+
+                    Sign Out
+
+                </button>
+
+            </header>
+
+            <div class="dashboard-grid">
+
+                <div class="dashboard-card">
+
+                    <h3>Pending Reviews</h3>
+
+                    <p>Loading...</p>
+
+                </div>
+
+                <div class="dashboard-card">
+
+                    <h3>Bakery Ballot</h3>
+
+                    <p>Loading...</p>
+
+                </div>
+
+                <div class="dashboard-card">
+
+                    <h3>Menu Items</h3>
+
+                    <p>Coming Soon</p>
+
+                </div>
+
+                <div class="dashboard-card">
+
+                    <h3>Orders</h3>
+
+                    <p>Coming Soon</p>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    `;
+
+    document
+        .getElementById("logoutBtn")
+        .addEventListener("click", logout);
+
+}
+
+async function logout() {
+
+    await supabaseClient.auth.signOut();
+
+    location.reload();
+
+}
