@@ -309,13 +309,19 @@ function renderBallotCategory(title, options, votes) {
 
         return `
 
-            <div class="ballot-admin-category">
+            <div class="ballot-category-header">
 
-                <h3>${title}</h3>
+    <h3>${title}</h3>
 
-                <p>No options yet.</p>
+    <button
+        class="add-option-btn"
+        onclick="openNewOptionModal('${title.toLowerCase()}')">
 
-            </div>
+        + Add
+
+    </button>
+
+</div>
 
         `;
 
