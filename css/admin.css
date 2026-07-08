@@ -285,6 +285,134 @@ body{
 
 }
 
+/* ==========================================
+   PENDING REVIEW CARDS
+========================================== */
+
+.admin-review-card{
+
+    border:1px solid var(--line);
+
+    border-radius:18px;
+
+    padding:24px;
+
+    margin-bottom:20px;
+
+    background:#fff;
+
+}
+
+.admin-review-top{
+
+    display:flex;
+
+    justify-content:space-between;
+
+    align-items:flex-start;
+
+    gap:20px;
+
+    margin-bottom:18px;
+
+}
+
+.admin-review-top h3{
+
+    margin:0;
+
+    font-size:1.15rem;
+
+}
+
+.admin-product{
+
+    margin:6px 0 0;
+
+    color:#7d736d;
+
+    font-weight:600;
+
+}
+
+.admin-stars{
+
+    color:#C89B3C;
+
+    font-size:1.4rem;
+
+    letter-spacing:2px;
+
+    white-space:nowrap;
+
+}
+
+.admin-review-text{
+
+    margin:0;
+
+    line-height:1.7;
+
+    color:#4d4642;
+
+}
+
+.admin-review-actions{
+
+    display:flex;
+
+    gap:12px;
+
+    margin-top:24px;
+
+}
+
+.approve-btn,
+
+.delete-btn{
+
+    border:none;
+
+    border-radius:12px;
+
+    padding:11px 20px;
+
+    font-weight:600;
+
+    cursor:pointer;
+
+    transition:.2s ease;
+
+}
+
+.approve-btn{
+
+    background:#2F7A43;
+
+    color:white;
+
+}
+
+.approve-btn:hover{
+
+    background:#27673a;
+
+}
+
+.delete-btn{
+
+    background:#B83A3A;
+
+    color:white;
+
+}
+
+.delete-btn:hover{
+
+    background:#9d2f2f;
+
+}
+
 @media (max-width:900px){
 
     .dashboard-header{
