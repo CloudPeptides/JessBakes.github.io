@@ -151,11 +151,9 @@ function createMenuCard(item) {
 
             </div>
 
-            <p>
-
-                ${escapeHtml(item.description || "")}
-
-            </p>
+            <p class="menu-description">
+    ${escapeHtml(item.description || "")}
+</p>
 
         </article>
 
