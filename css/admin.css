@@ -131,3 +131,96 @@ body{
     margin-top:18px;
 
 }
+
+
+/* ==========================================
+   DASHBOARD
+========================================== */
+
+.dashboard-container{
+
+    max-width:1300px;
+
+    margin:60px auto;
+
+    padding:0 30px;
+
+}
+
+.dashboard-header{
+
+    display:flex;
+
+    justify-content:space-between;
+
+    align-items:center;
+
+    margin-bottom:50px;
+
+}
+
+.dashboard-grid{
+
+    display:grid;
+
+    grid-template-columns:repeat(2,1fr);
+
+    gap:24px;
+
+}
+
+.dashboard-card{
+
+    background:white;
+
+    border-radius:22px;
+
+    padding:30px;
+
+    border:1px solid var(--line);
+
+    box-shadow:0 10px 30px rgba(0,0,0,.05);
+
+}
+
+.dashboard-card h3{
+
+    margin-top:0;
+
+}
+
+.logout-btn{
+
+    background:#7b2b22;
+
+    color:white;
+
+    border:none;
+
+    padding:14px 22px;
+
+    border-radius:14px;
+
+    cursor:pointer;
+
+}
+
+@media (max-width:900px){
+
+    .dashboard-header{
+
+        flex-direction:column;
+
+        align-items:flex-start;
+
+        gap:20px;
+
+    }
+
+    .dashboard-grid{
+
+        grid-template-columns:1fr;
+
+    }
+
+}
