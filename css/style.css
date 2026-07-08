@@ -1063,3 +1063,7 @@ h3 {
     vertical-align:middle;
 
 }
+
+.menu-description{
+    white-space: pre-line;
+}
