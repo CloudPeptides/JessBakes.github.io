@@ -43,71 +43,131 @@ function showDashboard(user) {
 
     dashboard.innerHTML = `
 
-        <div class="dashboard-container">
+       <div class="dashboard-container">
 
-            <header class="dashboard-header">
+    <header class="dashboard-header">
 
-                <div>
+        <div>
 
-                    <p class="eyebrow">Jess Bakes Sourdough</p>
+            <p class="eyebrow">Jess Bakes Sourdough</p>
 
-                    <h1>Admin Dashboard</h1>
+            <h1>Admin Dashboard</h1>
 
-                    <p>Welcome back, Jess.</p>
-
-                </div>
-
-                <button
-                    class="logout-btn"
-                    id="logoutBtn">
-
-                    Sign Out
-
-                </button>
-
-            </header>
-
-            <div class="dashboard-grid">
-
-                <div class="dashboard-card">
-
-                    <h3>Pending Reviews</h3>
-
-                    <div id="pendingReviews">
-
-                        Loading...
-
-                    </div>
-
-                </div>
-
-                <div class="dashboard-card">
-
-                    <h3>Bakery Ballot</h3>
-
-                    <p>Coming Soon</p>
-
-                </div>
-
-                <div class="dashboard-card">
-
-                    <h3>Menu Items</h3>
-
-                    <p>Coming Soon</p>
-
-                </div>
-
-                <div class="dashboard-card">
-
-                    <h3>Orders</h3>
-
-                    <p>Coming Soon</p>
-
-                </div>
-
-            </div>
+            <p>Welcome back, Jess.</p>
 
         </div>
+
+        <button
+            class="logout-btn"
+            id="logoutBtn">
+
+            Sign Out
+
+        </button>
+
+    </header>
+
+    <section class="overview-grid">
+
+        <div class="overview-card">
+
+            <h3>Pending Reviews</h3>
+
+            <span id="pendingReviewCount">--</span>
+
+        </div>
+
+        <div class="overview-card">
+
+            <h3>Ballot Votes</h3>
+
+            <span id="ballotVoteCount">--</span>
+
+        </div>
+
+        <div class="overview-card">
+
+            <h3>Products</h3>
+
+            <span id="productCount">--</span>
+
+        </div>
+
+        <div class="overview-card">
+
+            <h3>Orders</h3>
+
+            <span>Coming Soon</span>
+
+        </div>
+
+    </section>
+
+    <section class="admin-panel">
+
+        <div class="panel-header">
+
+            <h2>Pending Reviews</h2>
+
+        </div>
+
+        <div id="pendingReviews">
+
+            Loading...
+
+        </div>
+
+    </section>
+
+    <section class="admin-panel">
+
+        <div class="panel-header">
+
+            <h2>Bakery Ballot</h2>
+
+        </div>
+
+        <div id="ballotManager">
+
+            Coming Soon
+
+        </div>
+
+    </section>
+
+    <section class="admin-panel">
+
+        <div class="panel-header">
+
+            <h2>Menu</h2>
+
+        </div>
+
+        <div id="menuManager">
+
+            Coming Soon
+
+        </div>
+
+    </section>
+
+    <section class="admin-panel">
+
+        <div class="panel-header">
+
+            <h2>Orders</h2>
+
+        </div>
+
+        <div id="orderManager">
+
+            Coming Soon
+
+        </div>
+
+    </section>
+
+</div>
 
     `;
 
