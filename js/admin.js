@@ -201,6 +201,8 @@ async function loadPendingReviews() {
 
 function renderPendingReviews(reviews) {
 
+    document.getElementById("pendingReviewCount").textContent = reviews.length;
+
     const container = document.getElementById("pendingReviews");
 
     if (!reviews.length) {
@@ -213,21 +215,33 @@ function renderPendingReviews(reviews) {
 
     container.innerHTML = reviews.map(review => `
 
-        <div class="pending-review">
+        <article class="admin-review-card">
 
-            <div class="pending-review-header">
+            <div class="admin-review-top">
 
-                <strong>${review.name}</strong>
+                <div>
 
-                <span>${"★".repeat(review.rating)}</span>
+                    <h3>${review.name}</h3>
+
+                    <p class="admin-product">${review.product}</p>
+
+                </div>
+
+                <div class="admin-stars">
+
+                    ${"★".repeat(review.rating)}${"☆".repeat(5-review.rating)}
+
+                </div>
 
             </div>
 
-            <p><strong>${review.product}</strong></p>
+            <p class="admin-review-text">
 
-            <p>${review.review}</p>
+                "${review.review}"
 
-            <div class="review-actions">
+            </p>
+
+            <div class="admin-review-actions">
 
                 <button
                     class="approve-btn"
@@ -247,7 +261,7 @@ function renderPendingReviews(reviews) {
 
             </div>
 
-        </div>
+        </article>
 
     `).join("");
 
