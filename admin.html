@@ -143,6 +143,104 @@
 
 </div>
 
+    <div id="newBallotModal" class="modal-overlay" style="display:none;">
+
+    <div class="modal-card">
+
+        <div class="modal-header">
+
+            <h2>Start New Ballot</h2>
+
+            <button
+                class="modal-close"
+                onclick="closeNewBallotModal()">
+
+                ✕
+
+            </button>
+
+        </div>
+
+        <div class="modal-body">
+
+            <label>Ballot Title</label>
+
+            <input
+                type="text"
+                id="newBallotTitle"
+                placeholder="September Bakery Ballot">
+
+            <label>Voting Ends</label>
+
+            <input
+                type="date"
+                id="newBallotEndDate">
+
+            <hr>
+
+            <h3>Bread Options</h3>
+
+            <div id="breadInputs"></div>
+
+            <button
+                class="secondary-btn"
+                onclick="addBallotInput('bread')">
+
+                + Add Bread
+            </button>
+
+            <hr>
+
+            <h3>Cookie Options</h3>
+
+            <div id="cookieInputs"></div>
+
+            <button
+                class="secondary-btn"
+                onclick="addBallotInput('cookie')">
+
+                + Add Cookie
+            </button>
+
+            <hr>
+
+            <h3>Dessert Options</h3>
+
+            <div id="dessertInputs"></div>
+
+            <button
+                class="secondary-btn"
+                onclick="addBallotInput('dessert')">
+
+                + Add Dessert
+            </button>
+
+        </div>
+
+        <div class="modal-footer">
+
+            <button
+                class="secondary-btn"
+                onclick="closeNewBallotModal()">
+
+                Cancel
+
+            </button>
+
+            <button
+                class="primary-btn"
+                onclick="startNewBallot()">
+
+                Start New Ballot
+
+            </button>
+
+        </div>
+
+    </div>
+
+</div>
+
     <!-- SCRIPTS -->
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
