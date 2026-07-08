@@ -136,6 +136,64 @@ function showDashboard(user) {
    
     loadPendingReviews();
 
+    function renderPendingReviews(reviews) {
+
+    const container = document.getElementById("pendingReviews");
+
+    if (!reviews.length) {
+
+        container.innerHTML = `
+
+            <p>No pending reviews 🎉</p>
+
+        `;
+
+        return;
+
+    }
+
+    container.innerHTML = reviews.map(review => `
+
+        <div class="pending-review">
+
+            <div class="pending-review-header">
+
+                <strong>${review.name}</strong>
+
+                <span>${"★".repeat(review.rating)}</span>
+
+            </div>
+
+            <p><strong>${review.product}</strong></p>
+
+            <p>${review.review}</p>
+
+            <div class="review-actions">
+
+                <button
+                    class="approve-btn"
+                    onclick="approveReview('${review.id}')">
+
+                    Approve
+
+                </button>
+
+                <button
+                    class="delete-btn"
+                    onclick="deleteReview('${review.id}')">
+
+                    Delete
+
+                </button>
+
+            </div>
+
+        </div>
+
+    `).join("");
+
+}
+
 }
 
 async function loadPendingReviews() {
