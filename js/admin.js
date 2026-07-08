@@ -176,6 +176,7 @@ function showDashboard(user) {
         .addEventListener("click", logout);
 
     loadPendingReviews();
+    loadBallotManager();
 
 }
 
@@ -311,6 +312,11 @@ async function deleteReview(id) {
 
     loadPendingReviews();
 
+}
+
+async function loadBallotManager() {
+
+    ...
 }
 
 async function logout() {
