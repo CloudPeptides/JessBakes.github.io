@@ -569,3 +569,40 @@ body{
     margin-top:30px;
 
 }
+
+
+.ballot-category-header{
+
+    display:flex;
+
+    justify-content:space-between;
+
+    align-items:center;
+
+    margin-bottom:18px;
+
+}
+
+.add-option-btn{
+
+    background:#7b2b22;
+
+    color:white;
+
+    border:none;
+
+    border-radius:10px;
+
+    padding:8px 14px;
+
+    cursor:pointer;
+
+    font-size:.9rem;
+
+}
+
+.add-option-btn:hover{
+
+    opacity:.9;
+
+}
