@@ -263,105 +263,61 @@ async function loadBallotManager() {
     renderBallotManager(settings, options, votes);
 }
 
-function renderBallotManager(settings, options, votes) {
-    const container = document.getElementById("ballotManager");
-
-    if (!settings) {
-        container.innerHTML = `
-            <p>No active ballot found.</p>
-        `;
-        return;
-    }
-
-    const bread = options.filter((option) => option.category.toLowerCase() === "bread");
-    const cookies = options.filter((option) => option.category.toLowerCase() === "cookie");
-    const desserts = options.filter((option) => option.category.toLowerCase() === "dessert");
-
-    container.innerHTML = `
-        <div class="ballot-admin-overview">
-            <div>
-                <strong>Status</strong>
-                <p>${settings.active ? "Active" : "Closed"}</p>
-            </div>
-
-            <div>
-                <strong>Voting Ends</strong>
-                <p>${formatDate(settings.end_date)}</p>
-            </div>
-
-            <div>
-                <strong>Total Votes</strong>
-                <p>${votes.length}</p>
-            </div>
-        </div>
-
-        <div class="ballot-admin-grid">
-            ${renderBallotCategory("Bread", bread, votes)}
-            ${renderBallotCategory("Cookies", cookies, votes)}
-            ${renderBallotCategory("Desserts", desserts, votes)}
-        </div>
-    `;
-}
-
 function renderBallotCategory(title, options, votes) {
-
-    if (!options.length) {
-
-        return `
-
-            <div class="ballot-category-header">
-
-    <h3>${title}</h3>
-
-    <button
-        class="add-option-btn"
-        onclick="openNewOptionModal('${title.toLowerCase()}')">
-
-        + Add
-
-    </button>
-
-</div>
-
-        `;
-
-    }
 
     return `
 
         <div class="ballot-admin-category">
 
-            <h3>${title}</h3>
+            <div class="ballot-category-header">
 
-            ${options.map(option => {
+                <h3>${title}</h3>
 
-                const voteCount = votes.filter(vote => vote.option_id === option.id).length;
+                <button
+                    class="add-option-btn"
+                    onclick="openNewOptionModal('${title.toLowerCase()}')">
 
-                return `
+                    + Add
 
-                    <div class="ballot-option-row">
+                </button>
 
-                        <div>
+            </div>
 
-                            <strong>${option.name}</strong>
+            ${
+                !options.length
+                    ? "<p>No options yet.</p>"
+                    : options.map(option => {
 
-                            <small>${voteCount} vote${voteCount === 1 ? "" : "s"}</small>
+                        const voteCount = votes.filter(
+                            vote => vote.option_id === option.id
+                        ).length;
 
-                        </div>
+                        return `
 
-                        <button
-                            class="edit-option-btn"
-                            onclick="editBallotOption('${option.id}')">
+                            <div class="ballot-option-row">
 
-                            Edit
+                                <div>
 
-                        </button>
+                                    <strong>${option.name}</strong>
 
-                    </div>
+                                    <small>${voteCount} vote${voteCount === 1 ? "" : "s"}</small>
 
-                `;
+                                </div>
 
-            }).join("")}
+                                <button
+                                    class="edit-option-btn"
+                                    onclick="editBallotOption('${option.id}')">
+
+                                    Edit
+
+                                </button>
+
+                            </div>
+
+                        `;
+
+                    }).join("")
+            }
 
         </div>
 
