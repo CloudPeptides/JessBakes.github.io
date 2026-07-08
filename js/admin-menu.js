@@ -142,7 +142,9 @@ function renderMenuCategory(category, items) {
 }
 
 function renderMenuItemCard(item) {
+
     return `
+
         <article class="menu-admin-item ${item.available ? "" : "is-disabled"}">
 
             <div class="menu-admin-main">
@@ -153,15 +155,21 @@ function renderMenuItemCard(item) {
 
                         <h4>${escapeHtml(item.name)}</h4>
 
-                        ${item.featured ? `<span class="featured-pill">Featured</span>` : ""}
+                        ${item.featured
+                            ? `<span class="featured-pill">Featured</span>`
+                            : ""}
 
-                        ${!item.available ? `<span class="disabled-pill">Hidden</span>` : ""}
+                        ${!item.available
+                            ? `<span class="disabled-pill">Hidden</span>`
+                            : ""}
 
                     </div>
 
                     <p class="menu-description">
-    ${escapeHtml(item.description || "")}
-</p>
+
+${escapeHtml(item.description || "")}
+
+                    </p>
 
                     <div class="menu-item-meta">
 
@@ -177,9 +185,33 @@ function renderMenuItemCard(item) {
 
                     <button
                         class="edit-option-btn"
-                        onclick="openMenuItemModal(null, '${item.id}')">
+                        onclick="openMenuItemModal(null,'${item.id}')">
 
                         Edit
+
+                    </button>
+
+                    <button
+                        class="add-option-btn"
+                        onclick="toggleFeatured('${item.id}', ${item.featured})">
+
+                        ${item.featured ? "Unfeature" : "Feature"}
+
+                    </button>
+
+                    <button
+                        class="edit-option-btn"
+                        onclick="updateSortOrder('${item.id}',-1)">
+
+                        ↑ Up
+
+                    </button>
+
+                    <button
+                        class="edit-option-btn"
+                        onclick="updateSortOrder('${item.id}',1)">
+
+                        ↓ Down
 
                     </button>
 
@@ -191,12 +223,22 @@ function renderMenuItemCard(item) {
 
                     </button>
 
+                    <button
+                        class="delete-btn"
+                        onclick="deleteMenuItem('${item.id}','${escapeHtml(item.name)}')">
+
+                        Delete
+
+                    </button>
+
                 </div>
 
             </div>
 
         </article>
+
     `;
+
 }
 
 /* =========================
@@ -592,13 +634,16 @@ async function updateSortOrder(itemId, direction) {
 
     if (!item) return;
 
-    const newOrder = Number(item.sort_order || 0) + direction;
+    const newOrder = Math.max(
+    1,
+    Number(item.sort_order || 1) + direction
+);
 
     const { error } = await supabaseClient
         .from("menu_items")
         .update({
 
-            sort_order: Math.max(0, newOrder)
+            sort_order: newOrder
 
         })
         .eq("id", itemId);
