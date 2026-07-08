@@ -19,7 +19,7 @@ loginForm.addEventListener("submit", async (e) => {
     const email = document.getElementById("email").value.trim();
     const password = document.getElementById("password").value;
 
-    const { data, error } = await supabaseClient.auth.signInWithPassword({
+    const { error } = await supabaseClient.auth.signInWithPassword({
         email,
         password
     });
@@ -77,40 +77,28 @@ function showDashboard() {
                 <div class="panel-header">
                     <h2>Pending Reviews</h2>
                 </div>
-
-                <div id="pendingReviews">
-                    Loading...
-                </div>
+                <div id="pendingReviews">Loading...</div>
             </section>
 
             <section class="admin-panel">
                 <div class="panel-header">
                     <h2>Bakery Ballot</h2>
                 </div>
-
-                <div id="ballotManager">
-                    Loading...
-                </div>
+                <div id="ballotManager">Loading...</div>
             </section>
 
             <section class="admin-panel">
                 <div class="panel-header">
                     <h2>Menu</h2>
                 </div>
-
-                <div id="menuManager">
-                    Coming Soon
-                </div>
+                <div id="menuManager">Coming Soon</div>
             </section>
 
             <section class="admin-panel">
                 <div class="panel-header">
                     <h2>Orders</h2>
                 </div>
-
-                <div id="orderManager">
-                    Coming Soon
-                </div>
+                <div id="orderManager">Coming Soon</div>
             </section>
 
         </div>
@@ -170,15 +158,11 @@ function renderPendingReviews(reviews) {
             </p>
 
             <div class="admin-review-actions">
-                <button
-                    class="approve-btn"
-                    onclick="approveReview('${review.id}')">
+                <button class="approve-btn" onclick="approveReview('${review.id}')">
                     Approve
                 </button>
 
-                <button
-                    class="delete-btn"
-                    onclick="deleteReview('${review.id}')">
+                <button class="delete-btn" onclick="deleteReview('${review.id}')">
                     Delete
                 </button>
             </div>
@@ -243,21 +227,23 @@ async function loadBallotManager() {
             .select("*")
     ]);
 
+    const ballotManager = document.getElementById("ballotManager");
+
     if (settingsResult.error) {
         console.error(settingsResult.error);
-        document.getElementById("ballotManager").innerHTML = `<p>Unable to load ballot settings.</p>`;
+        ballotManager.innerHTML = `<p>Unable to load ballot settings.</p>`;
         return;
     }
 
     if (optionsResult.error) {
         console.error(optionsResult.error);
-        document.getElementById("ballotManager").innerHTML = `<p>Unable to load ballot options.</p>`;
+        ballotManager.innerHTML = `<p>Unable to load ballot options.</p>`;
         return;
     }
 
     if (votesResult.error) {
         console.error(votesResult.error);
-        document.getElementById("ballotManager").innerHTML = `<p>Unable to load ballot votes.</p>`;
+        ballotManager.innerHTML = `<p>Unable to load ballot votes.</p>`;
         return;
     }
 
@@ -276,19 +262,28 @@ function renderBallotManager(settings, options, votes) {
 
     if (!settings) {
         container.innerHTML = `
-            <div class="ballot-admin-actions">
-                <p>No active ballot found.</p>
-                <button class="approve-btn" onclick="startNewBallot()">Start New Ballot</button>
+            <div class="ballot-admin-toolbar">
+                <button class="approve-btn" onclick="openNewBallotModal()">
+                    Start New Ballot
+                </button>
             </div>
+
+            <p>No active ballot found.</p>
         `;
         return;
     }
 
-    const bread = options.filter((option) => option.category === "bread");
-    const cookies = options.filter((option) => option.category === "cookie");
-    const desserts = options.filter((option) => option.category === "dessert");
+    const bread = options.filter(option => option.category === "bread");
+    const cookies = options.filter(option => option.category === "cookie");
+    const desserts = options.filter(option => option.category === "dessert");
 
     container.innerHTML = `
+        <div class="ballot-admin-toolbar">
+            <button class="approve-btn" onclick="openNewBallotModal()">
+                Start New Ballot
+            </button>
+        </div>
+
         <div class="ballot-admin-overview">
             <div>
                 <strong>Status</strong>
@@ -307,20 +302,19 @@ function renderBallotManager(settings, options, votes) {
         </div>
 
         <div class="ballot-date-editor">
-            <label for="ballotEndDate">Change Voting End Date</label>
-            <input type="date" id="ballotEndDate" value="${formatDateForInput(settings.end_date)}">
-            <button class="edit-option-btn" onclick="saveBallotEndDate('${settings.id}')">
+            <label for="ballotEndDate">
+                Change Voting End Date
+            </label>
+
+            <input
+                type="date"
+                id="ballotEndDate"
+                value="${formatDateForInput(settings.end_date)}">
+
+            <button
+                class="edit-option-btn"
+                onclick="saveBallotEndDate('${settings.id}')">
                 Save Date
-            </button>
-        </div>
-
-        <div class="ballot-admin-controls">
-            <button class="delete-btn" onclick="endCurrentBallot('${settings.id}')">
-                End Current Ballot
-            </button>
-
-            <button class="approve-btn" onclick="startNewBallot()">
-                Start New Ballot
             </button>
         </div>
 
@@ -335,7 +329,6 @@ function renderBallotManager(settings, options, votes) {
 function renderBallotCategory(title, category, options, votes) {
     return `
         <div class="ballot-admin-category">
-
             <div class="ballot-category-header">
                 <h3>${title}</h3>
 
@@ -348,10 +341,10 @@ function renderBallotCategory(title, category, options, votes) {
 
             ${
                 !options.length
-                    ? "<p>No options yet.</p>"
-                    : options.map((option) => {
+                    ? `<p>No options yet.</p>`
+                    : options.map(option => {
                         const voteCount = votes.filter(
-                            (vote) => vote.option_id === option.id
+                            vote => vote.option_id === option.id
                         ).length;
 
                         return `
@@ -378,10 +371,13 @@ function renderBallotCategory(title, category, options, votes) {
                         `;
                     }).join("")
             }
-
         </div>
     `;
 }
+
+/* =========================
+   BALLOT OPTION MANAGEMENT
+========================= */
 
 function openNewOptionModal(category) {
     document.getElementById("optionModalTitle").textContent = "Add Ballot Option";
@@ -424,7 +420,7 @@ async function saveBallotOption() {
     const active = document.getElementById("editOptionActive").checked;
 
     if (!name) {
-        alert("Please enter a ballot option name.");
+        alert("Please enter a ballot option.");
         return;
     }
 
@@ -460,7 +456,7 @@ async function saveBallotOption() {
 }
 
 async function removeBallotOption(id, name) {
-    if (!confirm(`Remove "${name}" from the ballot?`)) return;
+    if (!confirm(`Remove "${name}" from this ballot?`)) return;
 
     const { error } = await supabaseClient
         .from("ballot_options")
@@ -476,190 +472,155 @@ async function removeBallotOption(id, name) {
     loadBallotManager();
 }
 
-async function saveBallotEndDate(settingsId) {
+async function saveBallotEndDate(ballotId) {
     const endDate = document.getElementById("ballotEndDate").value;
+
+    if (!endDate) {
+        alert("Please select an end date.");
+        return;
+    }
+
+    const { error } = await supabaseClient
+        .from("ballot_settings")
+        .update({ end_date: endDate })
+        .eq("id", ballotId);
+
+    if (error) {
+        console.error(error);
+        alert(error.message);
+        return;
+    }
+
+    loadBallotManager();
+}
+
+/* =========================
+   NEW BALLOT
+========================= */
+
+function openNewBallotModal() {
+    document.getElementById("newBallotModal").style.display = "flex";
+
+    document.getElementById("newBallotTitle").value = "";
+
+    const endDate = new Date();
+    endDate.setDate(endDate.getDate() + 30);
+
+    document.getElementById("newBallotEndDate").value =
+        endDate.toISOString().split("T")[0];
+
+    ["bread", "cookie", "dessert"].forEach(category => {
+        const container = document.getElementById(category + "Inputs");
+        container.innerHTML = "";
+
+        for (let i = 0; i < 5; i++) {
+            addBallotInput(category);
+        }
+    });
+}
+
+function closeNewBallotModal() {
+    document.getElementById("newBallotModal").style.display = "none";
+}
+
+function addBallotInput(category) {
+    const container = document.getElementById(category + "Inputs");
+
+    const input = document.createElement("input");
+    input.type = "text";
+    input.className = "ballot-input";
+    input.placeholder = "Option name";
+
+    container.appendChild(input);
+}
+
+async function startNewBallot() {
+    const title = document.getElementById("newBallotTitle").value.trim();
+    const endDate = document.getElementById("newBallotEndDate").value;
+
+    if (!title) {
+        alert("Please enter a ballot title.");
+        return;
+    }
 
     if (!endDate) {
         alert("Please choose an end date.");
         return;
     }
 
-    const { error } = await supabaseClient
-        .from("ballot_settings")
-        .update({
-            end_date: endDate
-        })
-        .eq("id", settingsId);
+    const bread = getNewBallotInputs("bread");
+    const cookies = getNewBallotInputs("cookie");
+    const desserts = getNewBallotInputs("dessert");
 
-    if (error) {
-        console.error(error);
-        alert(error.message);
+    if (!bread.length || !cookies.length || !desserts.length) {
+        alert("Please enter at least one option for bread, cookie, and dessert.");
         return;
     }
 
-    loadBallotManager();
-}
-
-async function endCurrentBallot(ballotId) {
-
-    if (!confirm("End the current ballot?")) return;
-
-    const { error } = await supabaseClient.rpc(
-        "end_current_ballot",
-        {
-            ballot_uuid: ballotId
-        }
-    );
-
-    if (error) {
-
-        console.error(error);
-        alert(error.message);
-        return;
-
-    }
-
-    loadBallotManager();
-
-}
-
-async function startNewBallot() {
-    const confirmed = confirm(
-        "Start a new ballot? This will archive current winners, reset all votes, and create a new active ballot."
-    );
-
-    if (!confirmed) return;
-
-    const [settingsResult, optionsResult, votesResult] = await Promise.all([
-        supabaseClient
-            .from("ballot_settings")
-            .select("*")
-            .eq("active", true)
-            .limit(1)
-            .maybeSingle(),
-
-        supabaseClient
-            .from("ballot_options")
-            .select("*")
-            .eq("active", true),
-
-        supabaseClient
-            .from("votes")
-            .select("*")
-    ]);
-
-    if (settingsResult.error || optionsResult.error || votesResult.error) {
-        console.error(settingsResult.error || optionsResult.error || votesResult.error);
-        alert("Could not start a new ballot.");
+    if (!confirm("Start a new ballot? This will archive the current winners, clear current votes, and replace the active ballot options.")) {
         return;
     }
 
-    const currentSettings = settingsResult.data;
-    const options = optionsResult.data || [];
-    const votes = votesResult.data || [];
+    const { error: prepareError } = await supabaseClient.rpc("prepare_new_ballot");
 
-    if (currentSettings && votes.length) {
-        const historyRows = buildHistoryRows(currentSettings, options, votes);
-
-        if (historyRows.length) {
-            const { error: historyError } = await supabaseClient
-                .from("ballot_history")
-                .insert(historyRows);
-
-            if (historyError) {
-                console.error(historyError);
-                alert(historyError.message);
-                return;
-            }
-        }
-    }
-
-    if (currentSettings) {
-        const { error: closeError } = await supabaseClient
-            .from("ballot_settings")
-            .update({ active: false })
-            .eq("id", currentSettings.id);
-
-        if (closeError) {
-            console.error(closeError);
-            alert(closeError.message);
-            return;
-        }
-    }
-
-    const { error: deleteVotesError } = await supabaseClient
-        .from("votes")
-        .delete()
-        .neq("id", "00000000-0000-0000-0000-000000000000");
-
-    if (deleteVotesError) {
-        console.error(deleteVotesError);
-        alert(deleteVotesError.message);
+    if (prepareError) {
+        console.error(prepareError);
+        alert(prepareError.message);
         return;
     }
 
-    const today = new Date();
-    const endDate = new Date();
-    endDate.setDate(today.getDate() + 30);
-
-    const title = prompt("New ballot title:", "Bakery Ballot");
-
-    if (!title) return;
-
-    const { error: newSettingsError } = await supabaseClient
+    const { error: settingsError } = await supabaseClient
         .from("ballot_settings")
         .insert({
             title,
             description: "Vote for the next bread, cookie, and dessert you would like to see.",
-            start_date: today.toISOString(),
-            end_date: endDate.toISOString(),
+            start_date: new Date().toISOString(),
+            end_date: endDate,
             active: true,
             show_results: true
         });
 
-    if (newSettingsError) {
-        console.error(newSettingsError);
-        alert(newSettingsError.message);
+    if (settingsError) {
+        console.error(settingsError);
+        alert(settingsError.message);
         return;
     }
 
+    const options = [
+        ...bread.map(name => ({
+            category: "bread",
+            name,
+            active: true
+        })),
+        ...cookies.map(name => ({
+            category: "cookie",
+            name,
+            active: true
+        })),
+        ...desserts.map(name => ({
+            category: "dessert",
+            name,
+            active: true
+        }))
+    ];
+
+    const { error: optionsError } = await supabaseClient
+        .from("ballot_options")
+        .insert(options);
+
+    if (optionsError) {
+        console.error(optionsError);
+        alert(optionsError.message);
+        return;
+    }
+
+    closeNewBallotModal();
     loadBallotManager();
 }
 
-function buildHistoryRows(settings, options, votes) {
-    const categories = ["bread", "cookie", "dessert"];
-
-    return categories
-        .map((category) => {
-            const categoryOptions = options.filter((option) => option.category === category);
-            const categoryVotes = votes.filter((vote) => vote.category === category);
-
-            if (!categoryOptions.length || !categoryVotes.length) {
-                return null;
-            }
-
-            const ranked = categoryOptions
-                .map((option) => {
-                    const count = categoryVotes.filter((vote) => vote.option_id === option.id).length;
-
-                    return {
-                        name: option.name,
-                        votes: count
-                    };
-                })
-                .sort((a, b) => b.votes - a.votes);
-
-            const winner = ranked[0];
-
-            return {
-                ballot_title: settings.title || "Bakery Ballot",
-                category,
-                winner: winner.name,
-                votes: winner.votes,
-                total_votes: categoryVotes.length,
-                ended_at: new Date().toISOString()
-            };
-        })
+function getNewBallotInputs(category) {
+    return [...document.querySelectorAll(`#${category}Inputs input`)]
+        .map(input => input.value.trim())
         .filter(Boolean);
 }
 
