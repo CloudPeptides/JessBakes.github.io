@@ -535,17 +535,30 @@ function addBallotInput(category) {
 }
 
 async function startNewBallot() {
-    const title = document.getElementById("newBallotTitle").value.trim();
-    const endDate = document.getElementById("newBallotEndDate").value;
+
+    const title =
+        document.getElementById("newBallotTitle")
+            .value
+            .trim();
+
+    const endDate =
+        document.getElementById("newBallotEndDate")
+            .value;
 
     if (!title) {
+
         alert("Please enter a ballot title.");
+
         return;
+
     }
 
     if (!endDate) {
+
         alert("Please choose an end date.");
+
         return;
+
     }
 
     const bread = getNewBallotInputs("bread");
@@ -553,69 +566,109 @@ async function startNewBallot() {
     const desserts = getNewBallotInputs("dessert");
 
     if (!bread.length || !cookies.length || !desserts.length) {
-        alert("Please enter at least one option for bread, cookie, and dessert.");
+
+        alert("Please enter at least one option for every category.");
+
         return;
+
     }
 
-    if (!confirm("Start a new ballot? This will archive the current winners, clear current votes, and replace the active ballot options.")) {
+    if (!confirm(
+        "Start a new ballot? This will archive the current ballot and begin a new one."
+    )) return;
+
+    const { error: rpcError } =
+        await supabaseClient.rpc("prepare_new_ballot");
+
+    if (rpcError) {
+
+        console.error(rpcError);
+
+        alert(rpcError.message);
+
         return;
+
     }
 
-    const { error: prepareError } = await supabaseClient.rpc("prepare_new_ballot");
+    const { data: settings } =
+        await supabaseClient
+            .from("ballot_settings")
+            .select("id")
+            .limit(1)
+            .single();
 
-    if (prepareError) {
-        console.error(prepareError);
-        alert(prepareError.message);
-        return;
-    }
+    const { error: settingsError } =
+        await supabaseClient
+            .from("ballot_settings")
+            .update({
 
-    const { error: settingsError } = await supabaseClient
-        .from("ballot_settings")
-        .insert({
-            title,
-            description: "Vote for the next bread, cookie, and dessert you would like to see.",
-            start_date: new Date().toISOString(),
-            end_date: endDate,
-            active: true,
-            show_results: true
-        });
+                title,
+
+                description:
+                    "Vote for the next bread, cookie, and dessert you'd like to see.",
+
+                start_date: new Date().toISOString(),
+
+                end_date: endDate,
+
+                active: true,
+
+                show_results: true
+
+            })
+            .eq("id", settings.id);
 
     if (settingsError) {
+
         console.error(settingsError);
+
         alert(settingsError.message);
+
         return;
+
     }
 
     const options = [
+
         ...bread.map(name => ({
             category: "bread",
             name,
             active: true
         })),
+
         ...cookies.map(name => ({
             category: "cookie",
             name,
             active: true
         })),
+
         ...desserts.map(name => ({
             category: "dessert",
             name,
             active: true
         }))
+
     ];
 
-    const { error: optionsError } = await supabaseClient
-        .from("ballot_options")
-        .insert(options);
+    const { error: optionError } =
+        await supabaseClient
+            .from("ballot_options")
+            .insert(options);
 
-    if (optionsError) {
-        console.error(optionsError);
-        alert(optionsError.message);
+    if (optionError) {
+
+        console.error(optionError);
+
+        alert(optionError.message);
+
         return;
+
     }
 
     closeNewBallotModal();
+
     loadBallotManager();
+
 }
 
 function getNewBallotInputs(category) {
