@@ -1035,3 +1035,31 @@ h3 {
     padding:24px;
   }
 }
+
+/* ==========================================
+   FEATURED MENU ITEM
+========================================== */
+
+.featured-badge{
+
+    display:inline-block;
+
+    margin-left:10px;
+
+    padding:3px 8px;
+
+    border-radius:999px;
+
+    background:#7b2b22;
+
+    color:#fff;
+
+    font-size:.7rem;
+
+    font-weight:700;
+
+    letter-spacing:.04em;
+
+    vertical-align:middle;
+
+}
