@@ -108,6 +108,7 @@ function showDashboard() {
 
     loadPendingReviews();
     loadBallotManager();
+    loadMenuManager();
 }
 
 /* =========================
