@@ -500,21 +500,27 @@ async function saveBallotEndDate(settingsId) {
     loadBallotManager();
 }
 
-async function endCurrentBallot(settingsId) {
-    if (!confirm("End the current ballot? Voting will close.")) return;
+async function endCurrentBallot(ballotId) {
 
-    const { error } = await supabaseClient
-        .from("ballot_settings")
-        .update({ active: false })
-        .eq("id", settingsId);
+    if (!confirm("End the current ballot?")) return;
+
+    const { error } = await supabaseClient.rpc(
+        "end_current_ballot",
+        {
+            ballot_uuid: ballotId
+        }
+    );
 
     if (error) {
+
         console.error(error);
         alert(error.message);
         return;
+
     }
 
     loadBallotManager();
+
 }
 
 async function startNewBallot() {
