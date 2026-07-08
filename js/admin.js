@@ -418,25 +418,27 @@ async function saveBallotOption() {
 
     const active = document.getElementById("editOptionActive").checked;
 
-    const { error } = await supabaseClient
+    console.log("Saving:", {
+        id,
+        name,
+        category,
+        active
+    });
 
+    const { data, error } = await supabaseClient
         .from("ballot_options")
-
         .update({
-
             name,
-
             category,
-
             active
-
         })
+        .eq("id", id)
+        .select();
 
-        .eq("id", id);
+    console.log("Returned data:", data);
+    console.log("Returned error:", error);
 
     if (error) {
-
-        console.error(error);
 
         alert(error.message);
 
@@ -446,7 +448,7 @@ async function saveBallotOption() {
 
     closeEditModal();
 
-    loadBallotManager();
+    await loadBallotManager();
 
 }
 
