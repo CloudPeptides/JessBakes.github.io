@@ -408,6 +408,23 @@ async function editBallotOption(id) {
 
 }
 
+function openNewOptionModal(category) {
+
+    document.getElementById("optionModalTitle").textContent =
+        "Add Ballot Option";
+
+    document.getElementById("editOptionId").value = "";
+
+    document.getElementById("editOptionName").value = "";
+
+    document.getElementById("editOptionCategory").value = category;
+
+    document.getElementById("editOptionActive").checked = true;
+
+    document.getElementById("editOptionModal").style.display = "flex";
+
+}
+
 function closeEditModal() {
 
     document.getElementById("editOptionModal").style.display = "none";
@@ -424,27 +441,43 @@ async function saveBallotOption() {
 
     const active = document.getElementById("editOptionActive").checked;
 
-    console.log("Saving:", {
-        id,
-        name,
-        category,
-        active
-    });
+    let error;
 
-    const { data, error } = await supabaseClient
-        .from("ballot_options")
-        .update({
-            name,
-            category,
-            active
-        })
-        .eq("id", id)
-        .select();
+    if (id) {
 
-    console.log("Returned data:", data);
-    console.log("Returned error:", error);
+        ({ error } = await supabaseClient
+
+            .from("ballot_options")
+
+            .update({
+
+                name,
+                category,
+                active
+
+            })
+
+            .eq("id", id));
+
+    } else {
+
+        ({ error } = await supabaseClient
+
+            .from("ballot_options")
+
+            .insert({
+
+                name,
+                category,
+                active
+
+            }));
+
+    }
 
     if (error) {
+
+        console.error(error);
 
         alert(error.message);
 
@@ -457,7 +490,6 @@ async function saveBallotOption() {
     await loadBallotManager();
 
 }
-
 async function logout() {
     await supabaseClient.auth.signOut();
     location.reload();
