@@ -8,9 +8,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     const { data } = await supabaseClient.auth.getSession();
 
     if (data.session) {
-
         showDashboard(data.session.user);
-
     }
 
 });
@@ -22,22 +20,16 @@ loginForm.addEventListener("submit", async (e) => {
     loginError.textContent = "";
 
     const email = document.getElementById("email").value.trim();
-
     const password = document.getElementById("password").value;
 
     const { data, error } = await supabaseClient.auth.signInWithPassword({
-
         email,
         password
-
     });
 
     if (error) {
-
         loginError.textContent = error.message;
-
         return;
-
     }
 
     showDashboard(data.user);
@@ -47,7 +39,6 @@ loginForm.addEventListener("submit", async (e) => {
 function showDashboard(user) {
 
     loginScreen.style.display = "none";
-
     dashboard.style.display = "block";
 
     dashboard.innerHTML = `
@@ -58,23 +49,11 @@ function showDashboard(user) {
 
                 <div>
 
-                    <p class="eyebrow">
+                    <p class="eyebrow">Jess Bakes Sourdough</p>
 
-                        Jess Bakes Sourdough
+                    <h1>Admin Dashboard</h1>
 
-                    </p>
-
-                    <h1>
-
-                        Admin Dashboard
-
-                    </h1>
-
-                    <p>
-
-                        Welcome back, Jess.
-
-                    </p>
+                    <p>Welcome back, Jess.</p>
 
                 </div>
 
@@ -88,23 +67,25 @@ function showDashboard(user) {
 
             </header>
 
-            <div class="dashboard-card">
+            <div class="dashboard-grid">
 
-    <h3>Pending Reviews</h3>
+                <div class="dashboard-card">
 
-    <div id="pendingReviews">
+                    <h3>Pending Reviews</h3>
 
-        Loading...
+                    <div id="pendingReviews">
 
-    </div>
+                        Loading...
 
-</div>
+                    </div>
+
+                </div>
 
                 <div class="dashboard-card">
 
                     <h3>Bakery Ballot</h3>
 
-                    <p>Loading...</p>
+                    <p>Coming Soon</p>
 
                 </div>
 
@@ -133,20 +114,38 @@ function showDashboard(user) {
     document
         .getElementById("logoutBtn")
         .addEventListener("click", logout);
-   
+
     loadPendingReviews();
 
-    function renderPendingReviews(reviews) {
+}
+
+async function loadPendingReviews() {
+
+    const { data, error } = await supabaseClient
+        .from("reviews")
+        .select("*")
+        .eq("approved", false)
+        .order("created_at", { ascending: true });
+
+    if (error) {
+
+        console.error(error);
+
+        return;
+
+    }
+
+    renderPendingReviews(data || []);
+
+}
+
+function renderPendingReviews(reviews) {
 
     const container = document.getElementById("pendingReviews");
 
     if (!reviews.length) {
 
-        container.innerHTML = `
-
-            <p>No pending reviews 🎉</p>
-
-        `;
+        container.innerHTML = "<p>No pending reviews 🎉</p>";
 
         return;
 
@@ -194,19 +193,14 @@ function showDashboard(user) {
 
 }
 
-}
+async function approveReview(id) {
 
-async function loadPendingReviews() {
-
-    const { data, error } = await supabaseClient
-
+    const { error } = await supabaseClient
         .from("reviews")
-
-        .select("*")
-
-        .eq("approved", false)
-
-        .order("created_at", { ascending: true });
+        .update({
+            approved: true
+        })
+        .eq("id", id);
 
     if (error) {
 
@@ -216,7 +210,30 @@ async function loadPendingReviews() {
 
     }
 
-    renderPendingReviews(data || []);
+    loadPendingReviews();
+
+}
+
+async function deleteReview(id) {
+
+    const confirmed = confirm("Delete this review?");
+
+    if (!confirmed) return;
+
+    const { error } = await supabaseClient
+        .from("reviews")
+        .delete()
+        .eq("id", id);
+
+    if (error) {
+
+        console.error(error);
+
+        return;
+
+    }
+
+    loadPendingReviews();
 
 }
 
