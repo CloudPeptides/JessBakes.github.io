@@ -5,6 +5,8 @@ const MENU_CATEGORY_NAMES = {
     seasonal: "Seasonal Specials"
 };
 
+let menuItems = [];
+
 document.addEventListener("DOMContentLoaded", () => {
     loadMenu();
 });
@@ -28,57 +30,37 @@ async function loadMenu() {
         console.error(error);
 
         container.innerHTML = `
-
             <article class="notice-card">
-
-                <h2>
-
-                    Unable to load menu.
-
-                </h2>
-
-                <p>
-
-                    Please try again later.
-
-                </p>
-
+                <h2>Unable to load menu.</h2>
+                <p>Please try again later.</p>
             </article>
-
         `;
 
         return;
 
     }
 
-    renderMenu(data || []);
+    menuItems = data || [];
+
+    renderMenu();
+
+    if (typeof initializeCart === "function") {
+        initializeCart(menuItems, renderMenu);
+    }
 
 }
 
-function renderMenu(items) {
+function renderMenu() {
 
     const container = document.getElementById("menuContainer");
 
-    if (!items.length) {
+    if (!menuItems.length) {
 
         container.innerHTML = `
-
             <article class="notice-card">
-
-                <h2>
-
-                    Menu Coming Soon
-
-                </h2>
-
-                <p>
-
-                    Fresh bakes will appear here soon.
-
-                </p>
-
+                <h2>Menu Coming Soon</h2>
+                <p>Fresh bakes will appear here soon.</p>
             </article>
-
         `;
 
         return;
@@ -89,7 +71,7 @@ function renderMenu(items) {
 
     Object.keys(MENU_CATEGORY_NAMES).forEach(category => {
 
-        const categoryItems = items.filter(
+        const categoryItems = menuItems.filter(
             item => item.category === category
         );
 
@@ -101,17 +83,13 @@ function renderMenu(items) {
 
                 <div class="menu-section-title">
 
-                    <h2>
-
-                        ${MENU_CATEGORY_NAMES[category]}
-
-                    </h2>
+                    <h2>${MENU_CATEGORY_NAMES[category]}</h2>
 
                 </div>
 
                 <div class="menu-grid ${category === "cookie" ? "two" : ""}">
 
-                    ${categoryItems.map(createMenuCard).join("")}
+                    ${categoryItems.map(renderMenuCard).join("")}
 
                 </div>
 
@@ -125,39 +103,90 @@ function renderMenu(items) {
 
 }
 
-function createMenuCard(item) {
+function renderMenuCard(item) {
+
+    const quantity =
+        typeof getCartQuantity === "function"
+            ? getCartQuantity(item.id)
+            : 0;
 
     return `
 
-        <article class="menu-item ${item.category === "cookie" ? "full" : ""}">
+<article class="menu-item ${item.category === "cookie" ? "full" : ""}">
 
-            <div class="menu-item-top">
+    <div class="menu-item-top">
 
-                <h3>
+        <h3>
 
-                    ${escapeHtml(item.name)}
+            ${escapeHtml(item.name)}
 
-                    ${item.featured
-                        ? `<span class="featured-badge">★ Featured</span>`
-                        : ""}
+            ${item.featured
+                ? `<span class="featured-badge">★ Featured</span>`
+                : ""}
 
-                </h3>
+        </h3>
 
-                <span class="price">
+        <span class="price">
 
-                    €${formatPrice(item.price)}
+            €${formatPrice(item.price)}
 
-                </span>
+        </span>
 
-            </div>
+    </div>
 
-            <p class="menu-description">
-    ${escapeHtml(item.description || "")}
-</p>
+    <p class="menu-description">
 
-        </article>
+        ${escapeHtml(item.description || "").replace(/\n/g,"<br>")}
 
-    `;
+    </p>
+
+    <div class="menu-order-actions">
+
+        ${
+            quantity > 0
+
+                ? `
+
+                    <button
+                        type="button"
+                        onclick="changeCartQuantity('${item.id}',-1)">
+
+                        −
+
+                    </button>
+
+                    <span>${quantity}</span>
+
+                    <button
+                        type="button"
+                        onclick="changeCartQuantity('${item.id}',1)">
+
+                        +
+
+                    </button>
+
+                `
+
+                : `
+
+                    <button
+                        type="button"
+                        class="add-cart-btn"
+                        onclick="changeCartQuantity('${item.id}',1)">
+
+                        Add to Cart
+
+                    </button>
+
+                `
+
+        }
+
+    </div>
+
+</article>
+
+`;
 
 }
 
