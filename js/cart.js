@@ -377,6 +377,7 @@ async function submitOrder(event) {
     const customer_name = document.getElementById("customerName").value.trim();
     const customer_email = document.getElementById("customerEmail").value.trim();
     const customer_phone = document.getElementById("customerPhone").value.trim();
+    const preferred_contact = document.getElementById("preferredContact").value;
     const order_type = document.getElementById("orderType").value;
     const custom_details = document.getElementById("customOrderDetails").value.trim();
 
