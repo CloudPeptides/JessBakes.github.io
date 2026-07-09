@@ -206,6 +206,24 @@ function ensureCheckoutModal() {
                 </div>
 
                 <div class="form-group">
+
+    <label>Preferred Contact Method</label>
+
+    <select id="preferredContact" required>
+
+        <option value="text">
+            Text Message
+        </option>
+
+        <option value="email">
+            Email
+        </option>
+
+    </select>
+
+</div>
+
+                <div class="form-group">
                     <label>Order Type</label>
 
                     <select
