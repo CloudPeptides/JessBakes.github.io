@@ -69,7 +69,7 @@ function showDashboard() {
 
                 <div class="overview-card">
                     <h3>Orders</h3>
-                    <span>Coming Soon</span>
+                    <span id="orderCount">--</span>
                 </div>
             </section>
 
@@ -98,7 +98,9 @@ function showDashboard() {
                 <div class="panel-header">
                     <h2>Orders</h2>
                 </div>
-                <div id="orderManager">Coming Soon</div>
+                <div id="orderManager">
+                    Loading...
+                </div>
             </section>
 
         </div>
@@ -109,6 +111,7 @@ function showDashboard() {
     loadPendingReviews();
     loadBallotManager();
     loadMenuManager();
+    loadOrderManager();
 }
 
 /* =========================
