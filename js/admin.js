@@ -98,6 +98,7 @@ function showDashboard() {
                 <div class="panel-header">
                     <h2>Orders</h2>
                 </div>
+
                 <div id="orderManager">
                     Loading...
                 </div>
