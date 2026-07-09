@@ -163,6 +163,20 @@ function renderOrderCard(order) {
 
 <p>
 
+<span class="order-type-badge ${
+    order.order_type === "custom"
+        ? "order-type-custom"
+        : "order-type-weekly"
+}">
+    ${
+        order.order_type === "custom"
+            ? "🎂 Custom Order"
+            : "🧺 Weekly Pickup"
+    }
+</span>
+
+<br>
+
 ${escapeHtml(order.customer_phone)}
 
 ${
@@ -189,49 +203,91 @@ ${capitalize(order.status)}
 
 <div class="order-meta">
 
-<div>
+    <div>
 
-<strong>Pickup</strong>
+        <strong>Order Type</strong>
 
-<p>${formatDate(order.pickup_date)}</p>
+        <p>
+            ${
+                order.order_type === "custom"
+                    ? "🎂 Custom Order"
+                    : "🧺 Weekly Sunday Pickup"
+            }
+        </p>
 
-</div>
+    </div>
 
-<div>
+    <div>
 
-<strong>Total</strong>
+        <strong>
+            ${
+                order.order_type === "custom"
+                    ? "Event Date"
+                    : "Pickup"
+            }
+        </strong>
 
-<p>€${Number(order.subtotal).toFixed(2)}</p>
+        <p>
+            ${
+                order.order_type === "custom"
+                    ? (order.event_date
+                        ? formatDate(order.event_date)
+                        : "Not Provided")
+                    : "Sunday @ 12:30 PM"
+            }
+        </p>
 
-</div>
+    </div>
 
-<div>
+    <div>
 
-<strong>Items</strong>
+        <strong>Total</strong>
 
-<p>${totalItems}</p>
+        <p>€${Number(order.subtotal).toFixed(2)}</p>
 
-</div>
+    </div>
 
-<div>
+    <div>
 
-<strong>Placed</strong>
+        <strong>Items</strong>
 
-<p>${formatDate(order.created_at)}</p>
+        <p>${totalItems}</p>
 
-</div>
+    </div>
+
+    <div>
+
+        <strong>Contact Via</strong>
+
+        <p>
+            ${
+                order.preferred_contact === "email"
+                    ? "Email"
+                    : "Text Message"
+            }
+        </p>
+
+    </div>
+
+    <div>
+
+        <strong>Placed</strong>
+
+        <p>${formatDate(order.created_at)}</p>
+
+    </div>
 
 </div>
 
 ${
-    order.notes
+    order.order_type === "custom" && order.notes
         ? `
 
 <div class="order-notes">
 
-<strong>Notes</strong>
+<strong>Custom Order Details</strong>
 
-<p>${escapeHtml(order.notes)}</p>
+<p>${escapeHtml(order.notes).replace(/\n/g,"<br>")}</p>
 
 </div>
 
