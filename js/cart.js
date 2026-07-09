@@ -412,15 +412,16 @@ async function submitOrder(event) {
     const { data: order, error } = await supabaseClient
         .from("orders")
         .insert({
-            customer_name,
-            customer_email,
-            customer_phone,
-            pickup_date,
-            notes,
-            order_type,
-            subtotal: getSubtotal(),
-            status: "pending"
-        })
+          customer_name,
+          customer_email,
+          customer_phone,
+          preferred_contact,
+          pickup_date,
+          notes,
+          order_type,
+          subtotal: getSubtotal(),
+          status: "pending"
+      })
         .select()
         .single();
 
