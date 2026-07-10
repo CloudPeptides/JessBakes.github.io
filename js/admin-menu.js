@@ -1,3 +1,12 @@
+document.addEventListener("DOMContentLoaded", async () => {
+
+    await requireAuth();
+
+    loadMenuManager();
+
+});
+
+
 /* =========================
    MENU MANAGER
 ========================= */
