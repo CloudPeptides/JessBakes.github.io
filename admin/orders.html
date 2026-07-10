@@ -110,99 +110,377 @@
 
         </header>
 
-       <section class="orders-page">
+        <!-- NEW ORDER BUTTON -->
 
-    <section class="overview-grid">
+        <div class="button-row"
+             style="margin-bottom:24px;">
 
-        <article class="overview-card">
+            <button
+                class="primary-btn"
+                onclick="openManualOrderModal()">
 
-            <span class="overview-label">
+                + New Order
 
-                Pending
-
-            </span>
-
-            <h2 id="pendingCount">
-
-                --
-
-            </h2>
-
-        </article>
-
-        <article class="overview-card">
-
-            <span class="overview-label">
-
-                Confirmed
-
-            </span>
-
-            <h2 id="confirmedCount">
-
-                --
-
-            </h2>
-
-        </article>
-
-        <article class="overview-card">
-
-            <span class="overview-label">
-
-                Ready
-
-            </span>
-
-            <h2 id="readyCount">
-
-                --
-
-            </h2>
-
-        </article>
-
-        <article class="overview-card">
-
-            <span class="overview-label">
-
-                Completed
-
-            </span>
-
-            <h2 id="completedCount">
-
-                --
-
-            </h2>
-
-        </article>
-
-    </section>
-
-    <section class="dashboard-card">
-
-        <div class="dashboard-card-header">
-
-            <h2>
-
-                All Orders
-
-            </h2>
+            </button>
 
         </div>
 
-        <div id="orderManager">
+        <section class="orders-page">
 
-            Loading...
+            <section class="overview-grid">
 
-        </div>
+                <article class="overview-card">
 
-    </section>
+                    <span class="overview-label">
 
-</section>
+                        Pending
+
+                    </span>
+
+                    <h2 id="pendingCount">
+
+                        --
+
+                    </h2>
+
+                </article>
+
+                <article class="overview-card">
+
+                    <span class="overview-label">
+
+                        Confirmed
+
+                    </span>
+
+                    <h2 id="confirmedCount">
+
+                        --
+
+                    </h2>
+
+                </article>
+
+                <article class="overview-card">
+
+                    <span class="overview-label">
+
+                        Ready
+
+                    </span>
+
+                    <h2 id="readyCount">
+
+                        --
+
+                    </h2>
+
+                </article>
+
+                <article class="overview-card">
+
+                    <span class="overview-label">
+
+                        Completed
+
+                    </span>
+
+                    <h2 id="completedCount">
+
+                        --
+
+                    </h2>
+
+                </article>
+
+            </section>
+
+            <section class="dashboard-card">
+
+                <div class="dashboard-card-header">
+
+                    <h2>
+
+                        All Orders
+
+                    </h2>
+
+                </div>
+
+                <div id="orderManager">
+
+                    Loading...
+
+                </div>
+
+            </section>
+
+        </section>
 
     </main>
+
+</div>
+
+<!-- ==========================================
+     MANUAL ORDER MODAL
+========================================== -->
+
+<div
+id="manualOrderModal"
+class="modal-overlay"
+style="display:none;">
+
+<div class="modal-card large-modal">
+
+<div class="modal-header">
+
+<h2>
+
+New Order
+
+</h2>
+
+<button
+class="modal-close"
+onclick="closeManualOrderModal()">
+
+✕
+
+</button>
+
+</div>
+
+<div class="modal-body">
+
+<label>
+
+Customer Name
+
+</label>
+
+<input
+id="manualCustomerName"
+type="text">
+
+<label>
+
+Phone
+
+</label>
+
+<input
+id="manualCustomerPhone"
+type="text">
+
+<label>
+
+Email (optional)
+
+</label>
+
+<input
+id="manualCustomerEmail"
+type="email">
+
+<label>
+
+Preferred Contact
+
+</label>
+
+<select id="manualContact">
+
+<option value="text">
+
+Text Message
+
+</option>
+
+<option value="email">
+
+Email
+
+</option>
+
+</select>
+
+<label>
+
+Order Source
+
+</label>
+
+<select id="manualSource">
+
+<option value="website">
+
+Website
+
+</option>
+
+<option value="facebook">
+
+Facebook
+
+</option>
+
+<option value="messenger">
+
+Messenger
+
+</option>
+
+<option value="instagram">
+
+Instagram
+
+</option>
+
+<option value="phone">
+
+Phone
+
+</option>
+
+<option value="text">
+
+Text Message
+
+</option>
+
+<option value="in_person">
+
+In Person
+
+</option>
+
+<option value="other">
+
+Other
+
+</option>
+
+</select>
+
+<label>
+
+Order Type
+
+</label>
+
+<select
+id="manualOrderType"
+onchange="toggleManualOrderType()">
+
+<option value="weekly">
+
+Weekly Sunday Pickup
+
+</option>
+
+<option value="custom">
+
+Custom Order
+
+</option>
+
+</select>
+
+<div id="weeklyFields">
+
+<label>
+
+Pickup Date
+
+</label>
+
+<input
+id="manualPickupDate"
+type="date">
+
+</div>
+
+<div
+id="customFields"
+style="display:none;">
+
+<label>
+
+Event Date
+
+</label>
+
+<input
+id="manualEventDate"
+type="date">
+
+<label>
+
+Pickup Date
+
+</label>
+
+<input
+id="manualCustomPickupDate"
+type="date">
+
+</div>
+
+<label>
+
+Notes
+
+</label>
+
+<textarea
+id="manualNotes"
+rows="4"
+placeholder="Anything about this order..."></textarea>
+
+<hr>
+
+<h3>
+
+Items
+
+</h3>
+
+<div id="manualItems">
+
+</div>
+
+<button
+type="button"
+class="secondary-btn"
+onclick="addManualItem()">
+
++ Add Item
+
+</button>
+
+</div>
+
+<div class="modal-footer">
+
+<button
+class="secondary-btn"
+onclick="closeManualOrderModal()">
+
+Cancel
+
+</button>
+
+<button
+class="primary-btn"
+onclick="saveManualOrder()">
+
+Save Order
+
+</button>
+
+</div>
+
+</div>
 
 </div>
 
