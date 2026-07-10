@@ -2,100 +2,54 @@
    SHARED ADMIN LAYOUT
 ========================================== */
 
-function renderLayout(pageTitle, content) {
+document.addEventListener("DOMContentLoaded", () => {
 
-    return `
+    highlightCurrentPage();
 
-<div class="admin-shell">
+    setupLogout();
 
-    <aside class="sidebar">
+});
 
-        <div class="sidebar-brand">
 
-            <h2>Jess Bakes</h2>
+/* ==========================================
+   ACTIVE NAV LINK
+========================================== */
 
-            <span>SOURDOUGH</span>
+function highlightCurrentPage() {
 
-        </div>
+    const currentPage =
+        window.location.pathname
+            .split("/")
+            .pop();
 
-        <nav class="sidebar-nav">
+    document
+        .querySelectorAll(".sidebar-nav a")
+        .forEach(link => {
 
-            ${navLink("Dashboard","dashboard.html",pageTitle)}
-            ${navLink("Orders","orders.html",pageTitle)}
-            ${navLink("Menu","menu-admin.html",pageTitle)}
-            ${navLink("Reviews","reviews-admin.html",pageTitle)}
+            const href =
+                link.getAttribute("href");
 
-            <hr>
+            link.classList.toggle(
+                "active",
+                href === currentPage
+            );
 
-            ${navLink("Sales","sales.html",pageTitle)}
-            ${navLink("Analytics","analytics.html",pageTitle)}
-            ${navLink("Inventory","inventory.html",pageTitle)}
-            ${navLink("Gallery","gallery.html",pageTitle)}
-
-            <hr>
-
-            ${navLink("Settings","settings.html",pageTitle)}
-
-        </nav>
-
-        <button
-            id="logoutBtn"
-            class="logout-btn">
-
-            Sign Out
-
-        </button>
-
-    </aside>
-
-    <main class="admin-content">
-
-        <header class="admin-header">
-
-            <div>
-
-                <h1>${pageTitle}</h1>
-
-                <p>
-
-                    Jess Bakes Sourdough Admin
-
-                </p>
-
-            </div>
-
-        </header>
-
-        ${content}
-
-    </main>
-
-</div>
-
-`;
+        });
 
 }
 
+
 /* ==========================================
-   SIDEBAR LINKS
+   LOGOUT
 ========================================== */
 
-function navLink(title, href, currentPage){
+function setupLogout() {
 
-    return `
+    const button =
+        document.getElementById("logoutBtn");
 
-<a
-    href="${href}"
-    class="${
-        title === currentPage
-            ? "active"
-            : ""
-    }">
+    if (!button) return;
 
-    ${title}
-
-</a>
-
-`;
+    button.addEventListener("click", logout);
 
 }
