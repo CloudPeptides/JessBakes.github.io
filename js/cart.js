@@ -529,16 +529,23 @@ async function submitOrder(event) {
     let pickup_date = null;
     let event_date = null;
 
-    if (order_type === "weekly") {
+  let pickup_date = null;
+let event_date = null;
+
+if (order_type === "weekly") {
 
     pickup_date = getNextPickupDate()
         .toISOString()
         .split("T")[0];
 
-   } else {
+} else {
 
     event_date =
         document.getElementById("eventDate").value;
+
+    // Required because pickup_date cannot be NULL.
+    // Use the event date as the pickup date.
+    pickup_date = event_date;
 
 }
 
