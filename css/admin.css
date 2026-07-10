@@ -1433,3 +1433,136 @@ body{
     }
 
 }
+
+/* ==========================================
+   DASHBOARD WIDGETS
+========================================== */
+
+.dashboard-grid{
+
+    display:grid;
+    gap:28px;
+
+}
+
+@media (min-width:1100px){
+
+    .dashboard-grid{
+
+        grid-template-columns:repeat(2,minmax(0,1fr));
+        align-items:start;
+
+    }
+
+}
+
+.admin-panel{
+
+    background:#fff;
+    border:1px solid #e9ddd4;
+    border-radius:24px;
+    box-shadow:0 12px 28px rgba(0,0,0,.06);
+
+    display:flex;
+    flex-direction:column;
+
+    overflow:hidden;
+
+    transition:.25s;
+
+}
+
+.admin-panel:hover{
+
+    transform:translateY(-3px);
+
+    box-shadow:0 20px 40px rgba(0,0,0,.09);
+
+}
+
+.panel-header{
+
+    padding:22px 26px;
+
+    border-bottom:1px solid #efe6df;
+
+    background:#fff;
+
+    position:sticky;
+
+    top:0;
+
+    z-index:2;
+
+}
+
+.panel-header h2{
+
+    margin:0;
+
+    color:#5b2018;
+
+}
+
+.panel-content{
+
+    padding:24px;
+
+    overflow-y:auto;
+
+    max-height:720px;
+
+}
+
+/* Orders */
+
+.panel-orders .panel-content{
+
+    max-height:900px;
+
+}
+
+/* Menu */
+
+.panel-menu .panel-content{
+
+    max-height:700px;
+
+}
+
+/* Reviews */
+
+.panel-reviews .panel-content{
+
+    max-height:500px;
+
+}
+
+/* Ballot */
+
+.panel-ballot .panel-content{
+
+    max-height:500px;
+
+}
+
+/* Scrollbars */
+
+.panel-content::-webkit-scrollbar{
+
+    width:10px;
+
+}
+
+.panel-content::-webkit-scrollbar-thumb{
+
+    background:#d8c5b6;
+    border-radius:999px;
+
+}
+
+.panel-content::-webkit-scrollbar-track{
+
+    background:transparent;
+
+}
