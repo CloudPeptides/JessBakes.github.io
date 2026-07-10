@@ -81,22 +81,23 @@ async function loadSuppliers() {
 }
 
 async function loadIngredients() {
+
     const { data, error } = await supabaseClient
         .from("ingredients")
-        .select(`
-            *,
-            inventory_categories(*),
-            suppliers(*)
-        `)
-        .order("name", { ascending: true });
+        .select("*")
+        .order("name");
+
+    console.log("DATA:", data);
+    console.log("ERROR:", error);
 
     if (error) {
         console.error(error);
-        ingredients = [];
         return;
     }
 
     ingredients = data || [];
+
+    renderIngredients();
 }
 
 async function loadRecipes() {
