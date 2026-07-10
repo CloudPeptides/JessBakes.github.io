@@ -2261,3 +2261,52 @@ body{
     color:#6e2418;
 
 }
+
+
+/* ==========================================
+   COLLAPSIBLE ORDER SECTIONS
+========================================== */
+
+.order-section{
+
+    margin-bottom:30px;
+
+}
+
+.order-section-header{
+
+    width:100%;
+
+    display:flex;
+
+    justify-content:space-between;
+
+    align-items:center;
+
+    padding:18px 22px;
+
+    background:#faf7f4;
+
+    border:1px solid #e7ddd4;
+
+    border-radius:14px;
+
+    cursor:pointer;
+
+    font:inherit;
+
+    text-align:left;
+
+}
+
+.order-section-header h3{
+
+    margin:0;
+
+}
+
+.order-section-header small{
+
+    color:#8b7b70;
+
+}
