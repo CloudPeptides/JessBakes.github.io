@@ -1,3 +1,14 @@
+document.addEventListener("DOMContentLoaded", async () => {
+
+    await requireAuth();
+
+    setupLogout();
+
+    loadOrderManager();
+
+});
+
+
 /* ==========================================
    ORDER MANAGER
 ========================================== */
@@ -19,16 +30,30 @@ async function loadOrderManager() {
         .order("created_at", { ascending: false });
 
     if (error) {
-        console.error(error);
-        orderContainer.innerHTML = `
-            <p>Unable to load orders.</p>
-        `;
-        return;
-    }
 
-    document.getElementById("orderCount").textContent = orders.length;
+    console.error(error);
 
-    renderOrderManager(orders);
+    orderContainer.innerHTML = `
+        <p>Unable to load orders.</p>
+    `;
+
+    return;
+
+}
+
+document.getElementById("pendingCount").textContent =
+    orders.filter(o => o.status === "pending").length;
+
+document.getElementById("confirmedCount").textContent =
+    orders.filter(o => o.status === "confirmed").length;
+
+document.getElementById("readyCount").textContent =
+    orders.filter(o => o.status === "ready").length;
+
+document.getElementById("completedCount").textContent =
+    orders.filter(o => o.status === "completed").length;
+
+renderOrderManager(orders);
 }
 
 /* ==========================================
