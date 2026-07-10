@@ -264,7 +264,7 @@ function ensureCheckoutModal() {
                   <textarea
                    id="customOrderDetails"
                    rows="5"
-                   placeholder="Anything you feel I need to know">
+                   placeholder="Insert order details here...">
                   </textarea>
 
                   </div>
