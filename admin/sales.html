@@ -21,6 +21,8 @@
 
 <div class="admin-shell">
 
+    <!-- Sidebar -->
+
     <aside class="sidebar">
 
         <div class="sidebar-brand">
@@ -54,9 +56,7 @@
             <a
                 href="sales.html"
                 class="active">
-
                 Sales
-
             </a>
 
             <a href="analytics.html">
@@ -89,6 +89,8 @@
 
     </aside>
 
+    <!-- Main -->
+
     <main class="admin-content">
 
         <header class="admin-header">
@@ -97,13 +99,13 @@
 
                 <h1>
 
-                    Sales Dashboard
+                    Sales
 
                 </h1>
 
                 <p>
 
-                    Revenue, profit, and business performance.
+                    Revenue, trends, and business performance.
 
                 </p>
 
@@ -111,95 +113,189 @@
 
         </header>
 
+        <!-- Overview -->
+
         <section class="overview-grid">
 
-            <div class="overview-card">
+            <article class="overview-card">
 
-                <div class="overview-label">
+                <span class="overview-label">
 
-                    Revenue Today
+                    Today
 
-                </div>
+                </span>
 
-                <div
-                    class="overview-value"
-                    id="salesToday">
+                <h2 id="salesToday">
 
                     €0
 
-                </div>
+                </h2>
 
-            </div>
+            </article>
 
-            <div class="overview-card">
+            <article class="overview-card">
 
-                <div class="overview-label">
+                <span class="overview-label">
 
-                    Revenue This Week
+                    This Week
 
-                </div>
+                </span>
 
-                <div
-                    class="overview-value"
-                    id="salesWeek">
+                <h2 id="salesWeek">
 
                     €0
 
-                </div>
+                </h2>
 
-            </div>
+            </article>
 
-            <div class="overview-card">
+            <article class="overview-card">
 
-                <div class="overview-label">
+                <span class="overview-label">
 
-                    Revenue This Month
+                    This Month
 
-                </div>
+                </span>
 
-                <div
-                    class="overview-value"
-                    id="salesMonth">
+                <h2 id="salesMonth">
 
                     €0
 
-                </div>
+                </h2>
 
-            </div>
+            </article>
 
-            <div class="overview-card">
+            <article class="overview-card">
 
-                <div class="overview-label">
+                <span class="overview-label">
 
                     Average Order
 
-                </div>
+                </span>
 
-                <div
-                    class="overview-value"
-                    id="averageOrder">
+                <h2 id="averageOrder">
 
                     €0
 
-                </div>
+                </h2>
 
-            </div>
+            </article>
 
         </section>
 
-        <section class="dashboard-section">
+        <!-- Main Grid -->
 
-            <h2>
+        <section class="dashboard-grid">
 
-                Coming Soon
+            <!-- Revenue Graph -->
 
-            </h2>
+            <section class="dashboard-card">
 
-            <p>
+                <div class="dashboard-card-header">
 
-                Charts, monthly revenue, product performance, profit tracking, and customer spending insights will appear here.
+                    <h2>
 
-            </p>
+                        Revenue
+
+                    </h2>
+
+                </div>
+
+                <div id="salesChart">
+
+                    <p>
+
+                        Revenue chart coming soon.
+
+                    </p>
+
+                </div>
+
+            </section>
+
+            <!-- Best Sellers -->
+
+            <section class="dashboard-card">
+
+                <div class="dashboard-card-header">
+
+                    <h2>
+
+                        Best Sellers
+
+                    </h2>
+
+                </div>
+
+                <div id="bestSellers">
+
+                    Loading...
+
+                </div>
+
+            </section>
+
+            <!-- Recent Sales -->
+
+            <section class="dashboard-card">
+
+                <div class="dashboard-card-header">
+
+                    <h2>
+
+                        Recent Sales
+
+                    </h2>
+
+                </div>
+
+                <div id="recentSales">
+
+                    Loading...
+
+                </div>
+
+            </section>
+
+            <!-- Business Insights -->
+
+            <section class="dashboard-card">
+
+                <div class="dashboard-card-header">
+
+                    <h2>
+
+                        Business Insights
+
+                    </h2>
+
+                </div>
+
+                <div id="salesInsights">
+
+                    <p>
+
+                        As sales come in, this section will automatically show:
+
+                    </p>
+
+                    <ul>
+
+                        <li>Best selling products</li>
+
+                        <li>Busiest sales day</li>
+
+                        <li>Average order value</li>
+
+                        <li>Revenue growth</li>
+
+                        <li>Top customers</li>
+
+                    </ul>
+
+                </div>
+
+            </section>
 
         </section>
 
@@ -212,8 +308,6 @@
 <script src="../js/supabase.js"></script>
 
 <script src="../js/auth.js"></script>
-
-<script src="../js/layout.js"></script>
 
 <script src="../js/admin-sales.js"></script>
 
