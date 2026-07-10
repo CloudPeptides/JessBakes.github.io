@@ -456,6 +456,10 @@ function openCheckoutModal() {
 
 function closeCheckoutModal() {
     document.getElementById("checkoutModal").style.display = "none";
+    document.getElementById("checkoutForm").reset();
+
+   toggleCustomOrderDetails();
+   updatePickupInfo();
 }
 
 /* ==========================================
