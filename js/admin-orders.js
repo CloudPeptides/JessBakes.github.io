@@ -4,9 +4,13 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     setupLogout();
 
-    loadOrderManager();
+    await loadMenuItems();
+
+    await loadOrderManager();
 
 });
+
+let menuItems = [];
 
 
 /* ==========================================
@@ -773,5 +777,27 @@ Remove
 `;
 
     container.appendChild(row);
+
+}
+
+
+async function loadMenuItems() {
+
+    const { data, error } = await supabaseClient
+        .from("menu_items")
+        .select("*")
+        .eq("active", true)
+        .order("category")
+        .order("display_order");
+
+    if (error) {
+
+        console.error(error);
+
+        return;
+
+    }
+
+    menuItems = data || [];
 
 }
