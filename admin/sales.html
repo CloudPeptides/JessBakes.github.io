@@ -93,213 +93,319 @@
 
     <main class="admin-content">
 
-        <header class="admin-header">
+    <header class="admin-header">
 
-            <div>
+        <div>
 
-                <h1>
+            <h1>Sales</h1>
 
-                    Sales
+            <p>Revenue, profit, and business performance.</p>
 
-                </h1>
+        </div>
 
-                <p>
+    </header>
 
-                    Revenue, trends, and business performance.
+    <!-- DATE FILTERS -->
 
-                </p>
+    <section class="sales-filters">
+
+        <button class="filter-btn active">Today</button>
+
+        <button class="filter-btn">Week</button>
+
+        <button class="filter-btn">Month</button>
+
+        <button class="filter-btn">Year</button>
+
+        <button class="filter-btn">All Time</button>
+
+    </section>
+
+    <!-- KPI CARDS -->
+
+    <section class="overview-grid">
+
+        <article class="overview-card">
+
+            <span class="overview-label">Today's Revenue</span>
+
+            <h2 id="salesToday">€0</h2>
+
+        </article>
+
+        <article class="overview-card">
+
+            <span class="overview-label">This Week</span>
+
+            <h2 id="salesWeek">€0</h2>
+
+        </article>
+
+        <article class="overview-card">
+
+            <span class="overview-label">This Month</span>
+
+            <h2 id="salesMonth">€0</h2>
+
+        </article>
+
+        <article class="overview-card">
+
+            <span class="overview-label">This Year</span>
+
+            <h2 id="salesYear">€0</h2>
+
+        </article>
+
+        <article class="overview-card">
+
+            <span class="overview-label">Average Order</span>
+
+            <h2 id="averageOrder">€0</h2>
+
+        </article>
+
+        <article class="overview-card">
+
+            <span class="overview-label">Completed Orders</span>
+
+            <h2 id="completedOrders">0</h2>
+
+        </article>
+
+        <article class="overview-card">
+
+            <span class="overview-label">Pending Revenue</span>
+
+            <h2 id="pendingRevenue">€0</h2>
+
+        </article>
+
+        <article class="overview-card">
+
+            <span class="overview-label">Gross Profit</span>
+
+            <h2 id="grossProfit">€0</h2>
+
+        </article>
+
+    </section>
+
+    <!-- REVENUE -->
+
+    <section class="dashboard-card">
+
+        <div class="dashboard-card-header">
+
+            <h2>Revenue Trend</h2>
+
+        </div>
+
+        <canvas id="salesChart"></canvas>
+
+    </section>
+
+    <!-- 2 COLUMN GRID -->
+
+    <section class="dashboard-grid">
+
+        <section class="dashboard-card">
+
+            <div class="dashboard-card-header">
+
+                <h2>Revenue by Category</h2>
 
             </div>
 
-        </header>
-
-        <!-- Overview -->
-
-        <section class="overview-grid">
-
-            <article class="overview-card">
-
-                <span class="overview-label">
-
-                    Today
-
-                </span>
-
-                <h2 id="salesToday">
-
-                    €0
-
-                </h2>
-
-            </article>
-
-            <article class="overview-card">
-
-                <span class="overview-label">
-
-                    This Week
-
-                </span>
-
-                <h2 id="salesWeek">
-
-                    €0
-
-                </h2>
-
-            </article>
-
-            <article class="overview-card">
-
-                <span class="overview-label">
-
-                    This Month
-
-                </span>
-
-                <h2 id="salesMonth">
-
-                    €0
-
-                </h2>
-
-            </article>
-
-            <article class="overview-card">
-
-                <span class="overview-label">
-
-                    Average Order
-
-                </span>
-
-                <h2 id="averageOrder">
-
-                    €0
-
-                </h2>
-
-            </article>
+            <div id="categoryRevenue"></div>
 
         </section>
 
-        <!-- Main Grid -->
+        <section class="dashboard-card">
 
-        <section class="dashboard-grid">
+            <div class="dashboard-card-header">
 
-            <!-- Revenue Graph -->
+                <h2>Best Sellers</h2>
 
-            <section class="dashboard-card">
+            </div>
 
-                <div class="dashboard-card-header">
-
-                    <h2>
-
-                        Revenue
-
-                    </h2>
-
-                </div>
-
-                <div id="salesChart">
-
-                    <p>
-
-                        Revenue chart coming soon.
-
-                    </p>
-
-                </div>
-
-            </section>
-
-            <!-- Best Sellers -->
-
-            <section class="dashboard-card">
-
-                <div class="dashboard-card-header">
-
-                    <h2>
-
-                        Best Sellers
-
-                    </h2>
-
-                </div>
-
-                <div id="bestSellers">
-
-                    Loading...
-
-                </div>
-
-            </section>
-
-            <!-- Recent Sales -->
-
-            <section class="dashboard-card">
-
-                <div class="dashboard-card-header">
-
-                    <h2>
-
-                        Recent Sales
-
-                    </h2>
-
-                </div>
-
-                <div id="recentSales">
-
-                    Loading...
-
-                </div>
-
-            </section>
-
-            <!-- Business Insights -->
-
-            <section class="dashboard-card">
-
-                <div class="dashboard-card-header">
-
-                    <h2>
-
-                        Business Insights
-
-                    </h2>
-
-                </div>
-
-                <div id="salesInsights">
-
-                    <p>
-
-                        As sales come in, this section will automatically show:
-
-                    </p>
-
-                    <ul>
-
-                        <li>Best selling products</li>
-
-                        <li>Busiest sales day</li>
-
-                        <li>Average order value</li>
-
-                        <li>Revenue growth</li>
-
-                        <li>Top customers</li>
-
-                    </ul>
-
-                </div>
-
-            </section>
+            <div id="bestSellers"></div>
 
         </section>
 
-    </main>
+        <section class="dashboard-card">
+
+            <div class="dashboard-card-header">
+
+                <h2>Sales Forecast</h2>
+
+            </div>
+
+            <div id="salesForecast"></div>
+
+        </section>
+
+        <section class="dashboard-card">
+
+            <div class="dashboard-card-header">
+
+                <h2>Business Insights</h2>
+
+            </div>
+
+            <div id="salesInsights"></div>
+
+        </section>
+
+    </section>
+
+    <!-- RECENT SALES -->
+
+    <section class="dashboard-card">
+
+        <div class="dashboard-card-header">
+
+            <h2>Recent Sales</h2>
+
+        </div>
+
+        <div id="recentSales"></div>
+
+    </section>
+
+    <!-- MONTHLY REVENUE -->
+
+    <section class="dashboard-card">
+
+        <div class="dashboard-card-header">
+
+            <h2>Monthly Revenue</h2>
+
+        </div>
+
+        <div id="monthlyRevenue"></div>
+
+    </section>
+
+    <!-- PROFIT -->
+
+    <section class="dashboard-card">
+
+        <div class="dashboard-card-header">
+
+            <h2>Profit Breakdown</h2>
+
+        </div>
+
+        <div id="profitBreakdown"></div>
+
+    </section>
+
+    <!-- EXPORTS -->
+
+    <section class="dashboard-card">
+
+        <div class="dashboard-card-header">
+
+            <h2>Reports</h2>
+
+        </div>
+
+        <div class="button-row">
+
+            <button id="exportCsv" class="primary-btn">
+
+                Export CSV
+
+            </button>
+
+            <button id="exportExcel" class="primary-btn">
+
+                Export Excel
+
+            </button>
+
+            <button id="printSales" class="primary-btn">
+
+                Print Report
+
+            </button>
+
+        </div>
+
+    </section>
+
+    <!-- FOOTER STATS -->
+
+    <section class="overview-grid">
+
+        <article class="overview-card">
+
+            <span class="overview-label">
+
+                Lifetime Revenue
+
+            </span>
+
+            <h2 id="lifetimeRevenue">
+
+                €0
+
+            </h2>
+
+        </article>
+
+        <article class="overview-card">
+
+            <span class="overview-label">
+
+                Total Orders
+
+            </span>
+
+            <h2 id="lifetimeOrders">
+
+                0
+
+            </h2>
+
+        </article>
+
+        <article class="overview-card">
+
+            <span class="overview-label">
+
+                Items Sold
+
+            </span>
+
+            <h2 id="lifetimeItems">
+
+                0
+
+            </h2>
+
+        </article>
+
+        <article class="overview-card">
+
+            <span class="overview-label">
+
+                Lifetime Average Order
+
+            </span>
+
+            <h2 id="lifetimeAverage">
+
+                €0
+
+            </h2>
+
+        </article>
+
+    </section>
+
+</main>
 
 </div>
 
