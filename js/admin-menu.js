@@ -2,7 +2,11 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     await requireAuth();
 
+    setupLogout();
+
     loadMenuManager();
+
+    loadBallotManager();
 
 });
 
@@ -57,6 +61,12 @@ async function loadMenuManager() {
     menuItems = data || [];
 
     renderMenuManager();
+
+    document.getElementById("menuItemCount").textContent =
+    data.length;
+
+    document.getElementById("availableCount").textContent =
+    data.filter(item => item.available).length;
 }
 
 function renderMenuManager() {
