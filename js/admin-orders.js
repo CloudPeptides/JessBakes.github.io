@@ -540,3 +540,28 @@ function capitalize(text) {
            text.slice(1);
 
 }
+
+function escapeHtml(text) {
+
+    return String(text || "")
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#039;");
+
+}
+
+function formatDate(date) {
+
+    if (!date) return "Not set";
+
+    return new Date(date).toLocaleDateString("en-US", {
+
+        month: "short",
+        day: "numeric",
+        year: "numeric"
+
+    });
+
+}
