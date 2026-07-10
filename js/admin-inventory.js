@@ -220,9 +220,9 @@ function renderIngredientCard(ingredient) {
                 </p>
 
                 <small>
-                    ${escapeHtml(ingredient.inventory_categories?.name || "Uncategorized")}
+                    ${escapeHtml(categories.find(c => c.id === ingredient.category_id)?.name || "Uncategorized")}
                     ${
-                        ingredient.suppliers?.name
+                        suppliers.find(s => s.id === ingredient.supplier_id)?.name
                             ? ` • ${escapeHtml(ingredient.suppliers.name)}`
                             : ""
                     }
