@@ -1,12 +1,16 @@
-function renderAdminLayout(pageTitle, pageContent) {
+/* ==========================================
+   SHARED ADMIN LAYOUT
+========================================== */
+
+function renderLayout(pageTitle, content) {
 
     return `
 
 <div class="admin-shell">
 
-    <aside class="admin-sidebar">
+    <aside class="sidebar">
 
-        <div class="sidebar-logo">
+        <div class="sidebar-brand">
 
             <h2>Jess Bakes</h2>
 
@@ -16,50 +20,21 @@ function renderAdminLayout(pageTitle, pageContent) {
 
         <nav class="sidebar-nav">
 
-            <a href="admin.html"
-               class="${pageTitle === "Dashboard" ? "active" : ""}">
-                Dashboard
-            </a>
+            ${navLink("Dashboard","dashboard.html",pageTitle)}
+            ${navLink("Orders","orders.html",pageTitle)}
+            ${navLink("Menu","menu-admin.html",pageTitle)}
+            ${navLink("Reviews","reviews-admin.html",pageTitle)}
 
-            <a href="admin-orders.html"
-               class="${pageTitle === "Orders" ? "active" : ""}">
-                Orders
-            </a>
+            <hr>
 
-            <a href="admin-menu.html"
-               class="${pageTitle === "Menu" ? "active" : ""}">
-                Menu
-            </a>
+            ${navLink("Sales","sales.html",pageTitle)}
+            ${navLink("Analytics","analytics.html",pageTitle)}
+            ${navLink("Inventory","inventory.html",pageTitle)}
+            ${navLink("Gallery","gallery.html",pageTitle)}
 
-            <a href="admin-reviews.html"
-               class="${pageTitle === "Reviews" ? "active" : ""}">
-                Reviews
-            </a>
+            <hr>
 
-            <a href="admin-ballot.html"
-               class="${pageTitle === "Ballot" ? "active" : ""}">
-                Ballot
-            </a>
-
-            <a href="admin-sales.html"
-               class="${pageTitle === "Sales" ? "active" : ""}">
-                Sales
-            </a>
-
-            <a href="admin-inventory.html"
-               class="${pageTitle === "Inventory" ? "active" : ""}">
-                Inventory
-            </a>
-
-            <a href="admin-gallery.html"
-               class="${pageTitle === "Gallery" ? "active" : ""}">
-                Gallery
-            </a>
-
-            <a href="admin-settings.html"
-               class="${pageTitle === "Settings" ? "active" : ""}">
-                Settings
-            </a>
+            ${navLink("Settings","settings.html",pageTitle)}
 
         </nav>
 
@@ -73,25 +48,53 @@ function renderAdminLayout(pageTitle, pageContent) {
 
     </aside>
 
-    <main class="admin-main">
+    <main class="admin-content">
 
-        <header class="admin-topbar">
+        <header class="admin-header">
 
             <div>
 
                 <h1>${pageTitle}</h1>
 
-                <p>Welcome back, Jess.</p>
+                <p>
+
+                    Jess Bakes Sourdough Admin
+
+                </p>
 
             </div>
 
         </header>
 
-        ${pageContent}
+        ${content}
 
     </main>
 
 </div>
+
+`;
+
+}
+
+/* ==========================================
+   SIDEBAR LINKS
+========================================== */
+
+function navLink(title, href, currentPage){
+
+    return `
+
+<a
+    href="${href}"
+    class="${
+        title === currentPage
+            ? "active"
+            : ""
+    }">
+
+    ${title}
+
+</a>
 
 `;
 
