@@ -31,3 +31,13 @@ async function logout() {
     window.location.href = "admin.html";
 
 }
+
+function setupLogout() {
+
+    const button = document.getElementById("logoutBtn");
+
+    if (!button) return;
+
+    button.addEventListener("click", logout);
+
+}
