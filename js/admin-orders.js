@@ -146,21 +146,94 @@ ${renderOrderSection("Cancelled", cancelled)}
 
 function renderOrderSection(title, orders) {
 
+    const sectionId = title
+        .toLowerCase()
+        .replace(/\s+/g, "-");
+
+    const expanded =
+        orders.length > 0
+            ? "true"
+            : "false";
+
     return `
 
 <section class="order-section">
 
-<h3>${title}</h3>
+    <button
+        class="order-section-header"
+        onclick="toggleOrderSection('${sectionId}')">
 
-${
-    !orders.length
-        ? `<p class="empty-orders">None</p>`
-        : orders.map(renderOrderCard).join("")
-}
+        <div>
+
+            <h3>${title}</h3>
+
+            <small>
+
+                ${orders.length}
+                order${orders.length === 1 ? "" : "s"}
+
+            </small>
+
+        </div>
+
+        <span
+            id="${sectionId}-icon">
+
+            ${
+                orders.length
+                    ? "▼"
+                    : "►"
+            }
+
+        </span>
+
+    </button>
+
+    <div
+        id="${sectionId}"
+        style="
+            display:${
+                orders.length
+                    ? "block"
+                    : "none"
+            };
+        ">
+
+        ${
+            orders.length
+                ? orders.map(renderOrderCard).join("")
+                : `<p class="empty-orders">No orders.</p>`
+        }
+
+    </div>
 
 </section>
 
 `;
+
+}
+
+function toggleOrderSection(id){
+
+    const section =
+        document.getElementById(id);
+
+    const icon =
+        document.getElementById(id + "-icon");
+
+    if(section.style.display === "none"){
+
+        section.style.display = "block";
+
+        icon.textContent = "▼";
+
+    }else{
+
+        section.style.display = "none";
+
+        icon.textContent = "►";
+
+    }
 
 }
 
