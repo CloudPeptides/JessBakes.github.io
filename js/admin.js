@@ -69,153 +69,160 @@ function showDashboard() {
 
     </header>
 
-    <section class="overview-grid">
+   <section class="overview-grid">
 
-        <div class="overview-card">
+    <div class="overview-card">
 
-            <div class="overview-label">
+        <div class="overview-label">
 
-                Pending Reviews
-
-            </div>
-
-            <div
-                class="overview-value"
-                id="pendingReviewCount">
-
-                --
-
-            </div>
+            Pending Reviews
 
         </div>
 
-        <div class="overview-card">
+        <div
+            class="overview-value"
+            id="pendingReviewCount">
 
-            <div class="overview-label">
-
-                Orders
-
-            </div>
-
-            <div
-                class="overview-value"
-                id="orderCount">
-
-                --
-
-            </div>
+            --
 
         </div>
 
-        <div class="overview-card">
+    </div>
 
-            <div class="overview-label">
+    <div class="overview-card">
 
-                Ballot Votes
+        <div class="overview-label">
 
-            </div>
-
-            <div
-                class="overview-value"
-                id="ballotVoteCount">
-
-                --
-
-            </div>
+            Orders
 
         </div>
 
-        <div class="overview-card">
+        <div
+            class="overview-value"
+            id="orderCount">
 
-            <div class="overview-label">
+            --
 
-                Ballot Options
+        </div>
 
-            </div>
+    </div>
 
-            <div
-                class="overview-value"
-                id="ballotOptionCount">
+    <div class="overview-card">
 
-                --
+        <div class="overview-label">
 
-            </div>
+            Ballot Votes
+
+        </div>
+
+        <div
+            class="overview-value"
+            id="ballotVoteCount">
+
+            --
+
+        </div>
+
+    </div>
+
+    <div class="overview-card">
+
+        <div class="overview-label">
+
+            Ballot Options
+
+        </div>
+
+        <div
+            class="overview-value"
+            id="ballotOptionCount">
+
+            --
+
+        </div>
+
+    </div>
+
+</section>
+
+<div class="dashboard-grid">
+
+    <section class="admin-panel panel-orders">
+
+        <div class="panel-header">
+
+            <h2>Orders</h2>
+
+        </div>
+
+        <div
+            class="panel-content"
+            id="orderManager">
+
+            Loading...
 
         </div>
 
     </section>
 
-    <div class="dashboard-grid">
+    <section class="admin-panel panel-menu">
 
-        <section class="admin-panel panel-orders">
+        <div class="panel-header">
 
-            <div class="panel-header">
+            <h2>Menu</h2>
 
-                <h2>Orders</h2>
+        </div>
 
-            </div>
+        <div
+            class="panel-content"
+            id="menuManager">
 
-            <div id="orderManager">
+            Loading...
 
-                Loading...
+        </div>
 
-            </div>
+    </section>
 
-        </section>
+    <section class="admin-panel panel-reviews">
 
-        <section class="admin-panel panel-menu">
+        <div class="panel-header">
 
-            <div class="panel-header">
+            <h2>Pending Reviews</h2>
 
-                <h2>Menu</h2>
+        </div>
 
-            </div>
+        <div
+            class="panel-content"
+            id="pendingReviews">
 
-            <div id="menuManager">
+            Loading...
 
-                Loading...
+        </div>
 
-            </div>
+    </section>
 
-        </section>
+    <section class="admin-panel panel-ballot">
 
-        <section class="admin-panel panel-reviews">
+        <div class="panel-header">
 
-            <div class="panel-header">
+            <h2>Bakery Ballot</h2>
 
-                <h2>Pending Reviews</h2>
+        </div>
 
-            </div>
+        <div
+            class="panel-content"
+            id="ballotManager">
 
-            <div id="pendingReviews">
+            Loading...
 
-                Loading...
+        </div>
 
-            </div>
-
-        </section>
-
-        <section class="admin-panel panel-ballot">
-
-            <div class="panel-header">
-
-                <h2>Bakery Ballot</h2>
-
-            </div>
-
-            <div id="ballotManager">
-
-                Loading...
-
-            </div>
-
-        </section>
-
-    </div>
+    </section>
 
 </div>
 
-`;
+`
+);
 
     document
         .getElementById("logoutBtn")
