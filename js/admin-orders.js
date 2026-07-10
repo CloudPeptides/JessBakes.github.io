@@ -170,177 +170,205 @@ ${
 
 function renderOrderCard(order) {
 
-    const totalItems =
-        order.order_items.reduce(
-            (sum, item) => sum + item.quantity,
-            0
-        );
+    const totalItems = order.order_items.reduce(
+        (sum, item) => sum + item.quantity,
+        0
+    );
 
     return `
 
 <article class="order-card">
 
-<div class="order-card-header">
+    <div class="order-card-header">
 
-<div>
+        <div>
 
-<h3>${escapeHtml(order.customer_name)}</h3>
+            <h3>${escapeHtml(order.customer_name)}</h3>
 
-<p>
+            <div class="customer-contact">
 
-<span class="order-type-badge ${
-    order.order_type === "custom"
-        ? "order-type-custom"
-        : "order-type-weekly"
-}">
+                📱 ${escapeHtml(order.customer_phone)}
+
+            </div>
+
+            ${
+                order.customer_email
+                    ? `
+                        <div class="customer-contact">
+
+                            📧 ${escapeHtml(order.customer_email)}
+
+                        </div>
+                    `
+                    : ""
+            }
+
+            <div style="margin-top:10px;">
+
+                <span class="order-type-badge ${
+                    order.order_type === "custom"
+                        ? "order-type-custom"
+                        : "order-type-weekly"
+                }">
+
+                    ${
+                        order.order_type === "custom"
+                            ? "🎂 Custom Order"
+                            : "🧺 Weekly Pickup"
+                    }
+
+                </span>
+
+            </div>
+
+        </div>
+
+        <div>
+
+            <span class="status-badge status-${order.status}">
+
+                ${capitalize(order.status)}
+
+            </span>
+
+        </div>
+
+    </div>
+
+    <div class="order-meta">
+
+        <div>
+
+            <strong>
+
+                ${
+                    order.order_type === "custom"
+                        ? "Needed By"
+                        : "Pickup"
+
+                }
+
+            </strong>
+
+            <p>
+
+                ${
+                    order.order_type === "custom"
+
+                        ? (
+                            order.event_date
+                                ? formatDate(order.event_date)
+                                : "No event date selected"
+                        )
+
+                        : `
+                            ${formatDate(order.pickup_date)}
+                            <br>
+                            <small>12:30 PM</small>
+                        `
+                }
+
+            </p>
+
+        </div>
+
+        <div>
+
+            <strong>Total</strong>
+
+            <p>
+
+                €${Number(order.subtotal).toFixed(2)}
+
+            </p>
+
+        </div>
+
+        <div>
+
+            <strong>Items</strong>
+
+            <p>
+
+                ${totalItems}
+
+            </p>
+
+        </div>
+
+        <div>
+
+            <strong>Preferred Contact</strong>
+
+            <p>
+
+                ${
+                    order.preferred_contact === "email"
+                        ? "Email"
+                        : "Text Message"
+                }
+
+            </p>
+
+        </div>
+
+        <div>
+
+            <strong>Order Placed</strong>
+
+            <p>
+
+                ${formatDate(order.created_at)}
+
+            </p>
+
+        </div>
+
+    </div>
+
     ${
-        order.order_type === "custom"
-            ? "🎂 Custom Order"
-            : "🧺 Weekly Pickup"
+        order.order_type === "custom" && order.notes
+
+            ? `
+
+                <div class="order-notes">
+
+                    <strong>Special Instructions</strong>
+
+                    <p>
+
+                        ${escapeHtml(order.notes).replace(/\n/g, "<br>")}
+
+                    </p>
+
+                </div>
+
+            `
+
+            : ""
     }
-</span>
 
-<br>
+    <div class="order-items">
 
-${escapeHtml(order.customer_phone)}
+        <strong>Items Ordered</strong>
 
-${
-    order.customer_email
-        ? `<br>${escapeHtml(order.customer_email)}`
-        : ""
-}
-
-</p>
-
-</div>
-
-<div>
-
-<span class="status-badge status-${order.status}">
-
-${capitalize(order.status)}
-
-</span>
-
-</div>
-
-</div>
-
-<div class="order-meta">
-
-    <div>
-
-        <strong>Order Type</strong>
-
-        <p>
-            ${
-                order.order_type === "custom"
-                    ? "🎂 Custom Order"
-                    : "🧺 Weekly Sunday Pickup"
-            }
-        </p>
+        ${renderOrderItems(order.order_items)}
 
     </div>
 
-    <div>
+    <div class="order-actions">
 
-        <strong>
-            ${
-                order.order_type === "custom"
-                    ? "Event Date"
-                    : "Pickup"
-            }
-        </strong>
+        ${renderStatusButtons(order)}
 
-        <p>
-            ${
-                order.order_type === "custom"
-                    ? (order.event_date
-                        ? formatDate(order.event_date)
-                        : "Not Provided")
-                    : "Sunday @ 12:30 PM"
-            }
-        </p>
+        <button
+            class="delete-btn"
+            onclick="deleteOrder('${order.id}')">
+
+            Delete
+
+        </button>
 
     </div>
-
-    <div>
-
-        <strong>Total</strong>
-
-        <p>€${Number(order.subtotal).toFixed(2)}</p>
-
-    </div>
-
-    <div>
-
-        <strong>Items</strong>
-
-        <p>${totalItems}</p>
-
-    </div>
-
-    <div>
-
-        <strong>Contact Via</strong>
-
-        <p>
-            ${
-                order.preferred_contact === "email"
-                    ? "Email"
-                    : "Text Message"
-            }
-        </p>
-
-    </div>
-
-    <div>
-
-        <strong>Placed</strong>
-
-        <p>${formatDate(order.created_at)}</p>
-
-    </div>
-
-</div>
-
-${
-    order.order_type === "custom" && order.notes
-        ? `
-
-<div class="order-notes">
-
-<strong>Custom Order Details</strong>
-
-<p>${escapeHtml(order.notes).replace(/\n/g,"<br>")}</p>
-
-</div>
-
-`
-        : ""
-}
-
-<div class="order-items">
-
-<strong>Items Ordered</strong>
-
-${renderOrderItems(order.order_items)}
-
-</div>
-
-<div class="order-actions">
-
-${renderStatusButtons(order)}
-
-<button
-class="delete-btn"
-onclick="deleteOrder('${order.id}')">
-
-Delete
-
-</button>
-
-</div>
 
 </article>
 
@@ -358,29 +386,43 @@ function renderOrderItems(items) {
         return `<p>No items.</p>`;
     }
 
-    return items.map(item => `
-        <div class="order-item-row">
+    return `
 
-            <div>
+        <div class="order-items-list">
 
-                <strong>${escapeHtml(item.item_name)}</strong>
+            ${items.map(item => `
 
-                <small>
-                    €${Number(item.price_at_purchase).toFixed(2)}
-                    ×
-                    ${item.quantity}
-                </small>
+                <div class="order-item-row">
 
-            </div>
+                    <div class="order-item-left">
 
-            <div>
+                        <span class="order-item-qty">
 
-                €${Number(item.line_total).toFixed(2)}
+                            ${item.quantity}×
 
-            </div>
+                        </span>
+
+                        <span class="order-item-name">
+
+                            ${escapeHtml(item.item_name)}
+
+                        </span>
+
+                    </div>
+
+                    <div class="order-item-right">
+
+                        €${Number(item.line_total).toFixed(2)}
+
+                    </div>
+
+                </div>
+
+            `).join("")}
 
         </div>
-    `).join("");
+
+    `;
 
 }
 
