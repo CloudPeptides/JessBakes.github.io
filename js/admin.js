@@ -37,74 +37,73 @@ function showDashboard() {
     dashboard.style.display = "block";
 
     dashboard.innerHTML = `
-        <div class="dashboard-container">
+        <div class="dashboard-grid">
 
-            <header class="dashboard-header">
-                <div>
-                    <p class="eyebrow">Jess Bakes Sourdough</p>
-                    <h1>Admin Dashboard</h1>
-                    <p>Manage your website from one place.</p>
-                </div>
+    <section class="admin-panel panel-orders">
 
-                <button class="logout-btn" id="logoutBtn">
-                    Sign Out
-                </button>
-            </header>
+        <div class="panel-header">
 
-            <section class="overview-grid">
-                <div class="overview-card">
-                    <h3>Pending Reviews</h3>
-                    <span id="pendingReviewCount">--</span>
-                </div>
-
-                <div class="overview-card">
-                    <h3>Ballot Votes</h3>
-                    <span id="ballotVoteCount">--</span>
-                </div>
-
-                <div class="overview-card">
-                    <h3>Ballot Options</h3>
-                    <span id="ballotOptionCount">--</span>
-                </div>
-
-                <div class="overview-card">
-                    <h3>Orders</h3>
-                    <span id="orderCount">--</span>
-                </div>
-            </section>
-
-            <section class="admin-panel">
-                <div class="panel-header">
-                    <h2>Pending Reviews</h2>
-                </div>
-                <div id="pendingReviews">Loading...</div>
-            </section>
-
-            <section class="admin-panel">
-                <div class="panel-header">
-                    <h2>Bakery Ballot</h2>
-                </div>
-                <div id="ballotManager">Loading...</div>
-            </section>
-
-            <section class="admin-panel">
-                <div class="panel-header">
-                    <h2>Menu</h2>
-                </div>
-                <div id="menuManager">Coming Soon</div>
-            </section>
-
-            <section class="admin-panel">
-                <div class="panel-header">
-                    <h2>Orders</h2>
-                </div>
-
-                <div id="orderManager">
-                    Loading...
-                </div>
-            </section>
+            <h2>Orders</h2>
 
         </div>
+
+        <div id="orderManager">
+
+            Loading...
+
+        </div>
+
+    </section>
+
+    <section class="admin-panel panel-menu">
+
+        <div class="panel-header">
+
+            <h2>Menu</h2>
+
+        </div>
+
+        <div id="menuManager">
+
+            Loading...
+
+        </div>
+
+    </section>
+
+    <section class="admin-panel panel-reviews">
+
+        <div class="panel-header">
+
+            <h2>Pending Reviews</h2>
+
+        </div>
+
+        <div id="pendingReviews">
+
+            Loading...
+
+        </div>
+
+    </section>
+
+    <section class="admin-panel panel-ballot">
+
+        <div class="panel-header">
+
+            <h2>Bakery Ballot</h2>
+
+        </div>
+
+        <div id="ballotManager">
+
+            Loading...
+
+        </div>
+
+    </section>
+
+</div>
     `;
 
     document.getElementById("logoutBtn").addEventListener("click", logout);
