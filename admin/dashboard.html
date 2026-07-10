@@ -89,85 +89,120 @@
 
     <main class="admin-content">
 
-        <header class="admin-header">
+        <header class="dashboard-header">
 
-            <div>
+    <div>
 
-                <h1>Dashboard</h1>
+        <p class="dashboard-greeting"
+           id="dashboardGreeting">
 
-                <p>
-                    Welcome back, Jess.
-                </p>
+            Hi,
 
-            </div>
+        </p>
 
-        </header>
+        <h1>
+
+            Jess 👋
+
+        </h1>
+
+        <p
+            class="dashboard-date"
+            id="dashboardDate">
+
+            Loading...
+
+        </p>
+
+    </div>
+
+</header>
 
         <!-- KPI CARDS -->
 
         <section class="overview-grid">
 
-            <div class="overview-card">
+    <article class="overview-card">
 
-                <div class="overview-label">
-                    Pending Orders
-                </div>
+        <span class="overview-label">
 
-                <div class="overview-value"
-                     id="orderCount">
+            Revenue Today
 
-                    --
+        </span>
 
-                </div>
+        <h2 id="salesToday">
 
-            </div>
+            €0
 
-            <div class="overview-card">
+        </h2>
 
-                <div class="overview-label">
-                    Pending Reviews
-                </div>
+    </article>
 
-                <div class="overview-value"
-                     id="pendingReviewCount">
+    <article class="overview-card">
 
-                    --
+        <span class="overview-label">
 
-                </div>
+            Revenue This Week
 
-            </div>
+        </span>
 
-            <div class="overview-card">
+        <h2 id="salesWeek">
 
-                <div class="overview-label">
-                    Ballot Votes
-                </div>
+            €0
 
-                <div class="overview-value"
-                     id="ballotVoteCount">
+        </h2>
 
-                    --
+    </article>
 
-                </div>
+    <article class="overview-card">
 
-            </div>
+        <span class="overview-label">
 
-            <div class="overview-card">
+            Pending Orders
 
-                <div class="overview-label">
-                    Ballot Options
-                </div>
+        </span>
 
-                <div class="overview-value"
-                     id="ballotOptionCount">
+        <h2 id="orderCount">
 
-                    --
+            --
 
-                </div>
+        </h2>
 
-            </div>
+    </article>
 
-        </section>
+    <article class="overview-card">
+
+        <span class="overview-label">
+
+            Pending Reviews
+
+        </span>
+
+        <h2 id="pendingReviewCount">
+
+            --
+
+        </h2>
+
+    </article>
+
+    <article class="overview-card">
+
+        <span class="overview-label">
+
+            Low Inventory
+
+        </span>
+
+        <h2 id="inventoryAlerts">
+
+            --
+
+        </h2>
+
+    </article>
+
+</section>
 
         <!-- QUICK ACTIONS -->
 
