@@ -1566,3 +1566,143 @@ body{
     background:transparent;
 
 }
+
+/* ==========================================
+   ADMIN SHELL
+========================================== */
+
+.admin-shell{
+
+    display:grid;
+
+    grid-template-columns:280px 1fr;
+
+    min-height:100vh;
+
+}
+
+.admin-sidebar{
+
+    background:#fff;
+
+    border-right:1px solid #e8ddd5;
+
+    padding:40px 24px;
+
+    position:sticky;
+
+    top:0;
+
+    height:100vh;
+
+}
+
+.sidebar-logo{
+
+    margin-bottom:48px;
+
+}
+
+.sidebar-logo h2{
+
+    margin:0;
+
+    color:#5d2018;
+
+}
+
+.sidebar-logo span{
+
+    font-size:.8rem;
+
+    letter-spacing:.25em;
+
+    color:#a28d80;
+
+}
+
+.sidebar-nav{
+
+    display:flex;
+
+    flex-direction:column;
+
+    gap:8px;
+
+}
+
+.sidebar-nav a{
+
+    text-decoration:none;
+
+    color:#5d2018;
+
+    padding:14px 18px;
+
+    border-radius:14px;
+
+    font-weight:600;
+
+    transition:.2s;
+
+}
+
+.sidebar-nav a:hover{
+
+    background:#f7f2ee;
+
+}
+
+.sidebar-nav a.active{
+
+    background:#5d2018;
+
+    color:white;
+
+}
+
+.admin-main{
+
+    padding:48px;
+
+}
+
+.admin-topbar{
+
+    display:flex;
+
+    justify-content:space-between;
+
+    align-items:center;
+
+    margin-bottom:40px;
+
+}
+
+.admin-topbar h1{
+
+    margin:0;
+
+}
+
+@media(max-width:1000px){
+
+    .admin-shell{
+
+        grid-template-columns:1fr;
+
+    }
+
+    .admin-sidebar{
+
+        position:relative;
+
+        height:auto;
+
+        border-right:none;
+
+        border-bottom:1px solid #eee;
+
+    }
+
+}
