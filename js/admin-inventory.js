@@ -183,67 +183,104 @@ function renderLowStockAlerts() {
 }
 
 function renderIngredients() {
+
     const container = document.getElementById("ingredientsTable");
 
     if (!container) return;
 
     const search =
-        document.getElementById("inventorySearch")?.value
+        document.getElementById("inventorySearch")
+            ?.value
             .toLowerCase()
             .trim() || "";
 
-    const filtered = ingredients.filter(ingredient => {
-        return ingredient.name.toLowerCase().includes(search);
-    });
+    const filtered = ingredients.filter(ingredient =>
+        ingredient.name.toLowerCase().includes(search)
+    );
 
     if (!filtered.length) {
-        container.innerHTML = "<p>No ingredients found.</p>";
+
+        container.innerHTML = `
+            <p>No ingredients found.</p>
+        `;
+
         return;
+
     }
 
-    container.innerHTML = `
-        <div class="inventory-list">
-            ${filtered.map(renderIngredientCard).join("")}
-        </div>
-    `;
+    const grouped = {};
+
+    filtered.forEach(ingredient => {
+
+        const category =
+            categories.find(c => c.id === ingredient.category_id);
+
+        const name = category?.name || "Other";
+
+        if (!grouped[name]) {
+
+            grouped[name] = [];
+
+        }
+
+        grouped[name].push(ingredient);
+
+    });
+
+    container.innerHTML = Object.entries(grouped)
+        .map(([categoryName, items]) => `
+
+            <section class="inventory-category">
+
+                <button
+                    class="inventory-category-header"
+                    onclick="toggleInventoryCategory(this)">
+
+                    <div>
+
+                        <h3>${escapeHtml(categoryName)}</h3>
+
+                        <small>${items.length} item${items.length === 1 ? "" : "s"}</small>
+
+                    </div>
+
+                    <span>▼</span>
+
+                </button>
+
+                <div class="inventory-category-body">
+
+                    ${items
+                        .sort((a, b) => a.name.localeCompare(b.name))
+                        .map(renderIngredientRow)
+                        .join("")}
+
+                </div>
+
+            </section>
+
+        `)
+        .join("");
+
 }
 
-function renderIngredientCard(ingredient) {
-
-    const category =
-        categories.find(
-            category => category.id === ingredient.category_id
-        );
+function renderIngredientRow(ingredient) {
 
     const supplier =
-        suppliers.find(
-            supplier => supplier.id === ingredient.supplier_id
-        );
+        suppliers.find(s => s.id === ingredient.supplier_id);
 
     return `
-        <article class="inventory-card ${isLowStock(ingredient) ? "is-low-stock" : ""}">
 
-            <div>
+        <div class="inventory-row ${isLowStock(ingredient) ? "inventory-low" : ""}">
 
-                <h3>${escapeHtml(ingredient.name)}</h3>
+            <div class="inventory-name">
 
-                <p>
-
-                    ${formatQuantity(ingredient.quantity_on_hand)}
-                    ${escapeHtml(ingredient.purchase_unit)}
-                    on hand
-
-                </p>
+                <strong>${escapeHtml(ingredient.name)}</strong>
 
                 <small>
 
-                    ${escapeHtml(category?.name || "Uncategorized")}
-
-                    ${
-                        supplier
-                            ? ` • ${escapeHtml(supplier.name)}`
-                            : ""
-                    }
+                    ${formatQuantity(ingredient.quantity_on_hand)}
+                    ${escapeHtml(ingredient.purchase_unit)}
 
                 </small>
 
@@ -251,27 +288,21 @@ function renderIngredientCard(ingredient) {
 
             <div>
 
-                <strong>
+                ${usd(ingredient.purchase_price)}
 
-                    ${usd(ingredient.purchase_price)}
+            </div>
 
-                    /
+            <div>
 
-                    ${formatQuantity(ingredient.purchase_size)}
+                Min
 
-                    ${escapeHtml(ingredient.purchase_unit)}
+                ${formatQuantity(ingredient.minimum_quantity)}
 
-                </strong>
+            </div>
 
-                <small>
+            <div>
 
-                    Minimum:
-
-                    ${formatQuantity(ingredient.minimum_quantity)}
-
-                    ${escapeHtml(ingredient.purchase_unit)}
-
-                </small>
+                ${supplier ? escapeHtml(supplier.name) : "-"}
 
             </div>
 
@@ -281,7 +312,7 @@ function renderIngredientCard(ingredient) {
                     class="primary-btn"
                     onclick="openRestockModal('${ingredient.id}')">
 
-                    + Stock
+                    Stock
 
                 </button>
 
@@ -303,7 +334,8 @@ function renderIngredientCard(ingredient) {
 
             </div>
 
-        </article>
+        </div>
+
     `;
 
 }
@@ -1210,6 +1242,31 @@ function escapeJs(value) {
 }
 
 
+function toggleInventoryCategory(button) {
+
+    const body =
+        button.nextElementSibling;
+
+    const arrow =
+        button.querySelector("span");
+
+    if (body.style.display === "none") {
+
+        body.style.display = "block";
+
+        arrow.textContent = "▼";
+
+    } else {
+
+        body.style.display = "none";
+
+        arrow.textContent = "►";
+
+    }
+
+}
+
+
 /*==================================================
     GLOBAL EXPORTS
 ==================================================*/
@@ -1233,3 +1290,4 @@ window.deleteRecipe = deleteRecipe;
 window.duplicateRecipe = duplicateRecipe;
 
 window.printShoppingList = printShoppingList;
+window.toggleInventoryCategory = toggleInventoryCategory;
