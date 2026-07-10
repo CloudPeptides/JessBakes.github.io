@@ -1289,3 +1289,63 @@ h3 {
     }
 
 }
+
+/* ==========================================
+   PICKUP INFORMATION
+========================================== */
+
+.pickup-info-card{
+
+    margin-top:12px;
+
+    padding:18px;
+
+    border-radius:14px;
+
+    background:#faf7f4;
+
+    border:1px solid #e6d8cc;
+
+    color:#5b4334;
+
+    line-height:1.6;
+
+}
+
+.pickup-info-card strong{
+
+    color:#6e2418;
+
+    font-size:1rem;
+
+}
+
+.pickup-date{
+
+    margin-top:12px;
+
+    padding:12px;
+
+    border-radius:10px;
+
+    background:white;
+
+    border:1px solid #ead9cb;
+
+}
+
+.pickup-date h4{
+
+    margin:0 0 6px;
+
+    color:#6e2418;
+
+}
+
+.pickup-date p{
+
+    margin:0;
+
+    font-weight:600;
+
+}
