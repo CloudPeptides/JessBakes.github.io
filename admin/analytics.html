@@ -73,9 +73,11 @@
 
     </aside>
 
-    <main class="admin-content">
+   <main class="admin-content">
 
-        <header class="admin-header">
+    <header class="admin-header">
+
+        <div>
 
             <h1>
 
@@ -85,29 +87,271 @@
 
             <p>
 
-                Customer insights and business trends.
+                Customer trends, product performance, and bakery insights.
 
             </p>
 
-        </header>
+        </div>
 
-        <section class="dashboard-section">
+    </header>
 
-            <h2>
+    <!-- FILTERS -->
 
-                Coming Soon
+    <section class="sales-filters">
+
+        <button class="filter-btn active">
+
+            30 Days
+
+        </button>
+
+        <button class="filter-btn">
+
+            90 Days
+
+        </button>
+
+        <button class="filter-btn">
+
+            Year
+
+        </button>
+
+        <button class="filter-btn">
+
+            All Time
+
+        </button>
+
+    </section>
+
+    <!-- OVERVIEW -->
+
+    <section class="overview-grid">
+
+        <article class="overview-card">
+
+            <span class="overview-label">
+
+                Total Customers
+
+            </span>
+
+            <h2 id="totalCustomers">
+
+                0
 
             </h2>
 
-            <p>
+        </article>
 
-                Best sellers, busiest pickup days, repeat customers, seasonal trends, and conversion metrics will be displayed here.
+        <article class="overview-card">
 
-            </p>
+            <span class="overview-label">
+
+                Returning Customers
+
+            </span>
+
+            <h2 id="returningCustomers">
+
+                0
+
+            </h2>
+
+        </article>
+
+        <article class="overview-card">
+
+            <span class="overview-label">
+
+                Items Sold
+
+            </span>
+
+            <h2 id="itemsSold">
+
+                0
+
+            </h2>
+
+        </article>
+
+        <article class="overview-card">
+
+            <span class="overview-label">
+
+                Average Items / Order
+
+            </span>
+
+            <h2 id="averageItems">
+
+                0
+
+            </h2>
+
+        </article>
+
+    </section>
+
+    <!-- CHARTS -->
+
+    <section class="dashboard-grid">
+
+        <section class="dashboard-card">
+
+            <div class="dashboard-card-header">
+
+                <h2>
+
+                    Orders Over Time
+
+                </h2>
+
+            </div>
+
+            <canvas id="ordersChart"></canvas>
 
         </section>
 
-    </main>
+        <section class="dashboard-card">
+
+            <div class="dashboard-card-header">
+
+                <h2>
+
+                    Product Popularity
+
+                </h2>
+
+            </div>
+
+            <canvas id="productChart"></canvas>
+
+        </section>
+
+    </section>
+
+    <!-- INSIGHTS -->
+
+    <section class="dashboard-grid">
+
+        <section class="dashboard-card">
+
+            <div class="dashboard-card-header">
+
+                <h2>
+
+                    Product Rankings
+
+                </h2>
+
+            </div>
+
+            <div id="productRankings">
+
+            </div>
+
+        </section>
+
+        <section class="dashboard-card">
+
+            <div class="dashboard-card-header">
+
+                <h2>
+
+                    Customer Insights
+
+                </h2>
+
+            </div>
+
+            <div id="customerInsights">
+
+            </div>
+
+        </section>
+
+        <section class="dashboard-card">
+
+            <div class="dashboard-card-header">
+
+                <h2>
+
+                    Pickup Trends
+
+                </h2>
+
+            </div>
+
+            <div id="pickupTrends">
+
+            </div>
+
+        </section>
+
+        <section class="dashboard-card">
+
+            <div class="dashboard-card-header">
+
+                <h2>
+
+                    Bakery Insights
+
+                </h2>
+
+            </div>
+
+            <div id="bakeryInsights">
+
+            </div>
+
+        </section>
+
+    </section>
+
+    <!-- TOP CUSTOMERS -->
+
+    <section class="dashboard-card">
+
+        <div class="dashboard-card-header">
+
+            <h2>
+
+                Top Customers
+
+            </h2>
+
+        </div>
+
+        <div id="topCustomers">
+
+        </div>
+
+    </section>
+
+    <!-- PRODUCT BREAKDOWN -->
+
+    <section class="dashboard-card">
+
+        <div class="dashboard-card-header">
+
+            <h2>
+
+                Product Breakdown
+
+            </h2>
+
+        </div>
+
+        <div id="productBreakdown">
+
+        </div>
+
+    </section>
+
+</main>
 
 </div>
 
