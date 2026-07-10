@@ -183,7 +183,7 @@ function ensureCheckoutModal() {
             <form id="checkoutForm" class="checkout-form">
 
                 <div class="form-group">
-                    <label>Name</label>
+                    <label>Full Name(First and Last)</label>
                     <input
                         id="customerName"
                         type="text"
