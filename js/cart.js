@@ -529,9 +529,6 @@ async function submitOrder(event) {
     let pickup_date = null;
     let event_date = null;
 
-  let pickup_date = null;
-let event_date = null;
-
 if (order_type === "weekly") {
 
     pickup_date = getNextPickupDate()
