@@ -85,19 +85,20 @@ async function loadIngredients() {
     const { data, error } = await supabaseClient
         .from("ingredients")
         .select("*")
-        .order("name");
-
-    console.log("DATA:", data);
-    console.log("ERROR:", error);
+        .order("name", { ascending: true });
 
     if (error) {
+
         console.error(error);
+
+        ingredients = [];
+
         return;
+
     }
 
     ingredients = data || [];
 
-    renderIngredients();
 }
 
 async function loadRecipes() {
@@ -208,57 +209,103 @@ function renderIngredients() {
 }
 
 function renderIngredientCard(ingredient) {
+
+    const category =
+        categories.find(
+            category => category.id === ingredient.category_id
+        );
+
+    const supplier =
+        suppliers.find(
+            supplier => supplier.id === ingredient.supplier_id
+        );
+
     return `
         <article class="inventory-card ${isLowStock(ingredient) ? "is-low-stock" : ""}">
+
             <div>
+
                 <h3>${escapeHtml(ingredient.name)}</h3>
 
                 <p>
+
                     ${formatQuantity(ingredient.quantity_on_hand)}
                     ${escapeHtml(ingredient.purchase_unit)}
                     on hand
+
                 </p>
 
                 <small>
-                    ${escapeHtml(categories.find(c => c.id === ingredient.category_id)?.name || "Uncategorized")}
+
+                    ${escapeHtml(category?.name || "Uncategorized")}
+
                     ${
-                        suppliers.find(s => s.id === ingredient.supplier_id)?.name
-                            ? ` • ${escapeHtml(ingredient.suppliers.name)}`
+                        supplier
+                            ? ` • ${escapeHtml(supplier.name)}`
                             : ""
                     }
+
                 </small>
+
             </div>
 
             <div>
+
                 <strong>
+
                     ${usd(ingredient.purchase_price)}
+
                     /
+
                     ${formatQuantity(ingredient.purchase_size)}
+
                     ${escapeHtml(ingredient.purchase_unit)}
+
                 </strong>
 
                 <small>
+
                     Minimum:
+
                     ${formatQuantity(ingredient.minimum_quantity)}
+
                     ${escapeHtml(ingredient.purchase_unit)}
+
                 </small>
+
             </div>
 
             <div class="inventory-actions">
-                <button class="primary-btn" onclick="openRestockModal('${ingredient.id}')">
+
+                <button
+                    class="primary-btn"
+                    onclick="openRestockModal('${ingredient.id}')">
+
                     + Stock
+
                 </button>
 
-                <button class="edit-option-btn" onclick="openIngredientModal('${ingredient.id}')">
+                <button
+                    class="edit-option-btn"
+                    onclick="openIngredientModal('${ingredient.id}')">
+
                     Edit
+
                 </button>
 
-                <button class="delete-btn" onclick="deleteIngredient('${ingredient.id}', '${escapeJs(ingredient.name)}')">
+                <button
+                    class="delete-btn"
+                    onclick="deleteIngredient('${ingredient.id}', '${escapeJs(ingredient.name)}')">
+
                     Delete
+
                 </button>
+
             </div>
+
         </article>
     `;
+
 }
 
 
