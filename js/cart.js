@@ -267,6 +267,8 @@ function ensureCheckoutModal() {
                    placeholder="Anything you feel I need to know">
                   </textarea>
 
+                  </div>
+
                 <button
                     type="submit"
                     class="primary-btn">
