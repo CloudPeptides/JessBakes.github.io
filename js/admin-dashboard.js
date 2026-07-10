@@ -40,10 +40,253 @@ async function loadDashboardOrders() {
 
     const orders = data || [];
 
-    document.getElementById("orderCount").textContent =
-        orders.filter(o => o.status === "pending").length;
+    const pendingOrders =
+        orders.filter(o => o.status === "pending");
 
-    renderRecentOrders(orders.slice(0,5));
+    document.getElementById("orderCount").textContent =
+        pendingOrders.length;
+
+    renderRecentOrders(
+        orders.slice(0,5)
+    );
+
+    calculateRevenue(orders);
+
+    renderUpcomingPickups(orders);
+
+    buildNotifications(orders);
+
+}
+
+/* ==========================================
+   REVENUE
+========================================== */
+
+function calculateRevenue(orders){
+
+    const today = new Date();
+
+    let todayTotal = 0;
+
+    let weekTotal = 0;
+
+    orders.forEach(order => {
+
+        if(order.status === "cancelled")
+            return;
+
+        const orderDate =
+            new Date(order.created_at);
+
+        const subtotal =
+            Number(order.subtotal) || 0;
+
+        if(isSameDay(today, orderDate)){
+
+            todayTotal += subtotal;
+
+        }
+
+        if(isThisWeek(today, orderDate)){
+
+            weekTotal += subtotal;
+
+        }
+
+    });
+
+    document.getElementById("salesToday").textContent =
+        euro(todayTotal);
+
+    document.getElementById("salesWeek").textContent =
+        euro(weekTotal);
+
+}
+
+function euro(value){
+
+    return new Intl.NumberFormat(
+
+        "de-DE",
+
+        {
+
+            style:"currency",
+
+            currency:"EUR"
+
+        }
+
+    ).format(value);
+
+}
+
+function isSameDay(a,b){
+
+    return a.getFullYear()===b.getFullYear()
+
+        &&
+
+        a.getMonth()===b.getMonth()
+
+        &&
+
+        a.getDate()===b.getDate();
+
+}
+
+function isThisWeek(today,date){
+
+    const start =
+        new Date(today);
+
+    start.setDate(
+        today.getDate()-today.getDay()
+    );
+
+    start.setHours(0,0,0,0);
+
+    return date>=start;
+
+}
+
+/* ==========================================
+   UPCOMING PICKUPS
+========================================== */
+
+function renderUpcomingPickups(orders){
+
+    const container =
+        document.getElementById("upcomingPickups");
+
+    const upcoming =
+        orders
+
+        .filter(o =>
+            o.status==="confirmed"
+            ||
+
+            o.status==="ready"
+        )
+
+        .sort((a,b)=>
+
+            new Date(a.pickup_date)
+
+            -
+
+            new Date(b.pickup_date)
+
+        )
+
+        .slice(0,5);
+
+    if(!upcoming.length){
+
+        container.innerHTML=
+
+        "<p>No upcoming pickups.</p>";
+
+        return;
+
+    }
+
+    container.innerHTML=
+
+        upcoming.map(order=>`
+
+<div class="dashboard-order">
+
+<div>
+
+<strong>
+
+${escapeHtml(order.customer_name)}
+
+</strong>
+
+<small>
+
+${formatDate(order.pickup_date)}
+
+</small>
+
+</div>
+
+<span>
+
+${escapeHtml(order.pickup_type || "Sunday Pickup")}
+
+</span>
+
+</div>
+
+`).join("");
+
+}
+
+/* ==========================================
+   NOTIFICATIONS
+========================================== */
+
+function buildNotifications(orders){
+
+    const panel =
+        document.getElementById("notificationsPanel");
+
+    const notes=[];
+
+    const pending =
+        orders.filter(o=>o.status==="pending").length;
+
+    if(pending){
+
+        notes.push(
+
+            `📦 ${pending} pending order${pending>1?"s":""}`
+
+        );
+
+    }
+
+    const custom =
+        orders.filter(
+
+            o=>o.pickup_type==="custom"
+
+        ).length;
+
+    if(custom){
+
+        notes.push(
+
+            `🎉 ${custom} custom order${custom>1?"s":""}`
+
+        );
+
+    }
+
+    if(!notes.length){
+
+        notes.push(
+
+            "Everything looks good today."
+
+        );
+
+    }
+
+    panel.innerHTML=
+
+        notes.map(note=>`
+
+<div class="notification-item">
+
+${note}
+
+</div>
+
+`).join("");
 
 }
 
