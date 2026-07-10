@@ -786,9 +786,9 @@ async function loadMenuItems() {
     const { data, error } = await supabaseClient
         .from("menu_items")
         .select("*")
-        .eq("active", true)
-        .order("category")
-        .order("display_order");
+        .eq("available", true)
+        .order("category", { ascending: true })
+        .order("sort_order", { ascending: true });
 
     if (error) {
 
@@ -798,6 +798,10 @@ async function loadMenuItems() {
 
     }
 
+    console.log(data);
+
     menuItems = data || [];
+
+    console.log(menuItems);
 
 }
