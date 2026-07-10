@@ -1391,3 +1391,81 @@ body{
     }
 
 }
+
+
+/* ==========================================
+   DESKTOP DASHBOARD LAYOUT
+========================================== */
+
+@media (min-width:1100px){
+
+    .dashboard-container{
+        max-width:1800px;
+        margin:40px auto;
+        padding:0 36px;
+        display:grid;
+        grid-template-columns:repeat(12,1fr);
+        gap:28px;
+        align-items:start;
+    }
+
+    .dashboard-header{
+        grid-column:1 / -1;
+        margin-bottom:10px;
+    }
+
+    .overview-grid{
+        grid-column:1 / -1;
+        margin-bottom:8px;
+    }
+
+    .admin-panel{
+        margin-bottom:0;
+        min-width:0;
+    }
+
+    .admin-panel:has(#orderManager){
+        grid-column:1 / span 6;
+        order:1;
+    }
+
+    .admin-panel:has(#menuManager){
+        grid-column:7 / span 6;
+        order:2;
+    }
+
+    .admin-panel:has(#pendingReviews){
+        grid-column:1 / span 6;
+        order:3;
+    }
+
+    .admin-panel:has(#ballotManager){
+        grid-column:7 / span 6;
+        order:4;
+    }
+
+}
+
+/* ==========================================
+   WIDE DESKTOP
+========================================== */
+
+@media (min-width:1500px){
+
+    .admin-panel:has(#orderManager){
+        grid-column:1 / span 7;
+    }
+
+    .admin-panel:has(#menuManager){
+        grid-column:8 / span 5;
+    }
+
+    .admin-panel:has(#pendingReviews){
+        grid-column:1 / span 5;
+    }
+
+    .admin-panel:has(#ballotManager){
+        grid-column:6 / span 7;
+    }
+
+}
