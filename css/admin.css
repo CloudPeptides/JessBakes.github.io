@@ -2175,3 +2175,89 @@ body{
     line-height:1.5;
 
 }
+
+    /* ==========================================
+   ORDER ITEMS
+========================================== */
+
+.order-items-list{
+
+    margin-top:12px;
+
+    border:1px solid #ece5dd;
+
+    border-radius:12px;
+
+    overflow:hidden;
+
+    background:white;
+
+}
+
+.order-item-row{
+
+    display:flex;
+
+    justify-content:space-between;
+
+    align-items:center;
+
+    padding:14px 18px;
+
+    border-bottom:1px solid #f3eee9;
+
+}
+
+.order-item-row:last-child{
+
+    border-bottom:none;
+
+}
+
+.order-item-left{
+
+    display:flex;
+
+    align-items:center;
+
+    gap:12px;
+
+}
+
+.order-item-qty{
+
+    width:32px;
+
+    height:32px;
+
+    border-radius:50%;
+
+    background:#f6efe8;
+
+    color:#6e2418;
+
+    display:flex;
+
+    align-items:center;
+
+    justify-content:center;
+
+    font-weight:700;
+
+    flex-shrink:0;
+
+}
+
+.order-item-name{
+
+    font-weight:600;
+
+}
+
+.order-item-right{
+
+    font-weight:700;
+
+    color:#6e2418;
+
+}
