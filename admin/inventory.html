@@ -73,42 +73,245 @@
 
     </aside>
 
-    <main class="admin-content">
+   <main class="admin-content">
 
-        <header class="admin-header">
+    <header class="admin-header">
 
-            <h1>
+        <div>
 
-                Inventory
-
-            </h1>
+            <h1>Inventory</h1>
 
             <p>
 
-                Recipes, ingredients, costs, and stock levels.
+                Ingredients, recipes, costs, and shopping.
 
             </p>
 
-        </header>
+        </div>
 
-        <section class="dashboard-section">
+    </header>
 
-            <h2>
+    <!-- TOP CARDS -->
 
-                Coming Soon
+    <section class="overview-grid">
+
+        <article class="overview-card">
+
+            <span class="overview-label">
+
+                Ingredients
+
+            </span>
+
+            <h2 id="ingredientCount">
+
+                0
 
             </h2>
 
-            <p>
+        </article>
 
-                This page will manage recipes, ingredient inventory, supplier pricing, shopping lists, food cost, and profit calculations.
+        <article class="overview-card">
 
-            </p>
+            <span class="overview-label">
+
+                Low Stock
+
+            </span>
+
+            <h2 id="lowStockCount">
+
+                0
+
+            </h2>
+
+        </article>
+
+        <article class="overview-card">
+
+            <span class="overview-label">
+
+                Inventory Value
+
+            </span>
+
+            <h2 id="inventoryValue">
+
+                €0
+
+            </h2>
+
+        </article>
+
+        <article class="overview-card">
+
+            <span class="overview-label">
+
+                Recipes
+
+            </span>
+
+            <h2 id="recipeCount">
+
+                0
+
+            </h2>
+
+        </article>
+
+    </section>
+
+    <!-- ACTIONS -->
+
+    <section class="button-row">
+
+        <button
+            class="primary-btn"
+            id="addIngredient">
+
+            Add Ingredient
+
+        </button>
+
+        <button
+            class="primary-btn"
+            id="addRecipe">
+
+            Add Recipe
+
+        </button>
+
+        <button
+            class="primary-btn"
+            id="shoppingList">
+
+            Shopping List
+
+        </button>
+
+        <button
+            class="primary-btn"
+            id="printInventory">
+
+            Print Inventory
+
+        </button>
+
+    </section>
+
+    <!-- LOW STOCK -->
+
+    <section class="dashboard-card">
+
+        <div class="dashboard-card-header">
+
+            <h2>
+
+                Low Stock Alerts
+
+            </h2>
+
+        </div>
+
+        <div id="lowStockAlerts">
+
+            Loading...
+
+        </div>
+
+    </section>
+
+    <!-- MAIN GRID -->
+
+    <section class="dashboard-grid">
+
+        <section class="dashboard-card">
+
+            <div class="dashboard-card-header">
+
+                <h2>
+
+                    Ingredients
+
+                </h2>
+
+            </div>
+
+            <div id="ingredientsTable">
+
+                Loading...
+
+            </div>
 
         </section>
 
-    </main>
+        <section class="dashboard-card">
 
+            <div class="dashboard-card-header">
+
+                <h2>
+
+                    Recipes
+
+                </h2>
+
+            </div>
+
+            <div id="recipesList">
+
+                Loading...
+
+            </div>
+
+        </section>
+
+    </section>
+
+    <!-- COSTING -->
+
+    <section class="dashboard-card">
+
+        <div class="dashboard-card-header">
+
+            <h2>
+
+                Recipe Costing
+
+            </h2>
+
+        </div>
+
+        <div id="recipeCosting">
+
+            Loading...
+
+        </div>
+
+    </section>
+
+    <!-- SHOPPING -->
+
+    <section class="dashboard-card">
+
+        <div class="dashboard-card-header">
+
+            <h2>
+
+                Shopping List
+
+            </h2>
+
+        </div>
+
+        <div id="shoppingListContainer">
+
+            Loading...
+
+        </div>
+
+    </section>
+
+</main>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
