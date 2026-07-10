@@ -318,61 +318,275 @@
 
         <!-- RECENT ORDERS -->
 
-        <section class="dashboard-section">
+       <section class="dashboard-grid">
 
-            <div class="section-title">
+    <section class="dashboard-card">
 
-                <h2>
+        <div class="dashboard-card-header">
 
-                    Recent Orders
+            <h2>
 
-                </h2>
+                Recent Orders
 
-                <a href="orders.html">
+            </h2>
 
-                    View All →
+            <a href="orders.html">
 
-                </a>
+                View All →
 
-            </div>
+            </a>
 
-            <div id="recentOrders">
+        </div>
 
-                Loading...
+        <div id="recentOrders">
 
-            </div>
+            Loading...
 
-        </section>
+        </div>
 
-        <!-- PENDING REVIEWS -->
+    </section>
 
-        <section class="dashboard-section">
+         <section class="dashboard-card">
 
-            <div class="section-title">
+        <div class="dashboard-card-header">
 
-                <h2>
+            <h2>
 
-                    Pending Reviews
+                Notifications
 
-                </h2>
+            </h2>
 
-                <a href="reviews.html">
+        </div>
 
-                    View All →
+        <div id="notificationsPanel">
 
-                </a>
+    <div class="notification-item">
 
-            </div>
+        🎉 Welcome to your new dashboard.
 
-            <div id="recentReviews">
+    </div>
 
-                Loading...
+    <div class="notification-item">
 
-            </div>
+        Orders, inventory alerts, and ballot reminders will appear here.
 
-        </section>
+    </div>
 
-    </main>
+</div>
+    </section>
+
+    <section class="dashboard-card">
+
+        <div class="dashboard-card-header">
+
+            <h2>
+
+                Upcoming Pickups
+
+            </h2>
+
+        </div>
+
+        <div id="upcomingPickups">
+
+            Loading...
+
+        </div>
+
+    </section>
+
+    <section class="dashboard-card">
+
+        <div class="dashboard-card-header">
+
+            <h2>
+
+                Pending Reviews
+
+            </h2>
+
+            <a href="reviews.html">
+
+                View All →
+
+            </a>
+
+        </div>
+
+        <div id="recentReviews">
+
+            Loading...
+
+        </div>
+
+    </section>
+
+</section>
+Add this to the bottom of admin.css
+/*==================================================
+  DASHBOARD GRID
+==================================================*/
+
+.dashboard-grid{
+
+    display:grid;
+
+    grid-template-columns:repeat(2,1fr);
+
+    gap:28px;
+
+    margin-top:10px;
+
+}
+
+.dashboard-card{
+
+    background:white;
+
+    border-radius:22px;
+
+    border:1px solid #ead9cd;
+
+    padding:28px;
+
+    box-shadow:0 10px 28px rgba(40,18,10,.05);
+
+}
+
+.dashboard-card-header{
+
+    display:flex;
+
+    justify-content:space-between;
+
+    align-items:center;
+
+    margin-bottom:22px;
+
+}
+
+.dashboard-card-header h2{
+
+    margin:0;
+
+    color:#5d2018;
+
+    font-size:1.35rem;
+
+}
+
+.dashboard-card-header a{
+
+    text-decoration:none;
+
+    color:#8d3527;
+
+    font-weight:600;
+
+}
+
+.dashboard-card-header a:hover{
+
+    text-decoration:underline;
+
+}
+Add these styles too
+.dashboard-order{
+
+    display:flex;
+
+    justify-content:space-between;
+
+    align-items:center;
+
+    padding:16px 0;
+
+    border-bottom:1px solid #f1e5db;
+
+}
+
+.dashboard-order:last-child{
+
+    border-bottom:none;
+
+}
+
+.dashboard-order strong{
+
+    display:block;
+
+}
+
+.dashboard-order small{
+
+    color:#9a887c;
+
+}
+
+.dashboard-review{
+
+    padding:16px 0;
+
+    border-bottom:1px solid #f1e5db;
+
+}
+
+.dashboard-review:last-child{
+
+    border-bottom:none;
+
+}
+
+.dashboard-review strong{
+
+    display:block;
+
+    margin-bottom:8px;
+
+}
+
+.dashboard-review p{
+
+    margin:0;
+
+    color:#6b6159;
+
+    line-height:1.5;
+
+}
+Finally, replace the "Loading..." notification with this placeholder
+
+In dashboard.html, change:
+
+<div id="notificationsPanel">
+
+    <div class="notification-item">
+
+        Loading...
+
+    </div>
+
+</div>
+
+to:
+
+<div id="notificationsPanel">
+
+    <div class="notification-item">
+
+        🎉 Welcome to your new dashboard.
+
+    </div>
+
+    <div class="notification-item">
+
+        Orders, inventory alerts, and ballot reminders will appear here.
+
+    </div>
+
+</div>
+
+</main>
 
 </div>
 
