@@ -33,85 +33,199 @@ loginForm.addEventListener("submit", async (e) => {
 });
 
 function showDashboard() {
+
     loginScreen.style.display = "none";
     dashboard.style.display = "block";
 
     dashboard.innerHTML = `
-        <div class="dashboard-grid">
 
-    <section class="admin-panel panel-orders">
+<div class="dashboard-container">
 
-        <div class="panel-header">
+    <header class="dashboard-header">
 
-            <h2>Orders</h2>
+        <div>
+
+            <p class="eyebrow">
+                Jess Bakes Sourdough
+            </p>
+
+            <h1>
+                Dashboard
+            </h1>
+
+            <p>
+                Welcome back, Jess.
+            </p>
 
         </div>
 
-        <div id="orderManager">
+        <button
+            class="logout-btn"
+            id="logoutBtn">
 
-            Loading...
+            Sign Out
+
+        </button>
+
+    </header>
+
+    <section class="overview-grid">
+
+        <div class="overview-card">
+
+            <div class="overview-label">
+
+                Pending Reviews
+
+            </div>
+
+            <div
+                class="overview-value"
+                id="pendingReviewCount">
+
+                --
+
+            </div>
+
+        </div>
+
+        <div class="overview-card">
+
+            <div class="overview-label">
+
+                Orders
+
+            </div>
+
+            <div
+                class="overview-value"
+                id="orderCount">
+
+                --
+
+            </div>
+
+        </div>
+
+        <div class="overview-card">
+
+            <div class="overview-label">
+
+                Ballot Votes
+
+            </div>
+
+            <div
+                class="overview-value"
+                id="ballotVoteCount">
+
+                --
+
+            </div>
+
+        </div>
+
+        <div class="overview-card">
+
+            <div class="overview-label">
+
+                Ballot Options
+
+            </div>
+
+            <div
+                class="overview-value"
+                id="ballotOptionCount">
+
+                --
+
+            </div>
 
         </div>
 
     </section>
 
-    <section class="admin-panel panel-menu">
+    <div class="dashboard-grid">
 
-        <div class="panel-header">
+        <section class="admin-panel panel-orders">
 
-            <h2>Menu</h2>
+            <div class="panel-header">
 
-        </div>
+                <h2>Orders</h2>
 
-        <div id="menuManager">
+            </div>
 
-            Loading...
+            <div id="orderManager">
 
-        </div>
+                Loading...
 
-    </section>
+            </div>
 
-    <section class="admin-panel panel-reviews">
+        </section>
 
-        <div class="panel-header">
+        <section class="admin-panel panel-menu">
 
-            <h2>Pending Reviews</h2>
+            <div class="panel-header">
 
-        </div>
+                <h2>Menu</h2>
 
-        <div id="pendingReviews">
+            </div>
 
-            Loading...
+            <div id="menuManager">
 
-        </div>
+                Loading...
 
-    </section>
+            </div>
 
-    <section class="admin-panel panel-ballot">
+        </section>
 
-        <div class="panel-header">
+        <section class="admin-panel panel-reviews">
 
-            <h2>Bakery Ballot</h2>
+            <div class="panel-header">
 
-        </div>
+                <h2>Pending Reviews</h2>
 
-        <div id="ballotManager">
+            </div>
 
-            Loading...
+            <div id="pendingReviews">
 
-        </div>
+                Loading...
 
-    </section>
+            </div>
+
+        </section>
+
+        <section class="admin-panel panel-ballot">
+
+            <div class="panel-header">
+
+                <h2>Bakery Ballot</h2>
+
+            </div>
+
+            <div id="ballotManager">
+
+                Loading...
+
+            </div>
+
+        </section>
+
+    </div>
 
 </div>
-    `;
 
-    document.getElementById("logoutBtn").addEventListener("click", logout);
+`;
+
+    document
+        .getElementById("logoutBtn")
+        .addEventListener("click", logout);
 
     loadPendingReviews();
     loadBallotManager();
     loadMenuManager();
     loadOrderManager();
+
 }
 
 /* =========================
