@@ -241,10 +241,9 @@ function ensureCheckoutModal() {
 
                     </select>
 
-                    <p class="checkout-help-text">
-                        Weekly pickup is every Sunday at 12:30 PM.
-                        Need something different? Select custom order.
-                    </p>
+                    <div id="pickupInfo" class="pickup-info-card">
+
+                    </div>
                 </div>
 
                 <div
@@ -252,14 +251,21 @@ function ensureCheckoutModal() {
                     class="form-group"
                     style="display:none;">
 
-                    <label>Tell me about your custom order</label>
+                   <label>Event Date *</label>
 
-                    <textarea
-                        id="customOrderDetails"
-                        rows="5"
-                        placeholder="Please include the date needed, occasion, quantity, flavor requests, and any special details."></textarea>
+                   <input
+                   type="date"
+                   id="eventDate">
 
-                </div>
+                  <label style="margin-top:20px;">
+                   Order Details
+                  </label>
+
+                  <textarea
+                   id="customOrderDetails"
+                   rows="5"
+                   placeholder="Anything you feel I need to know">
+                  </textarea>
 
                 <button
                     type="submit"
@@ -301,7 +307,119 @@ function ensureCheckoutModal() {
 
 /* ==========================================
    ORDER TYPE UI
-========================================== */
+========================================== */'
+
+function getNextPickupDate() {
+
+    const today = new Date();
+
+    const day = today.getDay();
+
+    let daysUntilSunday;
+
+    if (day >= 5) {
+
+        daysUntilSunday = 14 - day;
+
+    } else {
+
+        daysUntilSunday = 7 - day;
+
+    }
+
+    const pickup = new Date(today);
+
+    pickup.setDate(today.getDate() + daysUntilSunday);
+
+    return pickup;
+
+}
+
+function updatePickupInfo() {
+
+    const box = document.getElementById("pickupInfo");
+
+    const orderType = document.getElementById("orderType").value;
+
+    if (orderType === "custom") {
+
+        box.innerHTML = `
+
+            <strong>Custom Orders</strong>
+
+            <p>
+
+                Select the date you need your order.
+
+                Then use the notes below for flavors,
+
+                colors, theme, inspiration, and
+
+                anything else you'd like me to know.
+
+            </p>
+
+        `;
+
+        return;
+
+    }
+
+    const pickup = getNextPickupDate();
+
+    box.innerHTML = `
+
+        <strong>Weekly Sunday Pickup</strong>
+
+        <p>
+
+            Orders placed <strong>Monday–Thursday</strong>
+
+            are scheduled for the upcoming Sunday.
+
+        </p>
+
+        <p>
+
+            Orders placed <strong>Friday–Sunday</strong>
+
+            are automatically scheduled for the
+
+            following Sunday while dough is being
+
+            prepared for the current bake.
+
+        </p>
+
+        <div class="pickup-date">
+
+            <h4>Your Pickup</h4>
+
+            <p>
+
+                ${pickup.toLocaleDateString("en-US",{
+
+                    weekday:"long",
+
+                    month:"long",
+
+                    day:"numeric",
+
+                    year:"numeric"
+
+                })}
+
+                <br>
+
+                12:30 PM
+
+            </p>
+
+        </div>
+
+    `;
+
+}
 
 function toggleCustomOrderDetails() {
     const orderType = document.getElementById("orderType").value;
@@ -313,6 +431,7 @@ function toggleCustomOrderDetails() {
         detailsGroup.style.display = "none";
         document.getElementById("customOrderDetails").value = "";
     }
+   updatePickupInfo();
 }
 
 
@@ -332,6 +451,7 @@ function openCheckoutModal() {
 
     renderCheckoutSummary();
     toggleCustomOrderDetails();
+    updatePickupInfo();
 }
 
 function closeCheckoutModal() {
@@ -402,7 +522,21 @@ async function submitOrder(event) {
         return;
     }
 
-    const pickup_date = new Date().toISOString().split("T")[0];
+    let pickup_date = null;
+    let event_date = null;
+
+    if (order_type === "weekly") {
+
+    pickup_date = getNextPickupDate()
+        .toISOString()
+        .split("T")[0];
+
+   } else {
+
+    event_date =
+        document.getElementById("eventDate").value;
+
+}
 
     const notes =
         order_type === "weekly"
@@ -412,16 +546,22 @@ async function submitOrder(event) {
     const { data: order, error } = await supabaseClient
         .from("orders")
         .insert({
-          customer_name,
-          customer_email,
-          customer_phone,
-          preferred_contact,
-          pickup_date,
-          notes,
-          order_type,
-          subtotal: getSubtotal(),
-          status: "pending"
-      })
+    customer_name,
+    customer_email,
+    customer_phone,
+    preferred_contact,
+
+    order_type,
+
+    pickup_date,
+    event_date,
+
+    notes,
+
+    subtotal: getSubtotal(),
+
+    status: "pending"
+})
         .select()
         .single();
 
