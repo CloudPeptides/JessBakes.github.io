@@ -2,7 +2,6 @@
 <html lang="en">
 
 <head>
-
     <meta charset="UTF-8">
 
     <meta name="viewport"
@@ -12,415 +11,183 @@
 
     <link rel="stylesheet"
           href="../css/admin.css">
-
 </head>
 
 <body>
 
 <div class="admin-shell">
 
-    <!-- SIDEBAR -->
-
     <aside class="sidebar">
 
         <div class="sidebar-brand">
-
             <h2>Jess Bakes</h2>
-
             <span>SOURDOUGH</span>
-
         </div>
 
         <nav class="sidebar-nav">
 
-            <a href="dashboard.html"
-               class="active">
-                Dashboard
-            </a>
-
-            <a href="orders.html">
-                Orders
-            </a>
-
-            <a href="menu.html">
-                Menu
-            </a>
-
-            <a href="reviews.html">
-                Reviews
-            </a>
+            <a href="dashboard.html" class="active">Dashboard</a>
+            <a href="orders.html">Orders</a>
+            <a href="menu.html">Menu</a>
+            <a href="reviews.html">Reviews</a>
 
             <hr>
 
-            <a href="sales.html">
-                Sales
-            </a>
-
-            <a href="analytics.html">
-                Analytics
-            </a>
-
-            <a href="inventory.html">
-                Inventory
-            </a>
-
-            <a href="gallery.html">
-                Gallery
-            </a>
+            <a href="sales.html">Sales</a>
+            <a href="analytics.html">Analytics</a>
+            <a href="inventory.html">Inventory</a>
+            <a href="gallery.html">Gallery</a>
 
             <hr>
 
-            <a href="settings.html">
-                Settings
-            </a>
+            <a href="settings.html">Settings</a>
 
         </nav>
 
-        <button id="logoutBtn"
-                class="logout-btn">
-
+        <button id="logoutBtn" class="logout-btn">
             Sign Out
-
         </button>
 
     </aside>
 
-    <!-- MAIN -->
-
     <main class="admin-content">
 
         <header class="dashboard-header">
+            <div>
+                <p class="dashboard-greeting" id="dashboardGreeting">Hi,</p>
 
-    <div>
+                <h1>Jess</h1>
 
-        <p class="dashboard-greeting"
-           id="dashboardGreeting">
-
-            Hi,
-
-        </p>
-
-        <h1>
-
-            Jess 👋
-
-        </h1>
-
-        <p
-            class="dashboard-date"
-            id="dashboardDate">
-
-            Loading...
-
-        </p>
-
-    </div>
-
-</header>
-
-        <!-- KPI CARDS -->
+                <p class="dashboard-date" id="dashboardDate">
+                    Loading...
+                </p>
+            </div>
+        </header>
 
         <section class="overview-grid">
 
-    <article class="overview-card">
+            <article class="overview-card">
+                <span class="overview-label">Revenue Today</span>
+                <h2 id="salesToday">€0</h2>
+            </article>
 
-        <span class="overview-label">
+            <article class="overview-card">
+                <span class="overview-label">Revenue This Week</span>
+                <h2 id="salesWeek">€0</h2>
+            </article>
 
-            Revenue Today
+            <article class="overview-card">
+                <span class="overview-label">Pending Orders</span>
+                <h2 id="orderCount">--</h2>
+            </article>
 
-        </span>
+            <article class="overview-card">
+                <span class="overview-label">Pending Reviews</span>
+                <h2 id="pendingReviewCount">--</h2>
+            </article>
 
-        <h2 id="salesToday">
+            <article class="overview-card">
+                <span class="overview-label">Low Inventory</span>
+                <h2 id="inventoryAlerts">--</h2>
+            </article>
 
-            €0
-
-        </h2>
-
-    </article>
-
-    <article class="overview-card">
-
-        <span class="overview-label">
-
-            Revenue This Week
-
-        </span>
-
-        <h2 id="salesWeek">
-
-            €0
-
-        </h2>
-
-    </article>
-
-    <article class="overview-card">
-
-        <span class="overview-label">
-
-            Pending Orders
-
-        </span>
-
-        <h2 id="orderCount">
-
-            --
-
-        </h2>
-
-    </article>
-
-    <article class="overview-card">
-
-        <span class="overview-label">
-
-            Pending Reviews
-
-        </span>
-
-        <h2 id="pendingReviewCount">
-
-            --
-
-        </h2>
-
-    </article>
-
-    <article class="overview-card">
-
-        <span class="overview-label">
-
-            Low Inventory
-
-        </span>
-
-        <h2 id="inventoryAlerts">
-
-            --
-
-        </h2>
-
-    </article>
-
-</section>
-
-        <!-- QUICK ACTIONS -->
+        </section>
 
         <section class="dashboard-section">
 
-    <h2>
+            <h2>Quick Actions</h2>
 
-        Quick Actions
+            <div class="quick-actions-grid">
 
-    </h2>
+                <a href="orders.html" class="quick-action-card">
+                    <h3>Orders</h3>
+                    <p>View and manage customer orders.</p>
+                </a>
 
-    <div class="quick-actions-grid">
+                <a href="menu.html" class="quick-action-card">
+                    <h3>Menu</h3>
+                    <p>Edit menu items and ballot.</p>
+                </a>
 
-        <a
-            href="orders.html"
-            class="quick-action-card">
+                <a href="sales.html" class="quick-action-card">
+                    <h3>Sales</h3>
+                    <p>Revenue and profit.</p>
+                </a>
 
-            <h3>
+                <a href="inventory.html" class="quick-action-card">
+                    <h3>Inventory</h3>
+                    <p>Ingredients and recipes.</p>
+                </a>
 
-                Orders
+            </div>
 
-            </h3>
+        </section>
 
-            <p>
+        <section class="dashboard-grid">
 
-                View and manage customer orders.
+            <section class="dashboard-card">
 
-            </p>
+                <div class="dashboard-card-header">
+                    <h2>Recent Orders</h2>
+                    <a href="orders.html">View All →</a>
+                </div>
 
-        </a>
+                <div id="recentOrders">
+                    Loading...
+                </div>
 
-        <a
-            href="menu.html"
-            class="quick-action-card">
+            </section>
 
-            <h3>
+            <section class="dashboard-card">
 
-                Menu
+                <div class="dashboard-card-header">
+                    <h2>Notifications</h2>
+                </div>
 
-            </h3>
+                <div id="notificationsPanel">
+                    <div class="notification-item">
+                        Loading...
+                    </div>
+                </div>
 
-            <p>
+            </section>
 
-                Edit menu items and ballot.
+            <section class="dashboard-card">
 
-            </p>
+                <div class="dashboard-card-header">
+                    <h2>Upcoming Pickups</h2>
+                </div>
 
-        </a>
+                <div id="upcomingPickups">
+                    Loading...
+                </div>
 
-        <a
-            href="sales.html"
-            class="quick-action-card">
+            </section>
 
-            <h3>
+            <section class="dashboard-card">
 
-                Sales
+                <div class="dashboard-card-header">
+                    <h2>Pending Reviews</h2>
+                    <a href="reviews.html">View All →</a>
+                </div>
 
-            </h3>
+                <div id="recentReviews">
+                    Loading...
+                </div>
 
-            <p>
+            </section>
 
-                Revenue and profit.
+        </section>
 
-            </p>
-
-        </a>
-
-        <a
-            href="inventory.html"
-            class="quick-action-card">
-
-            <h3>
-
-                Inventory
-
-            </h3>
-
-            <p>
-
-                Ingredients and recipes.
-
-            </p>
-
-        </a>
-
-    </div>
-
-</section>
-
-        <!-- RECENT ORDERS -->
-
-       <section class="dashboard-grid">
-
-    <section class="dashboard-card">
-
-        <div class="dashboard-card-header">
-
-            <h2>
-
-                Recent Orders
-
-            </h2>
-
-            <a href="orders.html">
-
-                View All →
-
-            </a>
-
-        </div>
-
-        <div id="recentOrders">
-
-            Loading...
-
-        </div>
-
-    </section>
-
-         <section class="dashboard-card">
-
-        <div class="dashboard-card-header">
-
-            <h2>
-
-                Notifications
-
-            </h2>
-
-        </div>
-
-        <div id="notificationsPanel">
-
-    <div class="notification-item">
-
-        🎉 Welcome to your new dashboard.
-
-    </div>
-
-    <div class="notification-item">
-
-        Orders, inventory alerts, and ballot reminders will appear here.
-
-    </div>
-
-</div>
-    </section>
-
-    <section class="dashboard-card">
-
-        <div class="dashboard-card-header">
-
-            <h2>
-
-                Upcoming Pickups
-
-            </h2>
-
-        </div>
-
-        <div id="upcomingPickups">
-
-            Loading...
-
-        </div>
-
-    </section>
-
-    <section class="dashboard-card">
-
-        <div class="dashboard-card-header">
-
-            <h2>
-
-                Pending Reviews
-
-            </h2>
-
-            <a href="reviews.html">
-
-                View All →
-
-            </a>
-
-        </div>
-
-        <div id="recentReviews">
-
-            Loading...
-
-        </div>
-
-    </section>
-
-</section>
-
-
-<div id="notificationsPanel">
-
-    <div class="notification-item">
-
-        Loading...
-
-    </div>
-
-</div>
-
-</main>
+    </main>
 
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-
 <script src="../js/supabase.js"></script>
-
 <script src="../js/auth.js"></script>
-
-<script src="../js/dashboard.js"></script>
+<script src="../js/layout.js"></script>
+<script src="../js/admin-dashboard.js"></script>
 
 </body>
 
