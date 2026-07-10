@@ -353,9 +353,7 @@ function updatePickupInfo() {
 
                 Select the date you need your order.
 
-                Then use the notes below for flavors,
-
-                colors, theme, inspiration, and
+                Then use the notes below for
 
                 anything else you'd like me to know.
 
