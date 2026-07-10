@@ -1,3 +1,11 @@
+document.addEventListener("DOMContentLoaded", async () => {
+
+    await requireAuth();
+
+    loadPendingReviews();
+
+});
+
 let reviews = [];
 let selectedRating = 0;
 
