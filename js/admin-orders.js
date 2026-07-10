@@ -680,3 +680,98 @@ function formatDate(date) {
     });
 
 }
+
+function openManualOrderModal(){
+
+    document
+        .getElementById("manualOrderModal")
+        .style.display="flex";
+
+    document
+        .getElementById("manualItems")
+        .innerHTML="";
+
+    addManualItem();
+
+}
+
+function closeManualOrderModal(){
+
+    document
+        .getElementById("manualOrderModal")
+        .style.display="none";
+
+}
+
+function toggleManualOrderType(){
+
+    const custom =
+        document
+        .getElementById("manualOrderType")
+        .value==="custom";
+
+    document
+        .getElementById("weeklyFields")
+        .style.display =
+        custom
+        ? "none"
+        : "block";
+
+    document
+        .getElementById("customFields")
+        .style.display =
+        custom
+        ? "block"
+        : "none";
+
+}
+
+function addManualItem(){
+
+    const container =
+        document.getElementById("manualItems");
+
+    const row =
+        document.createElement("div");
+
+    row.className =
+        "manual-item-row";
+
+    row.innerHTML=`
+
+<select class="manualItem">
+
+${menuItems.map(item=>`
+
+<option
+value="${item.id}"
+data-price="${item.price}">
+
+${item.name}
+
+</option>
+
+`).join("")}
+
+</select>
+
+<input
+class="manualQty"
+type="number"
+value="1"
+min="1">
+
+<button
+class="delete-btn"
+type="button"
+onclick="this.parentElement.remove()">
+
+Remove
+
+</button>
+
+`;
+
+    container.appendChild(row);
+
+}
