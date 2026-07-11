@@ -1560,3 +1560,54 @@ JESS NOTE
     }
 
 }
+
+.suggestion-section{
+
+    max-width:900px;
+
+    margin:120px auto;
+
+    padding:0 24px;
+
+}
+
+.suggestion-form{
+
+    margin-top:40px;
+
+    display:grid;
+
+    gap:18px;
+
+}
+
+.suggestion-form input,
+.suggestion-form select{
+
+    padding:18px;
+
+    border-radius:14px;
+
+    border:1px solid #dfd2c6;
+
+    font-size:1rem;
+
+}
+
+.suggestion-form button{
+
+    background:#6f2418;
+
+    color:white;
+
+    border:none;
+
+    border-radius:14px;
+
+    padding:18px;
+
+    cursor:pointer;
+
+    font-weight:600;
+
+}
