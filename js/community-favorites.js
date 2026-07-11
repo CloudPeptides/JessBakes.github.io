@@ -75,9 +75,9 @@ async function loadCommunityFavorites() {
 
     const icons = {
 
-        bread: "🍞",
-        cookie: "🍪",
-        dessert: "🧁",
+        bread: "⭐",
+        cookie: "⭐",
+        dessert: "⭐",
         seasonal: "⭐"
 
     };
