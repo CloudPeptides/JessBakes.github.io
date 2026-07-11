@@ -1349,3 +1349,130 @@ h3 {
     font-weight:600;
 
 }
+
+
+/*==================================================
+COMMUNITY FAVORITES
+==================================================*/
+
+.community-favorites{
+
+    max-width:1200px;
+
+    margin:110px auto;
+
+    padding:0 24px;
+
+}
+
+.favorites-grid{
+
+    display:grid;
+
+    grid-template-columns:repeat(3,minmax(0,1fr));
+
+    gap:30px;
+
+    margin-top:55px;
+
+}
+
+.favorite-card{
+
+    background:#fbf6f0;
+
+    border:1px solid #e8d9cd;
+
+    border-radius:22px;
+
+    padding:40px 30px;
+
+    text-align:center;
+
+    box-shadow:0 12px 30px rgba(0,0,0,.06);
+
+    transition:.25s;
+
+}
+
+.favorite-card:hover{
+
+    transform:translateY(-6px);
+
+    box-shadow:0 20px 45px rgba(0,0,0,.10);
+
+}
+
+.favorite-icon{
+
+    font-size:46px;
+
+    margin-bottom:18px;
+
+}
+
+.favorite-category{
+
+    text-transform:uppercase;
+
+    letter-spacing:.18em;
+
+    font-size:.72rem;
+
+    color:#8d6b5b;
+
+    margin-bottom:14px;
+
+}
+
+.favorite-name{
+
+    font-family:"Cormorant Garamond",serif;
+
+    font-size:2.3rem;
+
+    color:#5d2017;
+
+    line-height:1.1;
+
+    margin-bottom:18px;
+
+}
+
+.favorite-votes{
+
+    font-weight:600;
+
+    color:#8b6f60;
+
+}
+
+.favorite-date{
+
+    margin-top:20px;
+
+    color:#9d8a7f;
+
+    font-size:.9rem;
+
+}
+
+.favorite-loading{
+
+    grid-column:1/-1;
+
+    text-align:center;
+
+    padding:60px;
+
+}
+
+@media(max-width:900px){
+
+    .favorites-grid{
+
+        grid-template-columns:1fr;
+
+    }
+
+}
