@@ -6,7 +6,17 @@ const CATEGORY_LABELS = {
     dessert: "Desserts"
 };
 
-const VOTE_STORAGE_KEY = "jess_bakes_ballot_voted";
+function getVoteStorageKey() {
+
+    if (!ballotSettings) {
+
+        return "jess_bakes_ballot";
+
+    }
+
+    return `jess_bakes_ballot_${ballotSettings.id}`;
+
+}
 
 let ballotOptions = [];
 let votes = [];
@@ -39,6 +49,17 @@ async function loadBallotSettings() {
     }
 
     ballotSettings = data;
+
+    Object.keys(localStorage).forEach(key => {
+
+    if (
+        key.startsWith("jess_bakes_ballot_") &&
+        key !== getVoteStorageKey()
+    ) {
+        localStorage.removeItem(key);
+    }
+
+});
 }
 
 async function loadBallotOptions() {
@@ -153,7 +174,8 @@ function renderBallotCards() {
         return;
     }
 
-    const hasVoted = localStorage.getItem(VOTE_STORAGE_KEY) === "true";
+    const hasVoted =
+    localStorage.getItem(getVoteStorageKey()) === "true";
 
     const cards = BALLOT_CATEGORIES
         .map((category) => {
@@ -283,7 +305,10 @@ async function submitVote() {
         return;
     }
 
-    localStorage.setItem(VOTE_STORAGE_KEY, "true");
+    localStorage.setItem(
+    getVoteStorageKey(),
+    "true"
+);
 
     await loadVotes();
 
