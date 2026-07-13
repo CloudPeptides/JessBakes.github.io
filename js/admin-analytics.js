@@ -347,39 +347,59 @@ orders.length
    TOP CUSTOMERS
 ========================================== */
 
-function renderTopCustomers(orders){
+function renderTopCustomers(orders) {
 
     const container =
         document.getElementById("topCustomers");
 
     const totals = {};
 
-    orders.forEach(order=>{
+    orders.forEach(order => {
+
+        const normalizedName =
+            String(order.customer_name || "")
+                .trim()
+                .toLowerCase();
+
+        const normalizedEmail =
+            String(order.customer_email || "")
+                .trim()
+                .toLowerCase();
+
+        const normalizedPhone =
+            String(order.customer_phone || "")
+                .replace(/\D/g, "");
 
         const key =
-            order.customer_email;
+            normalizedName ||
+            normalizedEmail ||
+            normalizedPhone ||
+            order.id;
 
-        if(!totals[key]){
+        if (!totals[key]) {
 
-            totals[key]={
-                name:order.customer_name,
-                total:0
+            totals[key] = {
+                name: order.customer_name || "Unknown Customer",
+                total: 0,
+                orders: 0
             };
 
         }
 
         totals[key].total +=
-            Number(order.subtotal);
+            Number(order.subtotal || 0);
+
+        totals[key].orders += 1;
 
     });
 
     const customers =
         Object.values(totals)
-            .sort((a,b)=>
-                b.total-a.total
+            .sort((a, b) =>
+                b.total - a.total
             );
 
-    if(!customers.length){
+    if (!customers.length) {
 
         container.innerHTML =
             "<p>No customers yet.</p>";
@@ -389,21 +409,26 @@ function renderTopCustomers(orders){
     }
 
     container.innerHTML =
-        customers.map(customer=>`
+        customers.map(customer => `
 
 <div class="ranking-row">
 
-<strong>
+    <div>
 
-${escapeHtml(customer.name)}
+        <strong>
+            ${escapeHtml(customer.name)}
+        </strong>
 
-</strong>
+        <small>
+            ${customer.orders}
+            order${customer.orders === 1 ? "" : "s"}
+        </small>
 
-<span>
+    </div>
 
-€${customer.total.toFixed(2)}
-
-</span>
+    <span>
+        €${customer.total.toFixed(2)}
+    </span>
 
 </div>
 
@@ -433,35 +458,39 @@ function renderProductBreakdown(orders){
    HELPERS
 ========================================== */
 
-function getReturningCustomers(orders){
+function getReturningCustomers(orders) {
 
-    const counts={};
+    const counts = {};
 
-    orders.forEach(order=>{
+    orders.forEach(order => {
 
-        counts[order.customer_email]=
-            (counts[order.customer_email]||0)+1;
+        const normalizedName =
+            String(order.customer_name || "")
+                .trim()
+                .toLowerCase();
+
+        const normalizedEmail =
+            String(order.customer_email || "")
+                .trim()
+                .toLowerCase();
+
+        const normalizedPhone =
+            String(order.customer_phone || "")
+                .replace(/\D/g, "");
+
+        const key =
+            normalizedName ||
+            normalizedEmail ||
+            normalizedPhone ||
+            order.id;
+
+        counts[key] =
+            (counts[key] || 0) + 1;
 
     });
 
     return Object.values(counts)
-        .filter(c=>c>1)
+        .filter(count => count > 1)
         .length;
-
-}
-
-function escapeHtml(text){
-
-    return String(text||"")
-
-        .replaceAll("&","&amp;")
-
-        .replaceAll("<","&lt;")
-
-        .replaceAll(">","&gt;")
-
-        .replaceAll('"',"&quot;")
-
-        .replaceAll("'","&#039;");
 
 }
