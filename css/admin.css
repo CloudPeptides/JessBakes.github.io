@@ -2438,3 +2438,47 @@ body{
     height: 100% !important;
     max-height: 340px;
 }
+
+.customer-card{
+
+    padding:16px 0;
+
+    border-bottom:1px solid #ece2d9;
+
+}
+
+.customer-card:last-child{
+
+    border-bottom:none;
+
+}
+
+.customer-header{
+
+    display:flex;
+
+    justify-content:space-between;
+
+    align-items:center;
+
+    font-size:18px;
+
+    font-weight:600;
+
+    margin-bottom:6px;
+
+}
+
+.customer-details{
+
+    display:flex;
+
+    gap:20px;
+
+    color:#777;
+
+    font-size:14px;
+
+    flex-wrap:wrap;
+
+}
