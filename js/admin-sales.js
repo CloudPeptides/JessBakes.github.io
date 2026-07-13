@@ -210,8 +210,6 @@ function renderRevenueTrend(orders, range) {
             }
         }
     });
-
-    canvas.parentElement.style.minHeight = "340px";
 }
 
 function buildRevenueSeries(orders, range) {
