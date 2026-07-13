@@ -2425,3 +2425,16 @@ body{
     }
 
 }
+.sales-chart-container {
+    position: relative;
+    width: 100%;
+    height: 340px;
+    overflow: hidden;
+}
+
+.sales-chart-container canvas {
+    display: block;
+    width: 100% !important;
+    height: 100% !important;
+    max-height: 340px;
+}
