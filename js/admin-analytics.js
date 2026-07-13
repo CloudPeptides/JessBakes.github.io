@@ -68,9 +68,13 @@ async function loadAnalytics() {
 function updateOverview(orders){
 
     const customers =
-        [...new Set(
-            orders.map(order => order.customer_email)
-        )];
+    [...new Set(
+        orders.map(order =>
+            (order.customer_name || "")
+                .trim()
+                .toLowerCase()
+        )
+    )];
 
     const totalItems =
         orders.reduce((sum, order)=>{
@@ -175,9 +179,13 @@ function renderCustomerInsights(orders){
         document.getElementById("customerInsights");
 
     const totalCustomers =
-        new Set(
-            orders.map(o=>o.customer_email)
-        ).size;
+    new Set(
+        orders.map(order =>
+            (order.customer_name || "")
+                .trim()
+                .toLowerCase()
+        )
+    ).size;
 
     const repeat =
         getReturningCustomers(orders);
@@ -356,32 +364,23 @@ function renderTopCustomers(orders) {
 
     orders.forEach(order => {
 
-        const normalizedName =
-            String(order.customer_name || "")
-                .trim()
-                .toLowerCase();
-
-        const normalizedEmail =
-            String(order.customer_email || "")
-                .trim()
-                .toLowerCase();
-
-        const normalizedPhone =
-            String(order.customer_phone || "")
-                .replace(/\D/g, "");
-
         const key =
-            normalizedName ||
-            normalizedEmail ||
-            normalizedPhone ||
-            order.id;
+            (order.customer_name || "")
+                .trim()
+                .toLowerCase();
 
         if (!totals[key]) {
 
             totals[key] = {
-                name: order.customer_name || "Unknown Customer",
+
+                name: order.customer_name || "Unknown",
+
                 total: 0,
-                orders: 0
+
+                orders: 0,
+
+                lastOrder: order.created_at
+
             };
 
         }
@@ -389,15 +388,26 @@ function renderTopCustomers(orders) {
         totals[key].total +=
             Number(order.subtotal || 0);
 
-        totals[key].orders += 1;
+        totals[key].orders++;
+
+        if (
+            new Date(order.created_at) >
+            new Date(totals[key].lastOrder)
+        ) {
+
+            totals[key].lastOrder =
+                order.created_at;
+
+        }
 
     });
 
     const customers =
         Object.values(totals)
-            .sort((a, b) =>
-                b.total - a.total
-            );
+
+        .sort((a, b) => b.total - a.total)
+
+        .slice(0, 5);
 
     if (!customers.length) {
 
@@ -409,33 +419,73 @@ function renderTopCustomers(orders) {
     }
 
     container.innerHTML =
-        customers.map(customer => `
+        customers.map((customer, index) => {
 
-<div class="ranking-row">
+            let medal = "";
 
-    <div>
+            if (index === 0) medal = "🥇";
+            else if (index === 1) medal = "🥈";
+            else if (index === 2) medal = "🥉";
+
+            const average =
+                customer.total /
+                customer.orders;
+
+            const last =
+                new Date(customer.lastOrder)
+                    .toLocaleDateString();
+
+            return `
+
+<div class="customer-card">
+
+    <div class="customer-header">
 
         <strong>
-            ${escapeHtml(customer.name)}
+
+            ${medal}
+            ${customer.name}
+
         </strong>
 
-        <small>
-            ${customer.orders}
-            order${customer.orders === 1 ? "" : "s"}
-        </small>
+        <span>
+
+            €${customer.total.toFixed(2)}
+
+        </span>
 
     </div>
 
-    <span>
-        €${customer.total.toFixed(2)}
-    </span>
+    <div class="customer-details">
+
+        <span>
+
+            ${customer.orders}
+            order${customer.orders === 1 ? "" : "s"}
+
+        </span>
+
+        <span>
+
+            Avg €${average.toFixed(2)}
+
+        </span>
+
+        <span>
+
+            Last: ${last}
+
+        </span>
+
+    </div>
 
 </div>
 
-`).join("");
+`;
+
+        }).join("");
 
 }
-
 
 /* ==========================================
    PRODUCT BREAKDOWN
@@ -458,31 +508,16 @@ function renderProductBreakdown(orders){
    HELPERS
 ========================================== */
 
-function getReturningCustomers(orders) {
+function getReturningCustomers(orders){
 
     const counts = {};
 
-    orders.forEach(order => {
-
-        const normalizedName =
-            String(order.customer_name || "")
-                .trim()
-                .toLowerCase();
-
-        const normalizedEmail =
-            String(order.customer_email || "")
-                .trim()
-                .toLowerCase();
-
-        const normalizedPhone =
-            String(order.customer_phone || "")
-                .replace(/\D/g, "");
+    orders.forEach(order=>{
 
         const key =
-            normalizedName ||
-            normalizedEmail ||
-            normalizedPhone ||
-            order.id;
+            (order.customer_name || "")
+                .trim()
+                .toLowerCase();
 
         counts[key] =
             (counts[key] || 0) + 1;
@@ -492,16 +527,5 @@ function getReturningCustomers(orders) {
     return Object.values(counts)
         .filter(count => count > 1)
         .length;
-
-}
-
-function escapeHtml(text) {
-
-    return String(text ?? "")
-        .replace(/&/g, "&amp;")
-        .replace(/</g, "&lt;")
-        .replace(/>/g, "&gt;")
-        .replace(/"/g, "&quot;")
-        .replace(/'/g, "&#039;");
 
 }
