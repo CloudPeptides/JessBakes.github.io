@@ -1611,3 +1611,19 @@ JESS NOTE
     font-weight:600;
 
 }
+
+.hero-banner{
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    margin:1rem auto 2rem;
+    width:100%;
+}
+
+.hero-banner img{
+    width:min(1100px,95%);
+    height:auto;
+    display:block;
+    pointer-events:none;
+    user-select:none;
+}
