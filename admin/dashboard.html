@@ -1,0 +1,578 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0">
+
+    <title>Dashboard | Jess Bakes Sourdough</title>
+
+    <link
+        rel="preconnect"
+        href="https://fonts.googleapis.com">
+
+    <link
+        rel="preconnect"
+        href="https://fonts.gstatic.com"
+        crossorigin>
+
+    <link
+        href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600;700&family=Inter:wght@400;500;600;700&display=swap"
+        rel="stylesheet">
+
+    <link
+        rel="stylesheet"
+        href="../css/admin.css">
+</head>
+
+<body>
+
+<div class="admin-shell">
+
+    <!--==================================================
+        SIDEBAR
+    ==================================================-->
+
+    <aside class="sidebar">
+
+        <div class="sidebar-brand">
+
+            <p class="sidebar-brand-kicker">
+                JESS BAKES
+            </p>
+
+            <h2>
+                Sourdough
+            </h2>
+
+        </div>
+
+        <nav
+            class="sidebar-nav"
+            aria-label="Admin navigation">
+
+            <a
+                href="dashboard.html"
+                class="active">
+                Dashboard
+            </a>
+
+            <a href="orders.html">
+                Orders
+            </a>
+
+            <a href="menu.html">
+                Menu
+            </a>
+
+            <a href="suggestions.html">
+                Suggestions
+            </a>
+
+            <a href="reviews.html">
+                Reviews
+            </a>
+
+            <hr>
+
+            <a href="sales.html">
+                Sales
+            </a>
+
+            <a href="analytics.html">
+                Analytics
+            </a>
+
+            <a href="inventory.html">
+                Inventory
+            </a>
+
+            <a href="gallery.html">
+                Gallery
+            </a>
+
+            <hr>
+
+            <a href="settings.html">
+                Settings
+            </a>
+
+        </nav>
+
+        <button
+            id="logoutBtn"
+            class="logout-btn"
+            type="button">
+
+            Sign Out
+
+        </button>
+
+    </aside>
+
+    <!--==================================================
+        DASHBOARD CONTENT
+    ==================================================-->
+
+    <main class="admin-content dashboard-home">
+
+        <!-- HERO -->
+
+        <section class="dashboard-home-hero">
+
+            <div>
+
+                <p
+                    class="dashboard-greeting"
+                    id="dashboardGreeting">
+
+                    Good Morning,
+
+                </p>
+
+                <h1>
+                    Jess
+                </h1>
+
+                <p
+                    class="dashboard-date"
+                    id="dashboardDate">
+
+                    Loading...
+
+                </p>
+
+                <p
+                    class="dashboard-home-summary"
+                    id="dashboardSummary">
+
+                    Loading your bakery overview...
+
+                </p>
+
+            </div>
+
+            <div class="dashboard-month-card">
+
+                <span>
+                    THIS MONTH
+                </span>
+
+                <strong id="salesMonth">
+                    €0
+                </strong>
+
+                <small>
+                    completed revenue
+                </small>
+
+            </div>
+
+        </section>
+
+        <!-- KPI CARDS -->
+
+        <section class="dashboard-home-kpis">
+
+            <article class="dashboard-home-kpi">
+
+                <div class="dashboard-home-kpi-icon">
+                    €
+                </div>
+
+                <div>
+
+                    <span>
+                        Revenue Today
+                    </span>
+
+                    <h2 id="salesToday">
+                        €0
+                    </h2>
+
+                    <small>
+                        Completed orders
+                    </small>
+
+                </div>
+
+            </article>
+
+            <article class="dashboard-home-kpi">
+
+                <div class="dashboard-home-kpi-icon">
+                    7D
+                </div>
+
+                <div>
+
+                    <span>
+                        Revenue This Week
+                    </span>
+
+                    <h2 id="salesWeek">
+                        €0
+                    </h2>
+
+                    <small>
+                        Current calendar week
+                    </small>
+
+                </div>
+
+            </article>
+
+            <article class="dashboard-home-kpi">
+
+                <div class="dashboard-home-kpi-icon">
+                    #
+                </div>
+
+                <div>
+
+                    <span>
+                        Pending Orders
+                    </span>
+
+                    <h2 id="orderCount">
+                        --
+                    </h2>
+
+                    <small>
+                        Waiting for confirmation
+                    </small>
+
+                </div>
+
+            </article>
+
+            <article class="dashboard-home-kpi">
+
+                <div class="dashboard-home-kpi-icon">
+                    ★
+                </div>
+
+                <div>
+
+                    <span>
+                        Pending Reviews
+                    </span>
+
+                    <h2 id="pendingReviewCount">
+                        --
+                    </h2>
+
+                    <small>
+                        Waiting for approval
+                    </small>
+
+                </div>
+
+            </article>
+
+            <article class="dashboard-home-kpi">
+
+                <div class="dashboard-home-kpi-icon">
+                    !
+                </div>
+
+                <div>
+
+                    <span>
+                        Low Inventory
+                    </span>
+
+                    <h2 id="inventoryAlerts">
+                        --
+                    </h2>
+
+                    <small>
+                        Items below minimum
+                    </small>
+
+                </div>
+
+            </article>
+
+        </section>
+
+        <!-- QUICK ACTIONS -->
+
+        <section class="dashboard-home-section">
+
+            <div class="dashboard-home-section-heading">
+
+                <p class="eyebrow">
+                    SHORTCUTS
+                </p>
+
+                <h2>
+                    Quick Actions
+                </h2>
+
+            </div>
+
+            <div class="dashboard-home-actions">
+
+                <a
+                    href="orders.html"
+                    class="dashboard-home-action">
+
+                    <span class="dashboard-home-action-number">
+                        01
+                    </span>
+
+                    <div>
+
+                        <h3>
+                            Orders
+                        </h3>
+
+                        <p>
+                            Manage requests, pickup dates, and statuses.
+                        </p>
+
+                    </div>
+
+                    <span class="dashboard-home-action-arrow">
+                        →
+                    </span>
+
+                </a>
+
+                <a
+                    href="menu.html"
+                    class="dashboard-home-action">
+
+                    <span class="dashboard-home-action-number">
+                        02
+                    </span>
+
+                    <div>
+
+                        <h3>
+                            Menu
+                        </h3>
+
+                        <p>
+                            Edit products, prices, and ballot options.
+                        </p>
+
+                    </div>
+
+                    <span class="dashboard-home-action-arrow">
+                        →
+                    </span>
+
+                </a>
+
+                <a
+                    href="sales.html"
+                    class="dashboard-home-action">
+
+                    <span class="dashboard-home-action-number">
+                        03
+                    </span>
+
+                    <div>
+
+                        <h3>
+                            Sales
+                        </h3>
+
+                        <p>
+                            Review revenue and completed orders.
+                        </p>
+
+                    </div>
+
+                    <span class="dashboard-home-action-arrow">
+                        →
+                    </span>
+
+                </a>
+
+                <a
+                    href="inventory.html"
+                    class="dashboard-home-action">
+
+                    <span class="dashboard-home-action-number">
+                        04
+                    </span>
+
+                    <div>
+
+                        <h3>
+                            Inventory
+                        </h3>
+
+                        <p>
+                            Track ingredients, packaging, and recipes.
+                        </p>
+
+                    </div>
+
+                    <span class="dashboard-home-action-arrow">
+                        →
+                    </span>
+
+                </a>
+
+            </div>
+
+        </section>
+
+        <!-- DASHBOARD PANELS -->
+
+        <section class="dashboard-home-grid">
+
+            <section class="dashboard-home-card dashboard-home-orders-card">
+
+                <div class="dashboard-card-header">
+
+                    <div>
+
+                        <p class="eyebrow">
+                            ORDER ACTIVITY
+                        </p>
+
+                        <h2>
+                            Recent Orders
+                        </h2>
+
+                    </div>
+
+                    <a href="orders.html">
+                        View all
+                    </a>
+
+                </div>
+
+                <div
+                    id="recentOrders"
+                    class="dashboard-home-list">
+
+                    <p class="dashboard-home-empty">
+                        Loading...
+                    </p>
+
+                </div>
+
+            </section>
+
+            <section class="dashboard-home-card">
+
+                <div class="dashboard-card-header">
+
+                    <div>
+
+                        <p class="eyebrow">
+                            ATTENTION
+                        </p>
+
+                        <h2>
+                            Notifications
+                        </h2>
+
+                    </div>
+
+                </div>
+
+                <div
+                    id="notificationsPanel"
+                    class="dashboard-home-list">
+
+                    <p class="dashboard-home-empty">
+                        Loading...
+                    </p>
+
+                </div>
+
+            </section>
+
+            <section class="dashboard-home-card">
+
+                <div class="dashboard-card-header">
+
+                    <div>
+
+                        <p class="eyebrow">
+                            SCHEDULE
+                        </p>
+
+                        <h2>
+                            Upcoming Pickups
+                        </h2>
+
+                    </div>
+
+                    <a href="orders.html">
+                        View orders
+                    </a>
+
+                </div>
+
+                <div
+                    id="upcomingPickups"
+                    class="dashboard-home-list">
+
+                    <p class="dashboard-home-empty">
+                        Loading...
+                    </p>
+
+                </div>
+
+            </section>
+
+            <section class="dashboard-home-card">
+
+                <div class="dashboard-card-header">
+
+                    <div>
+
+                        <p class="eyebrow">
+                            CUSTOMER FEEDBACK
+                        </p>
+
+                        <h2>
+                            Pending Reviews
+                        </h2>
+
+                    </div>
+
+                    <a href="reviews.html">
+                        Review all
+                    </a>
+
+                </div>
+
+                <div
+                    id="recentReviews"
+                    class="dashboard-home-list">
+
+                    <p class="dashboard-home-empty">
+                        Loading...
+                    </p>
+
+                </div>
+
+            </section>
+
+        </section>
+
+    </main>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="../js/supabase.js"></script>
+<script src="../js/auth.js"></script>
+<script src="../js/layout.js"></script>
+<script src="../js/admin-dashboard.js"></script>
+
+</body>
+
+</html>
