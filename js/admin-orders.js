@@ -523,6 +523,19 @@ async function updateOrderStatus(orderId, status) {
 
 async function createSaleFromOrder(orderId) {
 
+   const { data: existingSale } =
+    await supabaseClient
+        .from("sales")
+        .select("id")
+        .eq("order_id", orderId)
+        .maybeSingle();
+
+if (existingSale) {
+
+    return;
+
+}
+
     alert("createSaleFromOrder() started");
 
     const { data: order, error: orderError } =
@@ -571,19 +584,111 @@ async function createSaleFromOrder(orderId) {
         return;
     }
 
-    const saleItems = items.map(item => ({
-        sale_id: sale.id,
-        menu_item_id: item.menu_item_id,
-        item_name: item.item_name,
-        quantity: item.quantity,
-        unit_price: item.price_at_purchase,
-        food_cost: 0,
-        packaging_cost: 0,
-        total_cost: 0,
-        line_revenue: item.line_total,
-        line_profit: 0
-    }));
+   const { data: menuItems, error: menuError } =
+    await supabaseClient
+        .from("menu_items")
+        .select("*");
 
+if (menuError) {
+
+    alert(menuError.message);
+    return;
+
+}
+
+const { data: recipeCosts, error: recipeCostError } =
+    await supabaseClient
+        .from("recipe_costs")
+        .select("*");
+
+if (recipeCostError) {
+
+    alert(recipeCostError.message);
+    return;
+
+}
+
+const { data: packagingCosts, error: packagingCostError } =
+    await supabaseClient
+        .from("packaging_profile_costs")
+        .select("*");
+
+if (packagingCostError) {
+
+    alert(packagingCostError.message);
+    return;
+
+}
+
+const menuMap =
+    new Map(menuItems.map(item => [
+        item.id,
+        item
+    ]));
+
+const recipeCostMap =
+    new Map(recipeCosts.map(recipe => [
+        recipe.id,
+        recipe
+    ]));
+
+const packagingCostMap =
+    new Map(packagingCosts.map(profile => [
+        profile.id,
+        profile
+    ]));
+
+    const saleItems = items.map(item => {
+
+    const menuItem =
+        menuMap.get(item.menu_item_id);
+
+    const recipeCost =
+        recipeCostMap.get(menuItem?.recipe_id);
+
+    const packagingCost =
+        packagingCostMap.get(menuItem?.packaging_profile_id);
+
+    const foodCost =
+        Number(recipeCost?.ingredient_cost || 0);
+
+    const packaging =
+        Number(packagingCost?.packaging_cost || 0);
+
+    const totalCost =
+        foodCost + packaging;
+
+    const revenue =
+        Number(item.line_total);
+
+    const profit =
+        revenue - (totalCost * item.quantity);
+
+    return {
+
+        sale_id: sale.id,
+
+        menu_item_id: item.menu_item_id,
+
+        item_name: item.item_name,
+
+        quantity: item.quantity,
+
+        unit_price: item.price_at_purchase,
+
+        food_cost: foodCost,
+
+        packaging_cost: packaging,
+
+        total_cost: totalCost,
+
+        line_revenue: revenue,
+
+        line_profit: profit
+
+    };
+
+});
     const { error: saleItemsError } =
         await supabaseClient
             .from("sale_items")
@@ -593,6 +698,49 @@ async function createSaleFromOrder(orderId) {
         alert(saleItemsError.message);
         return;
     }
+
+   const foodCost =
+    saleItems.reduce(
+        (sum, item) =>
+            sum + (item.food_cost * item.quantity),
+        0
+    );
+
+const packagingCost =
+    saleItems.reduce(
+        (sum, item) =>
+            sum + (item.packaging_cost * item.quantity),
+        0
+    );
+
+const totalCost =
+    foodCost + packagingCost;
+
+const profit =
+    Number(order.subtotal) - totalCost;
+
+   const { error: updateSaleError } =
+    await supabaseClient
+        .from("sales")
+        .update({
+
+            food_cost: foodCost,
+
+            packaging_cost: packagingCost,
+
+            total_cost: totalCost,
+
+            profit: profit
+
+        })
+        .eq("id", sale.id);
+
+if (updateSaleError) {
+
+    alert(updateSaleError.message);
+    return;
+
+}
 
     alert("Sale created successfully");
 
