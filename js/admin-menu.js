@@ -216,11 +216,47 @@ function renderMenuCategory(category, items) {
 }
 
 function renderMenuItemCard(item) {
+
+    const recipe =
+        getRecipe(item.recipe_id);
+
+    const packaging =
+        getPackaging(item.packaging_profile_id);
+
+    const recipeCost =
+        Number(getRecipeCost(item.recipe_id));
+
+    const packagingCost =
+        Number(getPackagingCost(item.packaging_profile_id));
+
+    const totalCost =
+        recipeCost + packagingCost;
+
+    const profit =
+        Number(item.price) - totalCost;
+
+    let profitClass = "profit-good";
+
+    if (profit < 5) {
+
+        profitClass = "profit-low";
+
+    } else if (profit < 8) {
+
+        profitClass = "profit-medium";
+
+    }
+
     return `
+
         <article class="menu-admin-item ${item.available ? "" : "is-disabled"}">
+
             <div class="menu-admin-main">
+
                 <div>
+
                     <div class="menu-item-title-row">
+
                         <h4>${escapeHtml(item.name)}</h4>
 
                         ${
@@ -234,58 +270,163 @@ function renderMenuItemCard(item) {
                                 ? `<span class="disabled-pill">Hidden</span>`
                                 : ""
                         }
+
                     </div>
 
                     <p class="menu-description">
-                        ${escapeHtml(item.description || "").replace(/\n/g, "<br>")}
+
+                        ${escapeHtml(item.description || "").replace(/\n/g,"<br>")}
+
                     </p>
 
-                    <div class="menu-item-meta">
-                        <span>€${formatMenuPrice(item.price)}</span>
-                        <span>Sort: ${item.sort_order || 0}</span>
+                    <div class="menu-cost-grid">
+
+                        <div>
+
+                            <small>Price</small>
+
+                            <strong>
+
+                                €${formatMenuPrice(item.price)}
+
+                            </strong>
+
+                        </div>
+
+                        <div>
+
+                            <small>Recipe</small>
+
+                            <strong>
+
+                                ${recipe ? recipe.name : "Not Assigned"}
+
+                            </strong>
+
+                        </div>
+
+                        <div>
+
+                            <small>Packaging</small>
+
+                            <strong>
+
+                                ${packaging ? packaging.name : "Not Assigned"}
+
+                            </strong>
+
+                        </div>
+
+                        <div>
+
+                            <small>Food Cost</small>
+
+                            <strong>
+
+                                $${formatMoney(recipeCost)}
+
+                            </strong>
+
+                        </div>
+
+                        <div>
+
+                            <small>Packaging</small>
+
+                            <strong>
+
+                                $${formatMoney(packagingCost)}
+
+                            </strong>
+
+                        </div>
+
+                        <div>
+
+                            <small>Total Cost</small>
+
+                            <strong>
+
+                                $${formatMoney(totalCost)}
+
+                            </strong>
+
+                        </div>
+
+                        <div class="${profitClass}">
+
+                            <small>Profit</small>
+
+                            <strong>
+
+                                €${formatMoney(profit)}
+
+                            </strong>
+
+                        </div>
+
                     </div>
+
                 </div>
 
                 <div class="menu-admin-actions">
+
                     <button
                         class="edit-option-btn"
                         onclick="openMenuItemModal(null,'${item.id}')">
+
                         Edit
+
                     </button>
 
                     <button
                         class="add-option-btn"
                         onclick="toggleFeatured('${item.id}', ${Boolean(item.featured)})">
+
                         ${item.featured ? "Unfeature" : "Feature"}
+
                     </button>
 
                     <button
                         class="edit-option-btn"
                         onclick="updateSortOrder('${item.id}', -1)">
+
                         ↑ Up
+
                     </button>
 
                     <button
                         class="edit-option-btn"
                         onclick="updateSortOrder('${item.id}', 1)">
+
                         ↓ Down
+
                     </button>
 
                     <button
                         class="remove-option-btn"
                         onclick="toggleMenuAvailability('${item.id}', ${Boolean(item.available)})">
+
                         ${item.available ? "Hide" : "Show"}
+
                     </button>
 
                     <button
                         class="delete-btn"
-                        onclick="deleteMenuItem('${item.id}', '${escapeJs(item.name)}')">
+                        onclick="deleteMenuItem('${item.id}','${escapeJs(item.name)}')">
+
                         Delete
+
                     </button>
+
                 </div>
+
             </div>
+
         </article>
+
     `;
+
 }
 
 
