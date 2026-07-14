@@ -3518,3 +3518,245 @@ body{
 .dashboard-home-kpi:hover .dashboard-home-kpi-icon img{
     transform:scale(1.08);
 }
+
+
+/*==================================================
+  INVENTORY REDESIGN
+==================================================*/
+
+.inventory-toolbar{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    gap:20px;
+    margin:28px 0;
+    flex-wrap:wrap;
+}
+
+.inventory-toolbar-left,
+.inventory-toolbar-right{
+    display:flex;
+    gap:12px;
+    flex-wrap:wrap;
+}
+
+.inventory-search-card{
+    background:#fff;
+    border:1px solid #ead9cd;
+    border-radius:20px;
+    padding:22px;
+    margin-bottom:28px;
+    box-shadow:0 10px 24px rgba(40,18,10,.05);
+}
+
+.inventory-search-large{
+    width:100%;
+    border:none;
+    outline:none;
+    background:#faf7f3;
+    border-radius:14px;
+    padding:18px 22px;
+    font-size:1rem;
+}
+
+.inventory-layout{
+    display:grid;
+    grid-template-columns:minmax(0,1fr) 340px;
+    gap:24px;
+    align-items:start;
+}
+
+.inventory-main,
+.inventory-sidebar{
+    min-width:0;
+}
+
+.inventory-panel{
+    background:#fff;
+    border:1px solid #ead9cd;
+    border-radius:24px;
+    padding:28px;
+    box-shadow:0 10px 24px rgba(40,18,10,.05);
+}
+
+.inventory-panel + .inventory-panel{
+    margin-top:24px;
+}
+
+.inventory-panel-header{
+    margin-bottom:22px;
+}
+
+.inventory-panel-header h2{
+    margin:4px 0 0;
+    color:#5d2018;
+    font-size:1.6rem;
+}
+
+.section-eyebrow{
+    font-size:.72rem;
+    text-transform:uppercase;
+    letter-spacing:.12em;
+    color:#987c6c;
+    font-weight:700;
+}
+
+/* ---------- Category Cards ---------- */
+
+.inventory-category{
+    margin-bottom:24px;
+    background:#faf8f5;
+    border:1px solid #ece2d9;
+    border-radius:20px;
+    overflow:hidden;
+}
+
+.inventory-category-header{
+    width:100%;
+    border:none;
+    background:none;
+    padding:22px 24px;
+    cursor:pointer;
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    transition:.2s;
+}
+
+.inventory-category-header:hover{
+    background:#f5efea;
+}
+
+.inventory-category-header h3{
+    margin:0;
+    color:#5d2018;
+    font-size:1.35rem;
+}
+
+.inventory-category-header small{
+    display:block;
+    margin-top:6px;
+    color:#8b786d;
+}
+
+.inventory-category-header span{
+    font-size:1.3rem;
+    color:#7b2b22;
+}
+
+.inventory-category-body{
+    padding:0 20px 20px;
+    display:grid;
+    grid-template-columns:repeat(auto-fill,minmax(280px,1fr));
+    gap:18px;
+}
+
+/* ---------- Ingredient Cards ---------- */
+
+.inventory-row{
+    display:flex;
+    flex-direction:column;
+    gap:16px;
+    background:#fff;
+    border:1px solid #ece2d9;
+    border-radius:18px;
+    padding:20px;
+    box-shadow:0 6px 18px rgba(40,18,10,.04);
+    transition:.18s;
+}
+
+.inventory-row:hover{
+    transform:translateY(-3px);
+    box-shadow:0 12px 26px rgba(40,18,10,.08);
+}
+
+.inventory-name strong{
+    display:block;
+    font-size:1.1rem;
+    color:#5d2018;
+}
+
+.inventory-name small{
+    display:block;
+    margin-top:4px;
+    color:#8c7b71;
+}
+
+.inventory-row > div:not(.inventory-actions):not(.inventory-name){
+    display:flex;
+    justify-content:space-between;
+    font-size:.92rem;
+    color:#6e6057;
+}
+
+.inventory-row > div:not(.inventory-actions):not(.inventory-name)::before{
+    color:#9b8b81;
+    font-weight:600;
+}
+
+.inventory-actions{
+    display:flex;
+    gap:8px;
+    flex-wrap:wrap;
+    margin-top:6px;
+}
+
+.inventory-low{
+    border-left:6px solid #d74d4d;
+}
+
+/* ---------- Alerts ---------- */
+
+.inventory-alert-row{
+    padding:16px 0;
+    border-bottom:1px solid #efe7df;
+}
+
+.inventory-alert-row:last-child{
+    border-bottom:none;
+}
+
+.inventory-alert-row strong{
+    display:block;
+    color:#5d2018;
+}
+
+.inventory-alert-row small{
+    color:#8a786d;
+}
+
+/* ---------- Responsive ---------- */
+
+@media(max-width:1200px){
+
+.inventory-layout{
+    grid-template-columns:1fr;
+}
+
+.inventory-sidebar{
+    order:-1;
+}
+
+}
+
+@media(max-width:700px){
+
+.inventory-category-body{
+    grid-template-columns:1fr;
+}
+
+.inventory-toolbar{
+    flex-direction:column;
+    align-items:stretch;
+}
+
+.inventory-toolbar-left,
+.inventory-toolbar-right{
+    width:100%;
+}
+
+.inventory-toolbar button{
+    flex:1;
+}
+
+}
