@@ -32,6 +32,8 @@ document.addEventListener("keydown", (event) => {
 ==================================================*/
 
 let menuItems = [];
+let recipes = [];
+let packagingProfiles = [];
 
 const MENU_CATEGORIES = [
     { key: "bread", label: "Bread" },
@@ -52,9 +54,37 @@ async function loadMenuManager() {
 
     container.innerHTML = `<p>Loading menu items...</p>`;
 
-    const { data, error } = await supabaseClient
+    const [
+    menuResult,
+    recipeResult,
+    packagingResult
+] = await Promise.all([
+
+    supabaseClient
         .from("menu_items")
         .select("*")
+        .order("category", { ascending: true })
+        .order("sort_order", { ascending: true })
+        .order("name"),
+
+    supabaseClient
+        .from("recipes")
+        .select("*")
+        .order("name"),
+
+    supabaseClient
+        .from("packaging_profiles")
+        .select("*")
+        .order("name")
+
+]);
+
+const data = menuResult.data;
+const error = menuResult.error;
+
+recipes = recipeResult.data || [];
+packagingProfiles = packagingResult.data || [];
+    
         .order("category", { ascending: true })
         .order("sort_order", { ascending: true })
         .order("name", { ascending: true });
@@ -270,6 +300,44 @@ function openMenuItemModal(category = null, itemId = null) {
     document.getElementById("menuItemCategory").value =
         item ? item.category : category || "bread";
 
+    const recipeSelect =
+    document.getElementById("menuRecipe");
+
+recipeSelect.innerHTML =
+    '<option value="">Select Recipe</option>';
+
+recipes.forEach(recipe => {
+
+    recipeSelect.innerHTML += `
+        <option value="${recipe.id}">
+            ${recipe.name}
+        </option>
+    `;
+
+});
+
+recipeSelect.value =
+    item?.recipe_id || "";
+
+    const packagingSelect =
+    document.getElementById("menuPackaging");
+
+packagingSelect.innerHTML =
+    '<option value="">Select Packaging</option>';
+
+packagingProfiles.forEach(profile => {
+
+    packagingSelect.innerHTML += `
+        <option value="${profile.id}">
+            ${profile.name}
+        </option>
+    `;
+
+});
+
+packagingSelect.value =
+    item?.packaging_profile_id || "";
+
     document.getElementById("menuItemSort").value =
         item ? item.sort_order || 0 : 0;
 
@@ -325,6 +393,31 @@ function buildMenuItemModal() {
                     placeholder="Short menu description"></textarea>
 
                 <label>Category</label>
+
+                <label>Recipe</label>
+
+<select id="menuRecipe">
+
+    <option value="">
+
+        Select Recipe
+
+    </option>
+
+</select>
+
+<label>Packaging</label>
+
+<select id="menuPackaging">
+
+    <option value="">
+
+        Select Packaging
+
+    </option>
+
+</select>
+                
                 <select id="menuItemCategory">
                     <option value="bread">Bread</option>
                     <option value="cookie">Cookie</option>
@@ -394,6 +487,11 @@ async function saveMenuItem() {
     const price = Number(document.getElementById("menuItemPrice").value);
     const description = document.getElementById("menuItemDescription").value.trim();
     const category = document.getElementById("menuItemCategory").value;
+    const recipeId =
+    document.getElementById("menuRecipe").value || null;
+
+const packagingProfileId =
+    document.getElementById("menuPackaging").value || null;
     const sortOrder = Number(document.getElementById("menuItemSort").value || 0);
     const available = document.getElementById("menuItemAvailable").checked;
     const featured = document.getElementById("menuItemFeatured").checked;
@@ -409,14 +507,23 @@ async function saveMenuItem() {
     }
 
     const payload = {
-        name,
-        price,
-        description,
-        category,
-        sort_order: sortOrder,
-        available,
-        featured
-    };
+
+    name,
+    price,
+    description,
+    category,
+
+    recipe_id: recipeId,
+
+    packaging_profile_id: packagingProfileId,
+
+    sort_order: sortOrder,
+
+    available,
+
+    featured
+
+};
 
     const query = id
         ? supabaseClient.from("menu_items").update(payload).eq("id", id)
