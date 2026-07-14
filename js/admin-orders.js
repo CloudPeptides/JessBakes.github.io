@@ -523,7 +523,36 @@ async function updateOrderStatus(orderId, status) {
 
 async function createSaleFromOrder(orderId) {
 
-    console.log("Creating sale from order:", orderId);
+    const { data: order, error: orderError } =
+        await supabaseClient
+            .from("orders")
+            .select("*")
+            .eq("id", orderId)
+            .single();
+
+    if (orderError) {
+
+        console.error(orderError);
+        return;
+
+    }
+
+    const { data: items, error: itemsError } =
+        await supabaseClient
+            .from("order_items")
+            .select("*")
+            .eq("order_id", orderId);
+
+    if (itemsError) {
+
+        console.error(itemsError);
+        return;
+
+    }
+
+    console.log("ORDER", order);
+
+    console.log("ITEMS", items);
 
 }
 
