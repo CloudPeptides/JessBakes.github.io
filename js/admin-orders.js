@@ -533,26 +533,41 @@ async function createSaleFromOrder(orderId) {
     if (orderError) {
 
         console.error(orderError);
+        alert(orderError.message);
         return;
 
     }
 
-    const { data: items, error: itemsError } =
+    const { error: saleError } =
         await supabaseClient
-            .from("order_items")
-            .select("*")
-            .eq("order_id", orderId);
+            .from("sales")
+            .insert({
 
-    if (itemsError) {
+                order_id: order.id,
 
-        console.error(itemsError);
+                customer_name: order.customer_name,
+
+                revenue: Number(order.subtotal || 0),
+
+                food_cost: 0,
+
+                packaging_cost: 0,
+
+                total_cost: 0,
+
+                profit: 0
+
+            });
+
+    if (saleError) {
+
+        console.error(saleError);
+        alert(saleError.message);
         return;
 
     }
 
-    console.log("ORDER", order);
-
-    console.log("ITEMS", items);
+    alert("Sale created.");
 
 }
 
