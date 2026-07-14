@@ -255,7 +255,11 @@ function renderMenuItemCard(item) {
 
                 <div>
 
-                    <div class="menu-item-title-row">
+                    <span class="menu-category-pill">
+
+    ${item.category}
+
+</span>
 
                         <h4>${escapeHtml(item.name)}</h4>
 
@@ -281,17 +285,17 @@ function renderMenuItemCard(item) {
 
                     <div class="menu-cost-grid">
 
-                        <div>
+                       <div class="menu-cost-card">
 
-                            <small>Price</small>
+    <small>Price</small>
 
-                            <strong>
+    <strong>
 
-                                €${formatMenuPrice(item.price)}
+        €${formatMenuPrice(item.price)}
 
-                            </strong>
+    </strong>
 
-                        </div>
+</div>
 
                         <div>
 
@@ -353,7 +357,7 @@ function renderMenuItemCard(item) {
 
                         </div>
 
-                        <div class="${profitClass}">
+                       <div class="menu-cost-card ${profitClass}">
 
                             <small>Profit</small>
 
