@@ -84,10 +84,6 @@ const error = menuResult.error;
 
 recipes = recipeResult.data || [];
 packagingProfiles = packagingResult.data || [];
-    
-        .order("category", { ascending: true })
-        .order("sort_order", { ascending: true })
-        .order("name", { ascending: true });
 
     if (error) {
         console.error(error);
@@ -506,6 +502,16 @@ const packagingProfileId =
         return;
     }
 
+    if (!recipeId) {
+    alert("Please select a recipe.");
+    return;
+    }
+
+    if (!packagingProfileId) {
+    alert("Please select a packaging profile.");
+    return;
+    }
+
     const payload = {
 
     name,
@@ -601,15 +607,19 @@ async function duplicateMenuItem(itemId) {
 
     if (!item) return;
 
-    const copy = {
-        name: item.name + " Copy",
-        price: item.price,
-        description: item.description,
-        category: item.category,
-        featured: false,
-        available: item.available,
-        sort_order: Number(item.sort_order || 0) + 1
-    };
+const copy = {
+    name: item.name + " Copy",
+    price: item.price,
+    description: item.description,
+    category: item.category,
+
+    recipe_id: item.recipe_id,
+    packaging_profile_id: item.packaging_profile_id,
+
+    featured: false,
+    available: item.available,
+    sort_order: Number(item.sort_order || 0) + 1
+};
 
     const { error } = await supabaseClient
         .from("menu_items")
