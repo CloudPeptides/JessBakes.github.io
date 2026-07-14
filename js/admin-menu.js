@@ -1564,9 +1564,13 @@ function getRecipeCost(recipeId) {
 
 function getPackagingCost(profileId) {
 
-    return packagingCosts.get(profileId)?.total_cost || 0;
+    const profile =
+        packagingCosts.get(Number(profileId));
+
+    return Number(profile?.packaging_cost || 0);
 
 }
+
 
 function formatMoney(value) {
 
