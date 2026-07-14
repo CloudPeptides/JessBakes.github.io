@@ -391,6 +391,14 @@ function renderSaleCard(order) {
 
 <div class="sale-card">
 
+    <button
+        class="sale-toggle"
+        onclick="toggleSaleDetails('${order.id}')">
+
+        View Details
+
+    </button>
+
     <div class="sale-card-header">
 
         <div>
@@ -417,13 +425,20 @@ function renderSaleCard(order) {
 
     </div>
 
+    <div
+    class="sale-details"
+    id="sale-${order.id}"
+    style="display:none;">
+
     <div class="sale-items">
 
         ${items}
 
     </div>
 
-    <div class="sale-summary">
+</div>
+
+<div class="sale-summary">
 
         <div>
 
@@ -454,6 +469,20 @@ function renderSaleCard(order) {
 </div>
 
 `;
+
+}
+
+function toggleSaleDetails(id) {
+
+    const details =
+        document.getElementById(`sale-${id}`);
+
+    if (!details) return;
+
+    details.style.display =
+        details.style.display === "none"
+            ? "block"
+            : "none";
 
 }
 
