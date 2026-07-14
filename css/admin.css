@@ -4380,3 +4380,73 @@ PACKAGING
         flex-direction: column;
     }
 }
+
+/*==================================================
+    MENU COST GRID
+==================================================*/
+
+.menu-cost-grid{
+
+    display:grid;
+
+    grid-template-columns:repeat(2,minmax(170px,1fr));
+
+    gap:16px;
+
+    margin-top:24px;
+
+    padding-top:22px;
+
+    border-top:1px solid #ece4dc;
+
+}
+
+.menu-cost-grid div{
+
+    display:flex;
+
+    flex-direction:column;
+
+}
+
+.menu-cost-grid small{
+
+    font-size:.72rem;
+
+    text-transform:uppercase;
+
+    letter-spacing:.08em;
+
+    color:#8b7b71;
+
+    margin-bottom:5px;
+
+}
+
+.menu-cost-grid strong{
+
+    color:#4a2d25;
+
+    font-size:.95rem;
+
+    font-weight:700;
+
+}
+
+.profit-good strong{
+
+    color:#1d8c45;
+
+}
+
+.profit-medium strong{
+
+    color:#d28a00;
+
+}
+
+.profit-low strong{
+
+    color:#d23a3a;
+
+}
