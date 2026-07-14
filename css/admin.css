@@ -3492,24 +3492,27 @@ body{
 ==================================================*/
 
 .dashboard-home-kpi-icon{
-    width:60px;
-    height:60px;
+    width:68px;
+    height:68px;
     flex-shrink:0;
+
     display:flex;
     align-items:center;
     justify-content:center;
 
     background:#f6eee9;
-    border-radius:18px;
+    border-radius:20px;
 }
 
 .dashboard-home-kpi-icon img{
-    width:42px;
-    height:42px;
+    width:52px;
+    height:52px;
+
     display:block;
     object-fit:contain;
 
-    transition:transform .25s ease;
+    transition:
+        transform .25s ease;
 }
 
 .dashboard-home-kpi:hover .dashboard-home-kpi-icon img{
