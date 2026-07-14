@@ -4061,3 +4061,56 @@ body{
         opacity .25s ease;
 
 }
+
+
+/*==================================================
+PACKAGING
+==================================================*/
+
+.packaging-card{
+
+    background:#fff;
+
+    border:1px solid #ead9cd;
+
+    border-radius:22px;
+
+    padding:28px;
+
+    box-shadow:0 8px 24px rgba(0,0,0,.05);
+
+    transition:.2s;
+
+}
+
+.packaging-card:hover{
+
+    transform:translateY(-3px);
+
+    box-shadow:0 16px 32px rgba(0,0,0,.08);
+
+}
+
+.packaging-card h3{
+
+    margin:0;
+
+    color:#5d2018;
+
+}
+
+.packaging-card p{
+
+    margin:12px 0;
+
+    color:#777;
+
+}
+
+.packaging-card h2{
+
+    color:var(--burgundy);
+
+    margin-bottom:22px;
+
+}
