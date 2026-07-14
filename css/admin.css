@@ -2992,3 +2992,229 @@ body{
     }
 
 }
+
+
+    /*==================================================
+  DASHBOARD HOME POLISH
+==================================================*/
+
+.dashboard-home {
+    max-width: 1600px;
+    margin: 0 auto;
+    padding: 40px;
+}
+
+/* ---------- Header ---------- */
+
+.dashboard-home-header {
+    margin-bottom: 32px;
+}
+
+.dashboard-home-header h1 {
+    font-size: 2.6rem;
+    font-weight: 700;
+    color: var(--burgundy);
+    margin-bottom: 8px;
+}
+
+.dashboard-home-header p {
+    font-size: 1rem;
+    color: #666;
+}
+
+/* ---------- Summary Cards ---------- */
+
+.dashboard-home-summary {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 22px;
+    margin-bottom: 36px;
+}
+
+.dashboard-home-card {
+    background: #fff;
+    border: 1px solid #ead8cb;
+    border-radius: 22px;
+    padding: 28px;
+    transition: .2s ease;
+    box-shadow: 0 10px 25px rgba(0,0,0,.04);
+}
+
+.dashboard-home-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 18px 35px rgba(0,0,0,.08);
+}
+
+.dashboard-home-card small {
+    display: block;
+    font-size: .78rem;
+    letter-spacing: .14em;
+    text-transform: uppercase;
+    color: #8d7d73;
+    margin-bottom: 10px;
+}
+
+.dashboard-home-card h2 {
+    font-size: 2.2rem;
+    color: var(--burgundy);
+    margin: 0;
+}
+
+.dashboard-home-card p {
+    margin-top: 10px;
+    color: #777;
+    font-size: .95rem;
+}
+
+/* ---------- Main Layout ---------- */
+
+.dashboard-home-grid {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 28px;
+    margin-top: 32px;
+}
+
+@media (max-width:1200px){
+
+.dashboard-home-grid{
+    grid-template-columns:1fr;
+}
+
+}
+
+/* ---------- Panels ---------- */
+
+.dashboard-home-panel {
+    background:#fff;
+    border:1px solid #ead8cb;
+    border-radius:22px;
+    padding:28px;
+    box-shadow:0 10px 25px rgba(0,0,0,.04);
+}
+
+.dashboard-home-panel + .dashboard-home-panel{
+    margin-top:24px;
+}
+
+.dashboard-home-panel h3{
+    margin:0 0 20px;
+    color:var(--burgundy);
+    font-size:1.35rem;
+}
+
+/* ---------- Recent Orders ---------- */
+
+.dashboard-home-order{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    padding:18px 0;
+    border-bottom:1px solid #f1e7df;
+}
+
+.dashboard-home-order:last-child{
+    border-bottom:none;
+}
+
+.dashboard-home-order-person{
+    display:flex;
+    align-items:center;
+    gap:16px;
+}
+
+.dashboard-home-avatar{
+    width:48px;
+    height:48px;
+    border-radius:50%;
+    background:#f6eee9;
+    color:var(--burgundy);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-weight:700;
+}
+
+.dashboard-home-order strong{
+    display:block;
+    font-size:1rem;
+}
+
+.dashboard-home-order small{
+    color:#888;
+}
+
+.dashboard-home-order-meta{
+    text-align:right;
+}
+
+.dashboard-home-order-meta strong{
+    display:block;
+    color:var(--burgundy);
+    font-size:1rem;
+}
+
+/* ---------- Notifications ---------- */
+
+.dashboard-home-notification{
+    display:flex;
+    align-items:center;
+    gap:12px;
+    padding:14px 18px;
+    margin-bottom:14px;
+    border-radius:14px;
+}
+
+.dashboard-home-notification-warning{
+    background:#fff8e7;
+}
+
+.dashboard-home-notification-success{
+    background:#eef8ef;
+}
+
+.dashboard-home-notification-info{
+    background:#edf6ff;
+}
+
+.dashboard-home-notification-dot{
+    width:10px;
+    height:10px;
+    border-radius:50%;
+    background:var(--burgundy);
+}
+
+/* ---------- Empty States ---------- */
+
+.dashboard-home-empty{
+    color:#888;
+    text-align:center;
+    padding:40px 20px;
+}
+
+/* ---------- Status Pills ---------- */
+
+.status-badge{
+    padding:5px 12px;
+    border-radius:999px;
+    font-size:.75rem;
+    font-weight:700;
+    text-transform:uppercase;
+    letter-spacing:.05em;
+}
+
+.status-pending{
+    background:#fff2c9;
+    color:#8a6500;
+}
+
+.status-completed{
+    background:#e9f5ea;
+    color:#22663b;
+}
+
+.status-confirmed,
+.status-ready{
+    background:#e8f2ff;
+    color:#245ba5;
+}
