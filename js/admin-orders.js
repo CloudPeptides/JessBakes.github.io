@@ -559,17 +559,51 @@ async function createSaleFromOrder(orderId) {
             .select()
             .single();
 
-    if (saleError) {
+   if (saleError) {
 
-        alert("Insert failed");
-        alert(saleError.message);
-        return;
-
-    }
-
-    alert("Sale created successfully");
+    alert("Insert failed");
+    alert(saleError.message);
+    return;
 
 }
+
+const saleItems = items.map(item => ({
+
+    sale_id: sale.id,
+
+    menu_item_id: item.menu_item_id,
+
+    item_name: item.item_name,
+
+    quantity: item.quantity,
+
+    unit_price: item.price_at_purchase,
+
+    food_cost: 0,
+
+    packaging_cost: 0,
+
+    total_cost: 0,
+
+    line_revenue: item.line_total,
+
+    line_profit: 0
+
+}));
+
+   const { error: saleItemsError } =
+    await supabaseClient
+        .from("sale_items")
+        .insert(saleItems);
+
+if (saleItemsError) {
+
+    alert(saleItemsError.message);
+    return;
+
+}
+
+alert("Sale created successfully");
 
 /* ==========================================
    DELETE
