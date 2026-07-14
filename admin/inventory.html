@@ -49,109 +49,204 @@
 
     </aside>
 
-    <main class="admin-content">
+   <main class="admin-content">
 
-        <header class="admin-header">
-            <div>
-                <h1>Inventory</h1>
-                <p>Ingredients, recipes, costs, and shopping.</p>
-            </div>
-        </header>
+    <header class="admin-header inventory-header">
 
-        <section class="overview-grid">
+        <div>
+            <h1>Inventory</h1>
+            <p>Ingredients, recipes, costs, and shopping.</p>
+        </div>
 
-            <article class="overview-card">
-                <span class="overview-label">Ingredients</span>
-                <h2 id="ingredientCount">0</h2>
-            </article>
+    </header>
 
-            <article class="overview-card">
-                <span class="overview-label">Low Stock</span>
-                <h2 id="lowStockCount">0</h2>
-            </article>
+    <!-- ==============================
+         OVERVIEW
+    =============================== -->
 
-            <article class="overview-card">
-                <span class="overview-label">Inventory Value</span>
-                <h2 id="inventoryValue">$0</h2>
-            </article>
+    <section class="overview-grid">
 
-            <article class="overview-card">
-                <span class="overview-label">Recipes</span>
-                <h2 id="recipeCount">0</h2>
-            </article>
+        <article class="overview-card">
+            <span class="overview-label">Ingredients</span>
+            <h2 id="ingredientCount">0</h2>
+            <small>Tracked ingredients</small>
+        </article>
 
-        </section>
+        <article class="overview-card">
+            <span class="overview-label">Low Stock</span>
+            <h2 id="lowStockCount">0</h2>
+            <small>Need attention</small>
+        </article>
 
-        <section class="button-row">
+        <article class="overview-card">
+            <span class="overview-label">Inventory Value</span>
+            <h2 id="inventoryValue">$0</h2>
+            <small>Estimated value</small>
+        </article>
 
-            <button class="primary-btn" onclick="openIngredientModal()">
-                Add Ingredient
+        <article class="overview-card">
+            <span class="overview-label">Recipes</span>
+            <h2 id="recipeCount">0</h2>
+            <small>Saved recipes</small>
+        </article>
+
+    </section>
+
+    <!-- ==============================
+         ACTIONS
+    =============================== -->
+
+    <section class="inventory-toolbar">
+
+        <div class="inventory-toolbar-left">
+
+            <button class="primary-btn"
+                    onclick="openIngredientModal()">
+                + Ingredient
             </button>
 
-            <button class="primary-btn" onclick="openRecipeModal()">
-                Add Recipe
+            <button class="primary-btn"
+                    onclick="openRecipeModal()">
+                + Recipe
             </button>
 
-            <button class="primary-btn" onclick="printShoppingList()">
-                Print Shopping List
+        </div>
+
+        <div class="inventory-toolbar-right">
+
+            <button class="secondary-btn"
+                    onclick="printShoppingList()">
+                Shopping List
             </button>
 
-            <button class="primary-btn" onclick="window.print()">
+            <button class="secondary-btn"
+                    onclick="window.print()">
                 Print Inventory
             </button>
 
-        </section>
+        </div>
 
-        <section class="sales-filters inventory-tabs">
+    </section>
 
-            <button class="filter-btn active" onclick="showInventoryTab('pantry', this)">
-                Pantry
-            </button>
+    <!-- ==============================
+         SEARCH
+    =============================== -->
 
-            <button class="filter-btn" onclick="showInventoryTab('recipes', this)">
-                Recipes
-            </button>
+    <section class="inventory-search-card">
 
-            <button class="filter-btn" onclick="showInventoryTab('shopping', this)">
-                Shopping
-            </button>
+        <input
+            id="inventorySearch"
+            class="inventory-search-large"
+            type="search"
+            placeholder="Search ingredients..."
+            oninput="renderIngredients()">
 
-            <button class="filter-btn" onclick="showInventoryTab('suppliers', this)">
-                Suppliers
-            </button>
+    </section>
 
-        </section>
+    <!-- ==============================
+         TABS
+    =============================== -->
 
-        <section id="tab-pantry" class="inventory-tab-panel">
+    <section class="sales-filters inventory-tabs">
 
-            <section class="dashboard-card">
-                <div class="dashboard-card-header">
-                    <h2>Low Stock Alerts</h2>
-                </div>
+        <button class="filter-btn active"
+                onclick="showInventoryTab('pantry', this)">
+            Pantry
+        </button>
 
-                <div id="lowStockAlerts">
-                    Loading...
-                </div>
-            </section>
+        <button class="filter-btn"
+                onclick="showInventoryTab('recipes', this)">
+            Recipes
+        </button>
 
-            <section class="dashboard-card">
-                <div class="dashboard-card-header">
-                    <h2>Pantry</h2>
-                </div>
+        <button class="filter-btn"
+                onclick="showInventoryTab('shopping', this)">
+            Shopping
+        </button>
 
-                <input
-                    id="inventorySearch"
-                    class="admin-search"
-                    type="search"
-                    placeholder="Search ingredients..."
-                    oninput="renderIngredients()">
+        <button class="filter-btn"
+                onclick="showInventoryTab('suppliers', this)">
+            Suppliers
+        </button>
 
-                <div id="ingredientsTable">
-                    Loading...
-                </div>
-            </section>
+    </section>
 
-        </section>
+    <!-- ==============================
+         PANTRY
+    =============================== -->
+
+    <section id="tab-pantry"
+             class="inventory-tab-panel">
+
+        <div class="inventory-layout">
+
+            <!-- LEFT -->
+
+            <div class="inventory-main">
+
+                <section class="inventory-panel">
+
+                    <div class="inventory-panel-header">
+
+                        <div>
+
+                            <span class="section-eyebrow">
+                                Pantry
+                            </span>
+
+                            <h2>
+                                Ingredients
+                            </h2>
+
+                        </div>
+
+                    </div>
+
+                    <div id="ingredientsTable">
+
+                        Loading...
+
+                    </div>
+
+                </section>
+
+            </div>
+
+            <!-- RIGHT -->
+
+            <aside class="inventory-sidebar">
+
+                <section class="inventory-panel">
+
+                    <div class="inventory-panel-header">
+
+                        <div>
+
+                            <span class="section-eyebrow">
+                                Alerts
+                            </span>
+
+                            <h2>
+                                Low Stock
+                            </h2>
+
+                        </div>
+
+                    </div>
+
+                    <div id="lowStockAlerts">
+
+                        Loading...
+
+                    </div>
+
+                </section>
+
+            </aside>
+
+        </div>
+
+    </section>
 
         <section id="tab-recipes" class="inventory-tab-panel" style="display:none;">
 
