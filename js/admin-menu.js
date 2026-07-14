@@ -491,6 +491,9 @@ packagingProfiles.forEach(profile => {
 packagingSelect.value =
     item?.packaging_profile_id || "";
 
+    document.getElementById("menuRecipeUnitsUsed").value =
+    item?.recipe_units_used ?? 1;
+
     document.getElementById("menuItemSort").value =
         item ? item.sort_order || 0 : 0;
 
@@ -558,6 +561,31 @@ function buildMenuItemModal() {
     </option>
 
 </select>
+
+<label>
+
+    Recipe Units Used
+
+    <input
+        id="menuRecipeUnitsUsed"
+        type="number"
+        min="1"
+        step="1"
+        value="1">
+
+</label>
+
+<p class="field-help">
+
+How many recipe units does this menu item use?
+
+Examples:
+• Bread = 1
+• Single Cookie = 1
+• 6-Pack = 6
+• 12-Pack = 12
+
+</p>
 
 <label>Packaging</label>
 
@@ -669,7 +697,7 @@ const packagingProfileId =
     return;
     }
 
-    const payload = {
+   const payload = {
 
     name,
     price,
@@ -679,6 +707,9 @@ const packagingProfileId =
     recipe_id: recipeId,
 
     packaging_profile_id: packagingProfileId,
+
+    recipe_units_used:
+        Number(document.getElementById("menuRecipeUnitsUsed").value) || 1,
 
     sort_order: sortOrder,
 
