@@ -511,10 +511,21 @@ async function updateOrderStatus(orderId, status) {
 
     }
 
+    if (status === "Completed") {
+
+        await createSaleFromOrder(orderId);
+
+    }
+
     await loadOrderManager();
 
 }
 
+async function createSaleFromOrder(orderId) {
+
+    console.log("Creating sale from order:", orderId);
+
+}
 
 /* ==========================================
    DELETE
