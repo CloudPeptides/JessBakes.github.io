@@ -217,11 +217,8 @@ function renderMenuCategory(category, items) {
 
 function renderMenuItemCard(item) {
 
-    const recipe =
-        getRecipe(item.recipe_id);
-
-    const packaging =
-        getPackaging(item.packaging_profile_id);
+    const recipe = getRecipe(item.recipe_id);
+    const packaging = getPackaging(item.packaging_profile_id);
 
     const recipeCost =
         Number(getRecipeCost(item.recipe_id));
@@ -249,187 +246,175 @@ function renderMenuItemCard(item) {
 
     return `
 
-        <article class="menu-admin-item ${item.available ? "" : "is-disabled"}">
+<article class="menu-admin-item ${item.available ? "" : "is-disabled"}">
 
-            <div class="menu-product-card">
+<div class="menu-product-card">
 
-                <div>
+<div class="menu-card-header">
 
-                    <span class="menu-category-pill">
+<div>
 
-    ${item.category}
+<div class="menu-item-title-row">
+
+<h4>${escapeHtml(item.name)}</h4>
+
+<span class="menu-category-pill">
+
+${item.category}
 
 </span>
 
-                        <h4>${escapeHtml(item.name)}</h4>
+${item.featured
+? `<span class="featured-pill">★ Featured</span>`
+: ""}
 
-                        ${
-                            item.featured
-                                ? `<span class="featured-pill">Featured</span>`
-                                : ""
-                        }
-
-                        ${
-                            !item.available
-                                ? `<span class="disabled-pill">Hidden</span>`
-                                : ""
-                        }
-
-                    </div>
-
-                    <p class="menu-description">
-
-                        ${escapeHtml(item.description || "").replace(/\n/g,"<br>")}
-
-                    </p>
-
-                    <div class="menu-cost-grid">
-
-                       <div class="menu-cost-card">
-
-    <small>Price</small>
-
-    <strong>
-
-        €${formatMenuPrice(item.price)}
-
-    </strong>
+${!item.available
+? `<span class="disabled-pill">Hidden</span>`
+: ""}
 
 </div>
 
-                        <div>
+<p class="menu-description">
 
-                            <small>Recipe</small>
+${escapeHtml(item.description || "").replace(/\n/g,"<br>")}
 
-                            <strong>
+</p>
 
-                                ${recipe ? recipe.name : "Not Assigned"}
+</div>
 
-                            </strong>
+<div class="menu-price-badge">
 
-                        </div>
+€${formatMenuPrice(item.price)}
 
-                        <div>
+</div>
 
-                            <small>Packaging</small>
+</div>
 
-                            <strong>
+<div class="menu-details-grid">
 
-                                ${packaging ? packaging.name : "Not Assigned"}
+<div class="menu-detail-box">
 
-                            </strong>
+<small>Recipe</small>
 
-                        </div>
+<strong>
 
-                        <div>
+${recipe ? recipe.name : "Not Assigned"}
 
-                            <small>Food Cost</small>
+</strong>
 
-                            <strong>
+<span>
 
-                                $${formatMoney(recipeCost)}
+$${formatMoney(recipeCost)}
 
-                            </strong>
+</span>
 
-                        </div>
+</div>
 
-                        <div>
+<div class="menu-detail-box">
 
-                            <small>Packaging</small>
+<small>Packaging</small>
 
-                            <strong>
+<strong>
 
-                                $${formatMoney(packagingCost)}
+${packaging ? packaging.name : "Not Assigned"}
 
-                            </strong>
+</strong>
 
-                        </div>
+<span>
 
-                        <div>
+$${formatMoney(packagingCost)}
 
-                            <small>Total Cost</small>
+</span>
 
-                            <strong>
+</div>
 
-                                $${formatMoney(totalCost)}
+</div>
 
-                            </strong>
+<div class="menu-summary-row">
 
-                        </div>
+<div>
 
-                       <div class="menu-cost-card ${profitClass}">
+<small>Total Cost</small>
 
-                            <small>Profit</small>
+<strong>
 
-                            <strong>
+$${formatMoney(totalCost)}
 
-                                €${formatMoney(profit)}
+</strong>
 
-                            </strong>
+</div>
 
-                        </div>
+<div class="${profitClass}">
 
-                    </div>
+<small>Estimated Profit</small>
 
-                </div>
+<strong>
 
-                <div class="menu-product-toolbar">
+€${formatMoney(profit)}
 
-                    <button
-                        class="edit-option-btn"
-                        onclick="openMenuItemModal(null,'${item.id}')">
+</strong>
 
-                        Edit
+</div>
 
-                    </button>
+</div>
 
-                    <button
-                        class="add-option-btn"
-                        onclick="toggleFeatured('${item.id}', ${Boolean(item.featured)})">
+<div class="menu-product-toolbar">
 
-                        ${item.featured ? "Unfeature" : "Feature"}
+<button
+class="edit-option-btn"
+onclick="openMenuItemModal(null,'${item.id}')">
 
-                    </button>
+Edit
 
-                    <button
-                        class="edit-option-btn"
-                        onclick="updateSortOrder('${item.id}', -1)">
+</button>
 
-                        ↑ Up
+<button
+class="add-option-btn"
+onclick="toggleFeatured('${item.id}',${Boolean(item.featured)})">
 
-                    </button>
+${item.featured ? "Unfeature" : "Feature"}
 
-                    <button
-                        class="edit-option-btn"
-                        onclick="updateSortOrder('${item.id}', 1)">
+</button>
 
-                        ↓ Down
+<button
+class="edit-option-btn"
+onclick="updateSortOrder('${item.id}',-1)">
 
-                    </button>
+↑
 
-                    <button
-                        class="remove-option-btn"
-                        onclick="toggleMenuAvailability('${item.id}', ${Boolean(item.available)})">
+</button>
 
-                        ${item.available ? "Hide" : "Show"}
+<button
+class="edit-option-btn"
+onclick="updateSortOrder('${item.id}',1)">
 
-                    </button>
+↓
 
-                    <button
-                        class="delete-btn"
-                        onclick="deleteMenuItem('${item.id}','${escapeJs(item.name)}')">
+</button>
 
-                        Delete
+<button
+class="remove-option-btn"
+onclick="toggleMenuAvailability('${item.id}',${Boolean(item.available)})">
 
-                    </button>
+${item.available ? "Hide" : "Show"}
 
-                </div>
+</button>
 
-            </div>
+<button
+class="delete-btn"
+onclick="deleteMenuItem('${item.id}','${escapeJs(item.name)}')">
 
-        </article>
+Delete
 
-    `;
+</button>
+
+</div>
+
+</div>
+
+</article>
+
+`;
 
 }
 
