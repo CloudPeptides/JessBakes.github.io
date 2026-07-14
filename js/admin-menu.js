@@ -35,6 +35,9 @@ let menuItems = [];
 let recipes = [];
 let packagingProfiles = [];
 
+let recipeCosts = new Map();
+let packagingCosts = new Map();
+
 const MENU_CATEGORIES = [
     { key: "bread", label: "Bread" },
     { key: "cookie", label: "Cookies" },
