@@ -8,6 +8,7 @@ let revenueChart = null;
 let categoryChart = null;
 let currentSalesRange = "today";
 
+
 document.addEventListener("DOMContentLoaded", async () => {
     await requireAuth();
 
@@ -63,13 +64,13 @@ function bindSalesControls() {
 
 async function loadSalesDashboard() {
     const [ordersResult, menuResult] = await Promise.all([
-        supabaseClient
-            .from("orders")
-            .select(`
-                *,
-                order_items(*)
-            `)
-            .order("created_at", { ascending: false }),
+       supabaseClient
+    .from("sales")
+    .select(`
+        *,
+        sale_items(*)
+    `)
+    .order("completed_at", { ascending: false }),
 
         supabaseClient
             .from("menu_items")
@@ -86,11 +87,16 @@ async function loadSalesDashboard() {
         console.warn("Unable to load menu categories:", menuResult.error);
     }
 
-    salesOrders = (ordersResult.data || []).map((order) => ({
-        ...order,
-        subtotal: Number(order.subtotal) || 0,
-        order_items: Array.isArray(order.order_items) ? order.order_items : []
-    }));
+    salesOrders = (ordersResult.data || []).map((sale) => ({
+    ...sale,
+
+    subtotal: Number(sale.revenue) || 0,
+
+    order_items: Array.isArray(sale.sale_items)
+        ? sale.sale_items
+        : []
+
+}));
 
     salesMenuItems = menuResult.data || [];
     renderSalesDashboard();
@@ -121,20 +127,20 @@ function updateSalesCards(completedOrders, activeOrders) {
     const now = new Date();
 
     const todayRevenue = sumRevenue(
-        completedOrders.filter((order) => isSameDay(now, new Date(order.created_at)))
+        completedOrders.filter((order) => isSameDay(now, new Date(order.completed_at)))
     );
 
     const weekRevenue = sumRevenue(
-        completedOrders.filter((order) => isThisWeek(new Date(order.created_at), now))
+        completedOrders.filter((order) => isThisWeek(new Date(order.completed_at), now))
     );
 
     const monthRevenue = sumRevenue(
-        completedOrders.filter((order) => isSameMonth(new Date(order.created_at), now))
+        completedOrders.filter((order) => isSameMonth(new Date(order.completed_at), now))
     );
 
     const yearRevenue = sumRevenue(
         completedOrders.filter((order) =>
-            new Date(order.created_at).getFullYear() === now.getFullYear()
+            new Date(order.completed_at).getFullYear() === now.getFullYear()
         )
     );
 
@@ -216,7 +222,7 @@ function buildRevenueSeries(orders, range) {
     const grouped = new Map();
 
     orders.forEach((order) => {
-        const date = new Date(order.created_at);
+        const date = new Date(order.completed_at);
         let key;
         let label;
 
@@ -327,29 +333,130 @@ function renderBestSellers(orders) {
 }
 
 function renderRecentSales(orders) {
-    const container = document.getElementById("recentSales");
+
+    const container =
+        document.getElementById("recentSales");
+
     if (!container) return;
 
     if (!orders.length) {
-        container.innerHTML = "<p>No completed sales in this period.</p>";
+
+        container.innerHTML =
+            "<p>No completed sales in this period.</p>";
+
         return;
+
     }
 
-    container.innerHTML = orders
-        .slice()
-        .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
-        .slice(0, 10)
-        .map((order) => `
-            <div class="sale-row">
-                <div>
-                    <strong>${escapeHtml(order.customer_name)}</strong>
-                    <small>${formatDate(order.created_at)}</small>
-                </div>
-                <strong>${euro(order.subtotal)}</strong>
-            </div>
-        `)
-        .join("");
+    container.innerHTML =
+        orders
+            .slice()
+            .sort(
+                (a, b) =>
+                    new Date(b.completed_at) -
+                    new Date(a.completed_at)
+            )
+            .slice(0, 10)
+            .map(renderSaleCard)
+            .join("");
+
 }
+
+function renderSaleCard(order) {
+
+    const items =
+        order.order_items
+            .map(item => `
+
+                <div class="sale-item-row">
+
+                    <span>
+
+                        ${escapeHtml(item.item_name)}
+
+                    </span>
+
+                    <strong>
+
+                        ×${item.quantity}
+
+                    </strong>
+
+                </div>
+
+            `)
+            .join("");
+
+    return `
+
+<div class="sale-card">
+
+    <div class="sale-card-header">
+
+        <div>
+
+            <h3>
+
+                ${escapeHtml(order.customer_name)}
+
+            </h3>
+
+            <small>
+
+                ${formatDate(order.completed_at)}
+
+            </small>
+
+        </div>
+
+        <strong>
+
+            ${euro(order.subtotal)}
+
+        </strong>
+
+    </div>
+
+    <div class="sale-items">
+
+        ${items}
+
+    </div>
+
+    <div class="sale-summary">
+
+        <div>
+
+            Revenue
+
+            <strong>
+
+                ${euro(order.subtotal)}
+
+            </strong>
+
+        </div>
+
+        <div>
+
+            Profit
+
+            <strong>
+
+                ${euro(order.profit)}
+
+            </strong>
+
+        </div>
+
+    </div>
+
+</div>
+
+`;
+
+}
+
 
 function renderSalesForecast(completedOrders) {
     const container = document.getElementById("salesForecast");
@@ -360,7 +467,7 @@ function renderSalesForecast(completedOrders) {
     recentStart.setHours(0, 0, 0, 0);
 
     const recentOrders = completedOrders.filter(
-        (order) => new Date(order.created_at) >= recentStart
+        (order) => new Date(order.completed_at) >= recentStart
     );
 
     const recentRevenue = sumRevenue(recentOrders);
@@ -414,7 +521,7 @@ function renderMonthlyRevenue(completedOrders) {
     const grouped = {};
 
     completedOrders.forEach((order) => {
-        const date = new Date(order.created_at);
+        const date = new Date(order.completed_at);
         const key = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`;
         const label = date.toLocaleDateString("en-US", { month: "long", year: "numeric" });
 
@@ -473,24 +580,46 @@ function renderProfitBreakdown(orders) {
 }
 
 function calculateProfit(orders) {
+
     let revenue = 0;
+
     let cost = 0;
-    let hasCostData = false;
 
-    orders.forEach((order) => {
-        revenue += Number(order.subtotal) || 0;
+    orders.forEach(order => {
 
-        order.order_items.forEach((item) => {
-            const unitCost = Number(
-                item.unit_cost ?? item.cost_at_purchase ?? item.ingredient_cost
-            );
+        revenue += Number(order.subtotal || 0);
 
-            if (Number.isFinite(unitCost) && unitCost >= 0) {
-                hasCostData = true;
-                cost += unitCost * Number(item.quantity || 0);
-            }
+        order.order_items.forEach(item => {
+
+            cost +=
+                Number(item.total_cost || 0) *
+                Number(item.quantity || 0);
+
         });
+
     });
+
+    const grossProfit =
+        revenue - cost;
+
+    return {
+
+        revenue,
+
+        cost,
+
+        grossProfit,
+
+        margin:
+            revenue > 0
+                ? (grossProfit / revenue) * 100
+                : 0,
+
+        hasCostData: true
+
+    };
+
+}
 
     const grossProfit = revenue - cost;
 
@@ -515,7 +644,7 @@ function exportSalesCsv() {
         rows.push([
             order.id,
             order.customer_name,
-            formatDate(order.created_at),
+            formatDate(order.completed_at),
             order.status,
             itemSummary,
             Number(order.subtotal).toFixed(2)
@@ -542,7 +671,7 @@ function filterOrdersByRange(orders, range) {
     const now = new Date();
 
     return orders.filter((order) => {
-        const date = new Date(order.created_at);
+        const date = new Date(order.completed_at);
         if (range === "today") return isSameDay(now, date);
         if (range === "week") return isThisWeek(date, now);
         if (range === "month") return isSameMonth(date, now);
@@ -578,7 +707,7 @@ function getBestSalesDay(orders) {
     const totals = {};
 
     orders.forEach((order) => {
-        const label = new Date(order.created_at).toLocaleDateString("en-US", { weekday: "long" });
+        const label = new Date(order.completed_at).toLocaleDateString("en-US", { weekday: "long" });
         totals[label] = (totals[label] || 0) + Number(order.subtotal || 0);
     });
 
