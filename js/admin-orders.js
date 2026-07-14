@@ -511,7 +511,7 @@ async function updateOrderStatus(orderId, status) {
 
     }
 
-    if (status === "Completed") {
+    if (status === "completed") {
 
         await createSaleFromOrder(orderId);
 
@@ -523,6 +523,8 @@ async function updateOrderStatus(orderId, status) {
 
 async function createSaleFromOrder(orderId) {
 
+    alert("createSaleFromOrder() started");
+
     const { data: order, error: orderError } =
         await supabaseClient
             .from("orders")
@@ -532,42 +534,40 @@ async function createSaleFromOrder(orderId) {
 
     if (orderError) {
 
-        console.error(orderError);
+        alert("Failed to load order");
         alert(orderError.message);
         return;
 
     }
 
-    const { error: saleError } =
+    alert("Order loaded");
+
+    const { data, error: saleError } =
         await supabaseClient
             .from("sales")
             .insert({
 
                 order_id: order.id,
-
                 customer_name: order.customer_name,
-
                 revenue: Number(order.subtotal || 0),
-
                 food_cost: 0,
-
                 packaging_cost: 0,
-
                 total_cost: 0,
-
                 profit: 0
 
-            });
+            })
+            .select()
+            .single();
 
     if (saleError) {
 
-        console.error(saleError);
+        alert("Insert failed");
         alert(saleError.message);
         return;
 
     }
 
-    alert("Sale created.");
+    alert("Sale created successfully");
 
 }
 
