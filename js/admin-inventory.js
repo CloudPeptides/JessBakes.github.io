@@ -201,7 +201,9 @@ function renderIngredients() {
     if (!filtered.length) {
 
         container.innerHTML = `
-            <p>No ingredients found.</p>
+            <p class="inventory-empty">
+                No ingredients found.
+            </p>
         `;
 
         return;
@@ -228,39 +230,95 @@ function renderIngredients() {
     });
 
     container.innerHTML = Object.entries(grouped)
+
+        .sort((a,b)=>a[0].localeCompare(b[0]))
+
         .map(([categoryName, items]) => `
 
-            <section class="inventory-category">
+<section class="inventory-category">
 
-                <button
-                    class="inventory-category-header"
-                    onclick="toggleInventoryCategory(this)">
+<button
+class="inventory-category-header"
+onclick="toggleInventoryCategory(this)">
 
-                    <div>
+<div class="inventory-category-left">
 
-                        <h3>${escapeHtml(categoryName)}</h3>
+<div class="inventory-category-icon">
 
-                        <small>${items.length} item${items.length === 1 ? "" : "s"}</small>
+${getCategoryEmoji(categoryName)}
 
-                    </div>
+</div>
 
-                    <span>▼</span>
+<div>
 
-                </button>
+<h3>${escapeHtml(categoryName)}</h3>
 
-                <div class="inventory-category-body">
+<small>
 
-                    ${items
-                        .sort((a, b) => a.name.localeCompare(b.name))
-                        .map(renderIngredientRow)
-                        .join("")}
+${items.length}
+ingredient${items.length===1?"":"s"}
 
-                </div>
+</small>
 
-            </section>
+</div>
 
-        `)
-        .join("");
+</div>
+
+<div class="inventory-category-arrow">
+
+▼
+
+</div>
+
+</button>
+
+<div class="inventory-category-body">
+
+${items
+.sort((a,b)=>a.name.localeCompare(b.name))
+.map(renderIngredientRow)
+.join("")}
+
+</div>
+
+</section>
+
+        `).join("");
+
+}
+
+function getCategoryEmoji(category){
+
+    switch(category.toLowerCase()){
+
+        case "pantry":
+            return "🥣";
+
+        case "dairy":
+            return "🥛";
+
+        case "produce":
+            return "🥬";
+
+        case "packaging":
+            return "📦";
+
+        case "chocolate":
+            return "🍫";
+
+        case "spices":
+            return "🌿";
+
+        case "equipment":
+            return "🧁";
+
+        case "cleaning":
+            return "🧽";
+
+        default:
+            return "📋";
+
+    }
 
 }
 
