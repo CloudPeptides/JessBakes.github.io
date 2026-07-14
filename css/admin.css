@@ -3925,3 +3925,117 @@ body{
 }
 
 }
+
+
+/*==================================================
+ CATEGORY HEADER REDESIGN
+==================================================*/
+
+.inventory-category{
+
+    margin-bottom:32px;
+
+}
+
+.inventory-category-header{
+
+    display:flex;
+
+    justify-content:space-between;
+
+    align-items:center;
+
+    width:100%;
+
+    padding:24px 26px;
+
+    background:#fbf8f5;
+
+    border:1px solid #ece2d9;
+
+    border-radius:22px;
+
+    cursor:pointer;
+
+    transition:.18s;
+
+}
+
+.inventory-category-header:hover{
+
+    background:#f6f0eb;
+
+}
+
+.inventory-category-left{
+
+    display:flex;
+
+    align-items:center;
+
+    gap:18px;
+
+}
+
+.inventory-category-icon{
+
+    width:58px;
+
+    height:58px;
+
+    border-radius:18px;
+
+    background:#f3e6e0;
+
+    display:flex;
+
+    align-items:center;
+
+    justify-content:center;
+
+    font-size:1.8rem;
+
+}
+
+.inventory-category-header h3{
+
+    margin:0;
+
+    font-size:1.45rem;
+
+    color:#5d2018;
+
+}
+
+.inventory-category-header small{
+
+    display:block;
+
+    margin-top:6px;
+
+    color:#8a776c;
+
+}
+
+.inventory-category-arrow{
+
+    font-size:1.3rem;
+
+    color:#7b2b22;
+
+    transition:.25s;
+
+}
+
+.inventory-category.open
+.inventory-category-arrow{
+
+    transform:rotate(180deg);
+
+}
+
+.inventory-category-body{
+
+    margin-top:18px;
+
+}
