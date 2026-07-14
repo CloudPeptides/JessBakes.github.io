@@ -269,50 +269,94 @@ function renderIngredientRow(ingredient) {
     const supplier =
         suppliers.find(s => s.id === ingredient.supplier_id);
 
+    const lowStock = isLowStock(ingredient);
+
     return `
 
-        <div class="inventory-row ${isLowStock(ingredient) ? "inventory-low" : ""}">
+        <article class="ingredient-card ${lowStock ? "ingredient-low" : ""}">
 
-            <div class="inventory-name">
+            <div class="ingredient-card-header">
 
-                <strong>${escapeHtml(ingredient.name)}</strong>
+                <div>
 
-                <small>
+                    <h3>${escapeHtml(ingredient.name)}</h3>
 
-                    ${formatQuantity(ingredient.quantity_on_hand)}
-                    ${escapeHtml(ingredient.purchase_unit)}
+                    <p>
+                        ${supplier ? escapeHtml(supplier.name) : "No Supplier"}
+                    </p>
 
-                </small>
+                </div>
 
-            </div>
+                <div class="ingredient-status ${lowStock ? "status-low" : "status-good"}">
 
-            <div>
+                    ${lowStock ? "Low Stock" : "In Stock"}
 
-                ${usd(ingredient.purchase_price)}
-
-            </div>
-
-            <div>
-
-                Min
-
-                ${formatQuantity(ingredient.minimum_quantity)}
+                </div>
 
             </div>
 
-            <div>
+            <div class="ingredient-card-grid">
 
-                ${supplier ? escapeHtml(supplier.name) : "-"}
+                <div class="ingredient-stat">
+
+                    <span>On Hand</span>
+
+                    <strong>
+
+                        ${formatQuantity(ingredient.quantity_on_hand)}
+                        ${escapeHtml(ingredient.purchase_unit)}
+
+                    </strong>
+
+                </div>
+
+                <div class="ingredient-stat">
+
+                    <span>Minimum</span>
+
+                    <strong>
+
+                        ${formatQuantity(ingredient.minimum_quantity)}
+                        ${escapeHtml(ingredient.purchase_unit)}
+
+                    </strong>
+
+                </div>
+
+                <div class="ingredient-stat">
+
+                    <span>Purchase Price</span>
+
+                    <strong>
+
+                        ${usd(ingredient.purchase_price)}
+
+                    </strong>
+
+                </div>
+
+                <div class="ingredient-stat">
+
+                    <span>Package Size</span>
+
+                    <strong>
+
+                        ${formatQuantity(ingredient.purchase_size)}
+                        ${escapeHtml(ingredient.purchase_unit)}
+
+                    </strong>
+
+                </div>
 
             </div>
 
-            <div class="inventory-actions">
+            <div class="ingredient-card-actions">
 
                 <button
                     class="primary-btn"
                     onclick="openRestockModal('${ingredient.id}')">
 
-                    Stock
+                    Restock
 
                 </button>
 
@@ -334,7 +378,7 @@ function renderIngredientRow(ingredient) {
 
             </div>
 
-        </div>
+        </article>
 
     `;
 
