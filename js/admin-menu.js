@@ -80,7 +80,7 @@ async function loadMenuManager() {
     supabaseClient
         .from("packaging_profiles")
         .select("*")
-        .order("name")
+        .order("name"),
 
     supabaseClient
         .from("recipe_costs")
