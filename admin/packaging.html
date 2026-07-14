@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <title>Packaging | Jess Bakes</title>
+
+    <link rel="stylesheet" href="../css/admin.css">
+
+</head>
+
+<body>
+
+<div class="admin-shell">
+
+    <aside id="sidebar"></aside>
+
+    <main class="admin-content">
+
+        <header class="admin-header">
+
+            <div>
+
+                <h1>Packaging</h1>
+
+                <p>
+                    Packaging profiles determine the supplies consumed when fulfilling customer orders.
+                </p>
+
+            </div>
+
+            <button
+                class="primary-btn"
+                id="newPackagingProfile">
+
+                + New Profile
+
+            </button>
+
+        </header>
+
+        <section class="overview-grid">
+
+            <article class="overview-card">
+
+                <span class="overview-label">
+                    Profiles
+                </span>
+
+                <h2 id="profileCount">
+                    0
+                </h2>
+
+                <small>
+                    Active Profiles
+                </small>
+
+            </article>
+
+            <article class="overview-card">
+
+                <span class="overview-label">
+                    Packaging Items
+                </span>
+
+                <h2 id="packagingItemCount">
+                    0
+                </h2>
+
+                <small>
+                    Inventory Items Used
+                </small>
+
+            </article>
+
+            <article class="overview-card">
+
+                <span class="overview-label">
+                    Avg Cost
+                </span>
+
+                <h2 id="averagePackagingCost">
+
+                    $0.00
+
+                </h2>
+
+                <small>
+
+                    Per Profile
+
+                </small>
+
+            </article>
+
+        </section>
+
+        <section
+            id="packagingProfiles"
+            class="inventory-card-grid">
+
+        </section>
+
+    </main>
+
+</div>
+
+<script src="../js/supabase.js"></script>
+<script src="../js/layout.js"></script>
+<script src="../js/packaging.js"></script>
+
+</body>
+</html>
