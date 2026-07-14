@@ -60,7 +60,9 @@ async function loadMenuManager() {
     const [
     menuResult,
     recipeResult,
-    packagingResult
+    packagingResult,
+    recipeCostResult,
+    packagingCostResult
 ] = await Promise.all([
 
     supabaseClient
@@ -80,6 +82,14 @@ async function loadMenuManager() {
         .select("*")
         .order("name")
 
+    supabaseClient
+        .from("recipe_costs")
+        .select("*"),
+
+    supabaseClient
+        .from("packaging_profile_costs")
+        .select("*")
+
 ]);
 
 const data = menuResult.data;
@@ -87,6 +97,20 @@ const error = menuResult.error;
 
 recipes = recipeResult.data || [];
 packagingProfiles = packagingResult.data || [];
+
+    recipeCosts = new Map(
+    (recipeCostResult.data || []).map(recipe => [
+        recipe.id,
+        recipe
+    ])
+);
+
+packagingCosts = new Map(
+    (packagingCostResult.data || []).map(profile => [
+        profile.id,
+        profile
+    ])
+);
 
     if (error) {
         console.error(error);
@@ -1384,6 +1408,40 @@ function escapeJs(value) {
         .replaceAll("'", "\\'")
         .replaceAll('"', "&quot;")
         .replaceAll("\n", " ");
+}
+
+function getRecipe(recipeId) {
+
+    return recipes.find(recipe =>
+        recipe.id === recipeId
+    );
+
+}
+
+function getPackaging(profileId) {
+
+    return packagingProfiles.find(profile =>
+        profile.id === profileId
+    );
+
+}
+
+function getRecipeCost(recipeId) {
+
+    return recipeCosts.get(recipeId)?.ingredient_cost || 0;
+
+}
+
+function getPackagingCost(profileId) {
+
+    return packagingCosts.get(profileId)?.total_cost || 0;
+
+}
+
+function formatMoney(value) {
+
+    return Number(value || 0).toFixed(2);
+
 }
 
 
