@@ -1346,28 +1346,67 @@ function escapeJs(value) {
 
 function toggleInventoryCategory(button) {
 
+    const category =
+        button.parentElement;
+
     const body =
         button.nextElementSibling;
 
     const arrow =
-        button.querySelector("span");
+        button.querySelector(".inventory-category-arrow");
 
-    if (body.style.display === "none") {
+    const isOpen =
+        category.classList.contains("open");
 
-        body.style.display = "block";
+    if (isOpen) {
 
-        arrow.textContent = "▼";
+        body.style.maxHeight =
+            body.scrollHeight + "px";
 
-    } else {
+        requestAnimationFrame(() => {
 
-        body.style.display = "none";
+            body.style.maxHeight = "0px";
+            body.style.opacity = "0";
 
-        arrow.textContent = "►";
+        });
+
+        category.classList.remove("open");
 
     }
 
-}
+    else {
 
+        category.classList.add("open");
+
+        body.style.display = "grid";
+
+        body.style.maxHeight = "0px";
+        body.style.opacity = "0";
+
+        requestAnimationFrame(() => {
+
+            body.style.maxHeight =
+                body.scrollHeight + "px";
+
+            body.style.opacity = "1";
+
+        });
+
+    }
+
+    body.addEventListener("transitionend", function handler() {
+
+        if (category.classList.contains("open")) {
+
+            body.style.maxHeight = "none";
+
+        }
+
+        body.removeEventListener("transitionend", handler);
+
+    });
+
+}
 
 /*==================================================
     GLOBAL EXPORTS
