@@ -2482,3 +2482,513 @@ body{
     flex-wrap:wrap;
 
 }
+
+/*==================================================
+    DASHBOARD HOME REDESIGN
+==================================================*/
+
+.dashboard-home {
+    max-width: 1500px;
+    padding: 36px;
+}
+
+
+/*==================================================
+    DASHBOARD HOME — HERO
+==================================================*/
+
+.dashboard-home-hero {
+    display: flex;
+    justify-content: space-between;
+    gap: 28px;
+    align-items: flex-end;
+    margin-bottom: 28px;
+    padding: 32px 34px;
+    overflow: hidden;
+    background:
+        radial-gradient(circle at top right, rgba(123, 43, 34, .12), transparent 32%),
+        linear-gradient(135deg, #fff 0%, #fbf5f0 100%);
+    border: 1px solid #ead9cd;
+    border-radius: 30px;
+    box-shadow: 0 12px 32px rgba(40, 18, 10, .06);
+}
+
+.dashboard-home-hero h1 {
+    margin: 4px 0;
+    color: #5d2018;
+    font-family: "Cormorant Garamond", serif;
+    font-size: clamp(3.5rem, 7vw, 5.5rem);
+    line-height: .88;
+}
+
+.dashboard-home-summary {
+    margin: 17px 0 0;
+    color: #4f433d;
+}
+
+.dashboard-month-card {
+    width: 190px;
+    flex: 0 0 auto;
+    padding: 20px;
+    text-align: center;
+    background: #fff;
+    border: 1px solid #ead9cd;
+    border-radius: 22px;
+    box-shadow: 0 10px 28px rgba(40, 18, 10, .05);
+}
+
+.dashboard-month-card span,
+.dashboard-month-card small {
+    display: block;
+}
+
+.dashboard-month-card span {
+    color: #8d786b;
+    font-size: .68rem;
+    font-weight: 700;
+    letter-spacing: .13em;
+}
+
+.dashboard-month-card strong {
+    display: block;
+    margin: 8px 0 4px;
+    color: #7b2b22;
+    font-size: 1.75rem;
+}
+
+.dashboard-month-card small {
+    color: #8d786b;
+}
+
+
+/*==================================================
+    DASHBOARD HOME — KPI CARDS
+==================================================*/
+
+.dashboard-home-kpis {
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: 16px;
+    margin-bottom: 38px;
+}
+
+.dashboard-home-kpi {
+    display: flex;
+    gap: 16px;
+    align-items: center;
+    min-width: 0;
+    padding: 22px;
+    background: #fff;
+    border: 1px solid #ead9cd;
+    border-radius: 22px;
+    box-shadow: 0 10px 28px rgba(40, 18, 10, .05);
+    transition: transform .2s ease, box-shadow .2s ease;
+}
+
+.dashboard-home-kpi:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 18px 38px rgba(40, 18, 10, .09);
+}
+
+.dashboard-home-kpi-icon {
+    width: 42px;
+    height: 42px;
+    flex: 0 0 42px;
+    display: grid;
+    place-items: center;
+    border-radius: 13px;
+    background: #f3e7e2;
+    color: #7b2b22;
+    font-size: .82rem;
+    font-weight: 800;
+}
+
+.dashboard-home-kpi span {
+    display: block;
+    color: #8d786b;
+    font-size: .69rem;
+    font-weight: 700;
+    letter-spacing: .09em;
+    text-transform: uppercase;
+}
+
+.dashboard-home-kpi h2 {
+    margin: 5px 0 3px;
+    color: #5d2018;
+    font-size: 1.6rem;
+}
+
+.dashboard-home-kpi small {
+    color: #8d786b;
+    font-size: .72rem;
+}
+
+
+/*==================================================
+    DASHBOARD HOME — QUICK ACTIONS
+==================================================*/
+
+.dashboard-home-section {
+    margin-bottom: 38px;
+}
+
+.dashboard-home-section-heading {
+    margin-bottom: 16px;
+}
+
+.dashboard-home-section-heading h2 {
+    margin: 0;
+    color: #5d2018;
+    font-size: 1.55rem;
+}
+
+.dashboard-home-actions {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 16px;
+}
+
+.dashboard-home-action {
+    min-width: 0;
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    gap: 16px;
+    align-items: center;
+    padding: 22px;
+    background: #fff;
+    border: 1px solid #ead9cd;
+    border-radius: 20px;
+    color: #332b28;
+    text-decoration: none;
+    box-shadow: 0 10px 28px rgba(40, 18, 10, .05);
+    transition: transform .2s ease, box-shadow .2s ease;
+}
+
+.dashboard-home-action:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 18px 38px rgba(40, 18, 10, .09);
+}
+
+.dashboard-home-action-number {
+    color: #7b2b22;
+    font-family: "Cormorant Garamond", serif;
+    font-size: 1.45rem;
+    font-weight: 700;
+}
+
+.dashboard-home-action h3 {
+    margin: 0 0 4px;
+    color: #5d2018;
+}
+
+.dashboard-home-action p {
+    margin: 0;
+    color: #887568;
+    font-size: .82rem;
+    line-height: 1.45;
+}
+
+.dashboard-home-action-arrow {
+    color: #7b2b22;
+    font-size: 1.4rem;
+}
+
+
+/*==================================================
+    DASHBOARD HOME — CONTENT GRID
+==================================================*/
+
+.dashboard-home-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1.35fr) minmax(320px, .65fr);
+    gap: 20px;
+}
+
+.dashboard-home-card {
+    padding: 26px;
+    background: #fff;
+    border: 1px solid #ead9cd;
+    border-radius: 24px;
+    box-shadow: 0 10px 28px rgba(40, 18, 10, .05);
+}
+
+.dashboard-home-orders-card {
+    grid-row: span 2;
+}
+
+.dashboard-home-list {
+    display: grid;
+    gap: 10px;
+}
+
+.dashboard-home-empty {
+    margin: 0;
+    color: #8d786b;
+}
+
+
+/*==================================================
+    DASHBOARD HOME — RECENT ORDERS
+==================================================*/
+
+.dashboard-home-order {
+    display: flex;
+    justify-content: space-between;
+    gap: 18px;
+    align-items: center;
+    padding: 15px 0;
+    border-bottom: 1px solid #f1e8e1;
+}
+
+.dashboard-home-order:last-child {
+    border-bottom: 0;
+}
+
+.dashboard-home-order-person {
+    min-width: 0;
+    display: flex;
+    gap: 12px;
+    align-items: center;
+}
+
+.dashboard-home-avatar {
+    width: 40px;
+    height: 40px;
+    flex: 0 0 40px;
+    display: grid;
+    place-items: center;
+    border-radius: 50%;
+    background: #f3e7e2;
+    color: #7b2b22;
+    font-size: .75rem;
+    font-weight: 800;
+}
+
+.dashboard-home-order strong {
+    display: block;
+}
+
+.dashboard-home-order small {
+    display: block;
+    margin-top: 4px;
+    color: #8d786b;
+}
+
+.dashboard-home-order-meta {
+    flex: 0 0 auto;
+    display: flex;
+    gap: 12px;
+    align-items: center;
+}
+
+
+/*==================================================
+    DASHBOARD HOME — PICKUPS
+==================================================*/
+
+.dashboard-home-pickup {
+    display: flex;
+    gap: 14px;
+    align-items: center;
+    padding: 14px 0;
+    border-bottom: 1px solid #f1e8e1;
+}
+
+.dashboard-home-pickup:last-child {
+    border-bottom: 0;
+}
+
+.dashboard-home-pickup-date {
+    width: 52px;
+    flex: 0 0 52px;
+    padding: 8px 6px;
+    text-align: center;
+    background: #fbf7f3;
+    border: 1px solid #ead9cd;
+    border-radius: 13px;
+}
+
+.dashboard-home-pickup-date strong {
+    display: block;
+    color: #7b2b22;
+    font-size: 1.1rem;
+}
+
+.dashboard-home-pickup-date span {
+    color: #8d786b;
+    font-size: .67rem;
+    font-weight: 800;
+    letter-spacing: .08em;
+}
+
+.dashboard-home-pickup-person {
+    min-width: 0;
+    flex: 1;
+}
+
+.dashboard-home-pickup-person strong,
+.dashboard-home-pickup-person small {
+    display: block;
+}
+
+.dashboard-home-pickup-person small {
+    margin-top: 4px;
+    color: #8d786b;
+}
+
+
+/*==================================================
+    DASHBOARD HOME — NOTIFICATIONS
+==================================================*/
+
+.dashboard-home-notification {
+    display: flex;
+    gap: 11px;
+    align-items: flex-start;
+    padding: 14px;
+    border-radius: 14px;
+}
+
+.dashboard-home-notification p {
+    margin: 0;
+    line-height: 1.45;
+}
+
+.dashboard-home-notification-dot {
+    width: 9px;
+    height: 9px;
+    flex: 0 0 9px;
+    margin-top: 5px;
+    border-radius: 50%;
+}
+
+.dashboard-home-notification-warning {
+    background: #fff2d3;
+}
+
+.dashboard-home-notification-warning .dashboard-home-notification-dot {
+    background: #9a6500;
+}
+
+.dashboard-home-notification-success {
+    background: #e4f4e8;
+}
+
+.dashboard-home-notification-success .dashboard-home-notification-dot {
+    background: #2f7a43;
+}
+
+.dashboard-home-notification-info {
+    background: #e5f0fa;
+}
+
+.dashboard-home-notification-info .dashboard-home-notification-dot {
+    background: #2f628f;
+}
+
+
+/*==================================================
+    DASHBOARD HOME — REVIEWS
+==================================================*/
+
+.dashboard-home-review {
+    padding: 15px 0;
+    border-bottom: 1px solid #f1e8e1;
+}
+
+.dashboard-home-review:last-child {
+    border-bottom: 0;
+}
+
+.dashboard-home-review-stars {
+    color: #b88122;
+    letter-spacing: .08em;
+}
+
+.dashboard-home-review p {
+    margin: 8px 0;
+    color: #5f554f;
+    line-height: 1.5;
+}
+
+
+/*==================================================
+    DASHBOARD HOME — SIDEBAR BRAND UPDATE
+==================================================*/
+
+.sidebar-brand-kicker {
+    margin: 0;
+    color: #7b2b22;
+    font-size: .72rem;
+    font-weight: 700;
+    letter-spacing: .2em;
+}
+
+.sidebar-brand h2 {
+    margin: 2px 0 0;
+    font-family: "Cormorant Garamond", serif;
+    font-size: 2rem;
+    line-height: 1;
+}
+
+
+/*==================================================
+    DASHBOARD HOME — RESPONSIVE
+==================================================*/
+
+@media (max-width: 1250px) {
+
+    .dashboard-home-kpis {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+
+    .dashboard-home-actions {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+}
+
+@media (max-width: 1000px) {
+
+    .dashboard-home-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .dashboard-home-orders-card {
+        grid-row: auto;
+    }
+
+}
+
+@media (max-width: 700px) {
+
+    .dashboard-home {
+        padding: 22px 16px;
+    }
+
+    .dashboard-home-hero {
+        align-items: flex-start;
+        flex-direction: column;
+        padding: 25px;
+    }
+
+    .dashboard-month-card {
+        width: 100%;
+    }
+
+    .dashboard-home-kpis,
+    .dashboard-home-actions {
+        grid-template-columns: 1fr;
+    }
+
+    .dashboard-home-order {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+
+    .dashboard-home-order-meta {
+        width: 100%;
+        justify-content: space-between;
+    }
+
+}
