@@ -533,20 +533,27 @@ async function createSaleFromOrder(orderId) {
             .single();
 
     if (orderError) {
-
         alert("Failed to load order");
         alert(orderError.message);
         return;
-
     }
 
-    alert("Order loaded");
+    const { data: items, error: itemsError } =
+        await supabaseClient
+            .from("order_items")
+            .select("*")
+            .eq("order_id", orderId);
 
-    const { data, error: saleError } =
+    if (itemsError) {
+        alert("Failed to load order items");
+        alert(itemsError.message);
+        return;
+    }
+
+    const { data: sale, error: saleError } =
         await supabaseClient
             .from("sales")
             .insert({
-
                 order_id: order.id,
                 customer_name: order.customer_name,
                 revenue: Number(order.subtotal || 0),
@@ -554,56 +561,43 @@ async function createSaleFromOrder(orderId) {
                 packaging_cost: 0,
                 total_cost: 0,
                 profit: 0
-
             })
             .select()
             .single();
 
-   if (saleError) {
+    if (saleError) {
+        alert("Insert failed");
+        alert(saleError.message);
+        return;
+    }
 
-    alert("Insert failed");
-    alert(saleError.message);
-    return;
+    const saleItems = items.map(item => ({
+        sale_id: sale.id,
+        menu_item_id: item.menu_item_id,
+        item_name: item.item_name,
+        quantity: item.quantity,
+        unit_price: item.price_at_purchase,
+        food_cost: 0,
+        packaging_cost: 0,
+        total_cost: 0,
+        line_revenue: item.line_total,
+        line_profit: 0
+    }));
 
-}
+    const { error: saleItemsError } =
+        await supabaseClient
+            .from("sale_items")
+            .insert(saleItems);
 
-const saleItems = items.map(item => ({
+    if (saleItemsError) {
+        alert(saleItemsError.message);
+        return;
+    }
 
-    sale_id: sale.id,
-
-    menu_item_id: item.menu_item_id,
-
-    item_name: item.item_name,
-
-    quantity: item.quantity,
-
-    unit_price: item.price_at_purchase,
-
-    food_cost: 0,
-
-    packaging_cost: 0,
-
-    total_cost: 0,
-
-    line_revenue: item.line_total,
-
-    line_profit: 0
-
-}));
-
-   const { error: saleItemsError } =
-    await supabaseClient
-        .from("sale_items")
-        .insert(saleItems);
-
-if (saleItemsError) {
-
-    alert(saleItemsError.message);
-    return;
+    alert("Sale created successfully");
 
 }
 
-alert("Sale created successfully");
 
 /* ==========================================
    DELETE
