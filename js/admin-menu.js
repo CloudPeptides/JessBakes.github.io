@@ -251,7 +251,7 @@ function renderMenuItemCard(item) {
 
         <article class="menu-admin-item ${item.available ? "" : "is-disabled"}">
 
-            <div class="menu-admin-main">
+            <div class="menu-product-card">
 
                 <div>
 
@@ -373,7 +373,7 @@ function renderMenuItemCard(item) {
 
                 </div>
 
-                <div class="menu-admin-actions">
+                <div class="menu-product-toolbar">
 
                     <button
                         class="edit-option-btn"
