@@ -3760,3 +3760,168 @@ body{
 }
 
 }
+
+
+/*==================================================
+  INGREDIENT CARDS
+==================================================*/
+
+.ingredient-card{
+
+    background:#fff;
+
+    border:1px solid #ece2d9;
+
+    border-radius:20px;
+
+    padding:22px;
+
+    display:flex;
+
+    flex-direction:column;
+
+    gap:20px;
+
+    transition:.2s;
+
+}
+
+.ingredient-card:hover{
+
+    transform:translateY(-4px);
+
+    box-shadow:0 14px 28px rgba(0,0,0,.08);
+
+}
+
+.ingredient-low{
+
+    border-left:6px solid #d54d4d;
+
+}
+
+.ingredient-card-header{
+
+    display:flex;
+
+    justify-content:space-between;
+
+    align-items:flex-start;
+
+    gap:20px;
+
+}
+
+.ingredient-card-header h3{
+
+    margin:0;
+
+    color:#5d2018;
+
+    font-size:1.2rem;
+
+}
+
+.ingredient-card-header p{
+
+    margin:6px 0 0;
+
+    color:#8b786d;
+
+    font-size:.9rem;
+
+}
+
+.ingredient-status{
+
+    padding:6px 14px;
+
+    border-radius:999px;
+
+    font-size:.72rem;
+
+    font-weight:700;
+
+    text-transform:uppercase;
+
+}
+
+.status-good{
+
+    background:#e8f5ea;
+
+    color:#22663b;
+
+}
+
+.status-low{
+
+    background:#fdeaea;
+
+    color:#b22626;
+
+}
+
+.ingredient-card-grid{
+
+    display:grid;
+
+    grid-template-columns:repeat(2,1fr);
+
+    gap:16px;
+
+}
+
+.ingredient-stat{
+
+    background:#faf8f5;
+
+    border-radius:14px;
+
+    padding:14px;
+
+}
+
+.ingredient-stat span{
+
+    display:block;
+
+    font-size:.72rem;
+
+    text-transform:uppercase;
+
+    color:#8b786d;
+
+    letter-spacing:.08em;
+
+    margin-bottom:6px;
+
+}
+
+.ingredient-stat strong{
+
+    color:#5d2018;
+
+    font-size:1.05rem;
+
+}
+
+.ingredient-card-actions{
+
+    display:flex;
+
+    gap:10px;
+
+    flex-wrap:wrap;
+
+}
+
+@media(max-width:650px){
+
+.ingredient-card-grid{
+
+    grid-template-columns:1fr;
+
+}
+
+}
