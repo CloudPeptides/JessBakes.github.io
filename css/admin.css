@@ -4502,3 +4502,23 @@ PACKAGING
     color:#d23a3a;
 
 }
+
+.menu-category-pill{
+
+    padding:5px 12px;
+
+    background:#f3e6df;
+
+    color:#7b2b22;
+
+    border-radius:999px;
+
+    font-size:.72rem;
+
+    font-weight:700;
+
+    text-transform:uppercase;
+
+    letter-spacing:.05em;
+
+}
