@@ -220,8 +220,6 @@ function renderMenuItemCard(item) {
     const recipe = getRecipe(item.recipe_id);
     const packaging = getPackaging(item.packaging_profile_id);
 
-    const recipe =
-    getRecipe(item.recipe_id);
 
 const recipeTotalCost =
     Number(getRecipeCost(item.recipe_id));
