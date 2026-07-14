@@ -4385,31 +4385,49 @@ PACKAGING
     MENU COST GRID
 ==================================================*/
 
+/*==================================================
+    MENU PRODUCT DETAILS
+==================================================*/
+
 .menu-cost-grid{
 
     display:grid;
 
-    grid-template-columns:repeat(2,minmax(170px,1fr));
+    grid-template-columns:repeat(2,minmax(180px,1fr));
 
-    gap:16px;
+    gap:14px;
 
     margin-top:24px;
 
-    padding-top:22px;
+}
 
-    border-top:1px solid #ece4dc;
+.menu-cost-card{
+
+    padding:14px 16px;
+
+    background:#faf8f5;
+
+    border:1px solid #ece3db;
+
+    border-radius:14px;
+
+    transition:.18s ease;
 
 }
 
-.menu-cost-grid div{
+.menu-cost-card:hover{
 
-    display:flex;
+    background:#fff;
 
-    flex-direction:column;
+    transform:translateY(-2px);
+
+    box-shadow:0 10px 18px rgba(0,0,0,.05);
 
 }
 
-.menu-cost-grid small{
+.menu-cost-card small{
+
+    display:block;
 
     font-size:.72rem;
 
@@ -4419,23 +4437,57 @@ PACKAGING
 
     color:#8b7b71;
 
-    margin-bottom:5px;
+    margin-bottom:6px;
 
 }
 
-.menu-cost-grid strong{
+.menu-cost-card strong{
 
-    color:#4a2d25;
+    font-size:1rem;
 
-    font-size:.95rem;
-
-    font-weight:700;
+    color:#54261d;
 
 }
 
-.profit-good strong{
+.menu-cost-card.profit-good{
 
-    color:#1d8c45;
+    background:#edf9f1;
+
+    border-color:#b8e4c5;
+
+}
+
+.menu-cost-card.profit-good strong{
+
+    color:#19753d;
+
+}
+
+.menu-cost-card.profit-medium{
+
+    background:#fff8e5;
+
+    border-color:#f2dc8f;
+
+}
+
+.menu-cost-card.profit-medium strong{
+
+    color:#a56a00;
+
+}
+
+.menu-cost-card.profit-low{
+
+    background:#fff0f0;
+
+    border-color:#f3c5c5;
+
+}
+
+.menu-cost-card.profit-low strong{
+
+    color:#bf2727;
 
 }
 
