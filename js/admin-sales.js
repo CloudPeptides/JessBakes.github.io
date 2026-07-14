@@ -628,8 +628,7 @@ function calculateProfit(orders) {
 
     });
 
-    const grossProfit =
-        revenue - cost;
+    const grossProfit = revenue - cost;
 
     return {
 
@@ -649,18 +648,6 @@ function calculateProfit(orders) {
     };
 
 }
-
-    const grossProfit = revenue - cost;
-
-    return {
-        revenue,
-        cost,
-        grossProfit,
-        margin: revenue > 0 ? (grossProfit / revenue) * 100 : 0,
-        hasCostData
-    };
-}
-
 function exportSalesCsv() {
     const completedOrders = salesOrders.filter((order) => order.status === "completed");
     const rows = [["Order ID", "Customer", "Date", "Status", "Items", "Subtotal"]];
