@@ -220,8 +220,21 @@ function renderMenuItemCard(item) {
     const recipe = getRecipe(item.recipe_id);
     const packaging = getPackaging(item.packaging_profile_id);
 
-    const recipeCost =
-        Number(getRecipeCost(item.recipe_id));
+    const recipe =
+    getRecipe(item.recipe_id);
+
+const recipeTotalCost =
+    Number(getRecipeCost(item.recipe_id));
+
+const recipeYield =
+    Number(recipe?.yield_quantity || 1);
+
+const recipeUnitsUsed =
+    Number(item.recipe_units_used || 1);
+
+const recipeCost =
+    (recipeTotalCost / recipeYield) *
+    recipeUnitsUsed;
 
     const packagingCost =
         Number(getPackagingCost(item.packaging_profile_id));
