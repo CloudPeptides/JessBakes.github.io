@@ -103,10 +103,10 @@ async function loadSalesDashboard() {
 }
 
 function renderSalesDashboard() {
-    const completedOrders = salesOrders.filter((order) => order.status === "completed");
-    const activeOrders = salesOrders.filter((order) =>
-        ["pending", "confirmed", "ready"].includes(order.status)
-    );
+
+    const completedOrders = salesOrders;
+
+    const activeOrders = [];
 
     updateSalesCards(completedOrders, activeOrders);
     updateLifetimeCards(completedOrders);
