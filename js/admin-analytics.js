@@ -109,15 +109,127 @@ function updateOverview(orders){
   setText('averageItems',orders.length?(totalItems/orders.length).toFixed(1):'0');
 }
 
-function renderOrdersOverTime(orders){
-  const container=findElement(['ordersOverTime','ordersOverTimeChart','orderTrend','ordersChart']);
-  if(!container||!window.Chart) return;
-  const canvas=prepareCanvas(container,'ordersOverTimeCanvas');
-  const grouped=new Map();
-  orders.forEach(order=>{const date=new Date(order.created_at);const key=date.toISOString().split('T')[0];if(!grouped.has(key)) grouped.set(key,{label:date.toLocaleDateString('en-US',{month:'short',day:'numeric'}),count:0});grouped.get(key).count+=1;});
-  const points=[...grouped.entries()].sort((a,b)=>a[0].localeCompare(b[0])).map(([,v])=>v);
-  if(ordersChart) ordersChart.destroy();
-  ordersChart=new Chart(canvas,{type:'line',data:{labels:points.length?points.map(p=>p.label):['No completed orders'],datasets:[{label:'Orders',data:points.length?points.map(p=>p.count):[0],borderWidth:2,tension:.3,fill:false}]},options:{responsive:true,maintainAspectRatio:false,scales:{y:{beginAtZero:true,ticks:{precision:0}}},plugins:{legend:{display:false}}}});
+function renderOrdersOverTime(orders) {
+
+    const container = findElement([
+        "ordersOverTime",
+        "ordersOverTimeChart",
+        "orderTrend",
+        "ordersChart"
+    ]);
+
+    if (!container || !window.Chart) return;
+
+    const canvas = prepareCanvas(
+        container,
+        "ordersOverTimeCanvas"
+    );
+
+    const grouped = new Map();
+
+    orders.forEach(order => {
+
+        if (!order.completed_at) return;
+
+        const date = new Date(order.completed_at);
+
+        if (isNaN(date.getTime())) return;
+
+        const key = date.toISOString().split("T")[0];
+
+        if (!grouped.has(key)) {
+
+            grouped.set(key, {
+
+                label: date.toLocaleDateString("en-US", {
+                    month: "short",
+                    day: "numeric"
+                }),
+
+                count: 0
+
+            });
+
+        }
+
+        grouped.get(key).count++;
+
+    });
+
+    const points = [...grouped.entries()]
+        .sort((a, b) => a[0].localeCompare(b[0]))
+        .map(([, value]) => value);
+
+    if (ordersChart) {
+
+        ordersChart.destroy();
+
+    }
+
+    ordersChart = new Chart(canvas, {
+
+        type: "line",
+
+        data: {
+
+            labels: points.length
+                ? points.map(p => p.label)
+                : ["No Sales"],
+
+            datasets: [{
+
+                label: "Completed Sales",
+
+                data: points.length
+                    ? points.map(p => p.count)
+                    : [0],
+
+                borderWidth: 2,
+
+                tension: 0.3,
+
+                fill: false
+
+            }]
+
+        },
+
+        options: {
+
+            responsive: true,
+
+            maintainAspectRatio: false,
+
+            scales: {
+
+                y: {
+
+                    beginAtZero: true,
+
+                    ticks: {
+
+                        precision: 0
+
+                    }
+
+                }
+
+            },
+
+            plugins: {
+
+                legend: {
+
+                    display: false
+
+                }
+
+            }
+
+        }
+
+    });
+
 }
 
 function renderProductPopularity(orders){
@@ -167,7 +279,7 @@ function renderBakeryInsights(orders){
 function renderTopCustomers(orders){
   const container=document.getElementById('topCustomers');if(!container)return;
   const totals={};
-  orders.forEach(order=>{const key=getCustomerKey(order)||order.id;if(!totals[key]) totals[key]={name:order.customer_name||'Unknown Customer',total:0,orders:0,lastOrder:order.created_at};totals[key].total+=Number(order.subtotal||0);totals[key].orders+=1;if(new Date(order.created_at)>new Date(totals[key].lastOrder)) totals[key].lastOrder=order.created_at;});
+  orders.forEach(order=>{const key=getCustomerKey(order)||order.id;if(!totals[key]) totals[key]={name:order.customer_name||'Unknown Customer',total:0,orders:0,lastOrder:order.completed_at};totals[key].total+=Number(order.subtotal||0);totals[key].orders+=1;if(new Date(order.completed_at)>new Date(totals[key].lastOrder)) totals[key].lastOrder=order.completed_at;});
   const customers=Object.values(totals).sort((a,b)=>b.total-a.total).slice(0,5);
   if(!customers.length){container.innerHTML='<p>No customers yet.</p>';return;}
   container.innerHTML=customers.map((customer,index)=>{const medal=index===0?'🥇':index===1?'🥈':index===2?'🥉':'';const average=customer.total/customer.orders;return `<div class="customer-card"><div class="customer-header"><strong>${medal} ${escapeHtml(customer.name)}</strong><span>${euro(customer.total)}</span></div><div class="customer-details"><span>${customer.orders} order${customer.orders===1?'':'s'}</span><span>Avg ${euro(average)}</span><span>Last: ${formatDate(customer.lastOrder)}</span></div></div>`;}).join('');
@@ -180,7 +292,7 @@ function renderProductBreakdown(orders){
   container.innerHTML=ranking.map(([name,qty],i)=>{const share=totalItems?Math.round(qty/totalItems*100):0;return `<div class="ranking-row"><strong>${i+1}. ${escapeHtml(name)}</strong><span>${qty} sold · ${share}%</span></div>`;}).join('');
 }
 
-function filterOrdersByRange(orders,range){if(range==='all') return orders.slice();const now=new Date();return orders.filter(order=>{const date=new Date(order.created_at);const days=(now-date)/(1000*60*60*24);if(range==='30')return days<=30;if(range==='90')return days<=90;if(range==='year')return date.getFullYear()===now.getFullYear();return true;});}
+function filterOrdersByRange(orders,range){if(range==='all') return orders.slice();const now=new Date();return orders.filter(order=>{const date=new Date(order.completed_at);const days=(now-date)/(1000*60*60*24);if(range==='30')return days<=30;if(range==='90')return days<=90;if(range==='year')return date.getFullYear()===now.getFullYear();return true;});}
 function normalizeAnalyticsRange(text){const v=String(text||'').trim().toLowerCase();if(v.includes('30'))return'30';if(v.includes('90'))return'90';if(v.includes('year'))return'year';return'all';}
 function getProductTotals(orders){const totals={};orders.forEach(order=>order.order_items.forEach(item=>{const name=item.item_name||'Unknown Item';totals[name]=(totals[name]||0)+Number(item.quantity||0);}));return totals;}
 function getTopProduct(orders){const top=Object.entries(getProductTotals(orders)).sort((a,b)=>b[1]-a[1])[0];return top?{name:top[0],quantity:top[1]}:null;}
