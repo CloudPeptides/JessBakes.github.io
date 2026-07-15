@@ -105,12 +105,16 @@ async function loadRecipes() {
     const { data, error } = await supabaseClient
         .from("recipes")
         .select(`
-            *,
-            recipe_ingredients(
-                *,
-                ingredients(*)
-            )
-        `)
+    *,
+    recipe_ingredients(
+        *,
+        ingredients(*)
+    ),
+    recipe_components(
+        *,
+        component_recipe:recipes(*)
+    )
+`)
         .order("name", { ascending: true });
 
     if (error) {
@@ -913,13 +917,20 @@ function buildRecipeModal() {
 
                 <hr>
 
-                <h3>Ingredients</h3>
+               <hr>
 
-                <div id="recipeIngredientRows"></div>
+<h3>Recipe Components</h3>
 
-                <button class="secondary-btn" type="button" onclick="addRecipeIngredientRow()">
-                    + Add Ingredient
-                </button>
+<div id="recipeComponentRows"></div>
+
+<button
+    class="secondary-btn"
+    type="button"
+    onclick="addRecipeComponentRow()">
+
+    + Add Component
+
+</button>
             </div>
 
             <div class="modal-footer">
@@ -963,56 +974,130 @@ function openRecipeModal(id = null) {
     document.getElementById("recipeNotes").value =
         recipe ? recipe.notes || "" : "";
 
-    const rows = document.getElementById("recipeIngredientRows");
-    rows.innerHTML = "";
+    const rows =
+    document.getElementById("recipeIngredientRows");
 
-    if (recipe?.recipe_ingredients?.length) {
-        recipe.recipe_ingredients.forEach(item => {
-            addRecipeIngredientRow(item.ingredient_id, item.quantity);
-        });
-    } else {
-        addRecipeIngredientRow();
-    }
+rows.innerHTML = "";
 
-    document.getElementById("recipeModal").style.display = "flex";
+const componentRows =
+    document.getElementById("recipeComponentRows");
+
+componentRows.innerHTML = "";
+
+if (recipe?.recipe_ingredients?.length) {
+
+    recipe.recipe_ingredients.forEach(item => {
+
+        addRecipeIngredientRow(
+            item.ingredient_id,
+            item.quantity
+        );
+
+    });
+
+}
+else {
+
+    addRecipeIngredientRow();
+
+}
+
+if (recipe?.recipe_components?.length) {
+
+    recipe.recipe_components.forEach(component => {
+
+        addRecipeComponentRow(
+
+            component.component_recipe_id,
+
+            component.quantity_used,
+
+            component.quantity_unit
+
+        );
+
+    });
+
+}
+
+document.getElementById("recipeModal").style.display = "flex";
 }
 
 function closeRecipeModal() {
     document.getElementById("recipeModal").style.display = "none";
 }
 
-function addRecipeIngredientRow(ingredientId = "", quantity = "") {
-    const container = document.getElementById("recipeIngredientRows");
+function addRecipeComponentRow(recipeId = "", quantity = "", unit = "g") {
 
-    const row = document.createElement("div");
+    const container =
+        document.getElementById("recipeComponentRows");
+
+    const currentRecipe =
+        document.getElementById("recipeId").value;
+
+    const row =
+        document.createElement("div");
 
     row.className = "recipe-ingredient-row";
 
     row.innerHTML = `
-        <select class="recipeIngredientSelect">
-            <option value="">Choose Ingredient</option>
-            ${ingredients.map(ingredient => `
-                <option value="${ingredient.id}">
-                    ${escapeHtml(ingredient.name)}
-                </option>
-            `).join("")}
-        </select>
 
-        <input
-            class="recipeIngredientQuantity"
-            type="number"
-            step="0.01"
-            placeholder="Quantity">
+<select class="recipeComponentSelect">
 
-        <button class="delete-btn" type="button" onclick="this.parentElement.remove()">
-            Remove
-        </button>
-    `;
+<option value="">Choose Recipe</option>
+
+${recipes
+.filter(r => String(r.id) !== String(currentRecipe))
+.map(recipe => `
+<option value="${recipe.id}">
+${escapeHtml(recipe.name)}
+</option>
+`).join("")}
+
+</select>
+
+<input
+class="recipeComponentQuantity"
+type="number"
+step="0.01"
+placeholder="Quantity">
+
+<select class="recipeComponentUnit">
+
+<option value="g">g</option>
+
+<option value="kg">kg</option>
+
+<option value="mL">mL</option>
+
+<option value="L">L</option>
+
+<option value="each">each</option>
+
+</select>
+
+<button
+class="delete-btn"
+type="button"
+onclick="this.parentElement.remove()">
+
+Remove
+
+</button>
+
+`;
 
     container.appendChild(row);
 
-    row.querySelector(".recipeIngredientSelect").value = ingredientId;
-    row.querySelector(".recipeIngredientQuantity").value = quantity;
+    row.querySelector(".recipeComponentSelect").value =
+        recipeId;
+
+    row.querySelector(".recipeComponentQuantity").value =
+        quantity;
+
+    row.querySelector(".recipeComponentUnit").value =
+        unit;
+
 }
 
 async function saveRecipe() {
@@ -1073,6 +1158,56 @@ async function saveRecipe() {
             return;
         }
     }
+
+    await supabaseClient
+    .from("recipe_components")
+    .delete()
+    .eq("parent_recipe_id", recipeId);
+
+const componentRows = [
+    ...document.querySelectorAll("#recipeComponentRows .recipe-ingredient-row")
+];
+
+const recipeComponents = componentRows
+    .map(row => ({
+
+        parent_recipe_id: recipeId,
+
+        component_recipe_id:
+            valueOrNull(
+                row.querySelector(".recipeComponentSelect").value
+            ),
+
+        quantity_used:
+            Number(
+                row.querySelector(".recipeComponentQuantity").value
+            ),
+
+        quantity_unit:
+            row.querySelector(".recipeComponentUnit").value
+
+    }))
+    .filter(component =>
+        component.component_recipe_id &&
+        component.quantity_used > 0
+    );
+
+if (recipeComponents.length) {
+
+    const { error: componentError } =
+        await supabaseClient
+            .from("recipe_components")
+            .insert(recipeComponents);
+
+    if (componentError) {
+
+        console.error(componentError);
+        alert(componentError.message);
+        return;
+
+    }
+
+}
 
     closeRecipeModal();
     await loadInventory();
