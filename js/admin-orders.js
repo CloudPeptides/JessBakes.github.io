@@ -470,12 +470,16 @@ function renderStatusButtons(order) {
                 </button>
             `;
 
-        case "completed":
-            return `
-                <span class="order-finished">
-                    Completed
-                </span>
-            `;
+       case "completed":
+    return `
+        <button
+            class="edit-option-btn"
+            onclick="reopenOrder('${order.id}')">
+
+            Undo Completion
+
+        </button>
+    `;
 
         case "cancelled":
             return `
@@ -1203,6 +1207,79 @@ function setInputValue(id, value) {
 
 }
 
+async function reopenOrder(orderId) {
+
+    if (
+        !confirm(
+            "Move this order back to Confirmed?\n\nThis will remove it from Sales."
+        )
+    ) {
+        return;
+    }
+
+    const { data: sale, error: saleError } =
+        await supabaseClient
+            .from("sales")
+            .select("id")
+            .eq("order_id", orderId)
+            .maybeSingle();
+
+    if (saleError) {
+
+        alert(saleError.message);
+        return;
+
+    }
+
+    if (sale) {
+
+        const { error: saleItemsError } =
+            await supabaseClient
+                .from("sale_items")
+                .delete()
+                .eq("sale_id", sale.id);
+
+        if (saleItemsError) {
+
+            alert(saleItemsError.message);
+            return;
+
+        }
+
+        const { error: deleteSaleError } =
+            await supabaseClient
+                .from("sales")
+                .delete()
+                .eq("id", sale.id);
+
+        if (deleteSaleError) {
+
+            alert(deleteSaleError.message);
+            return;
+
+        }
+
+    }
+
+    const { error: orderError } =
+        await supabaseClient
+            .from("orders")
+            .update({
+                status: "confirmed"
+            })
+            .eq("id", orderId);
+
+    if (orderError) {
+
+        alert(orderError.message);
+        return;
+
+    }
+
+    await loadOrderManager();
+
+}
+
 
 /* ==========================================
    GLOBAL EXPORTS
@@ -1211,6 +1288,7 @@ function setInputValue(id, value) {
 window.toggleOrderSection = toggleOrderSection;
 window.updateOrderStatus = updateOrderStatus;
 window.deleteOrder = deleteOrder;
+window.reopenOrder = reopenOrder;
 
 window.openManualOrderModal = openManualOrderModal;
 window.closeManualOrderModal = closeManualOrderModal;
