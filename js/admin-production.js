@@ -97,7 +97,15 @@ function populateDates(orders){const dates=[...new Set(orders.map(x=>x.pickup_da
 async function refreshProduction(){await loadReferenceData();await loadSelectedDate();}
 
 function convert(q,from,to){const a=Number(q||0),f=unit(from),t=unit(to);if(f===t)return a;if(MASS[f]&&MASS[t])return a*MASS[f]/MASS[t];if(VOLUME[f]&&VOLUME[t])return a*VOLUME[f]/VOLUME[t];if(COUNT.includes(f)&&COUNT.includes(t))return a;return null;}
-function displayQty(q,u){const a=Number(q||0),n=unit(u);if(MASS[n]===1&&a>=1000)return`${fmt(a/1000)} kg`;if(VOLUME[n]===1&&a>=1000)return`${fmt(a/1000)} L`;return`${fmt(a)} ${esc(u||"")}`.trim();}
+
+
+function displayQty(quantity, unit) {
+
+    return `${fmt(quantity)} ${esc(unit || "")}`.trim();
+
+}
+
+
 function unit(x){return String(x||"").trim().toLowerCase().replace(/\./g,"").replace(/\s+/g," ");}
 function emptyPlan(){return{date:"",orders:[],products:[],batches:[],ingredientReq:[],packagingReq:[],combined:[],shortages:[],warnings:[],orderCount:0,itemCount:0,revenue:0,foodCost:0,packagingCost:0,totalCost:0,profit:0,margin:0};}
 function loading(){["productionTotals","recipeBatches","productionCosts","ingredientRequirements","shoppingList","packagingRequirements","productionChecklist","productionTimeline","includedOrders"].forEach(id=>{const e=document.getElementById(id);if(e)e.innerHTML=empty("Loading...");});}
