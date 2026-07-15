@@ -931,6 +931,21 @@ function buildRecipeModal() {
 
                <hr>
 
+<h3>Ingredients</h3>
+
+<div id="recipeIngredientRows"></div>
+
+<button
+    class="secondary-btn"
+    type="button"
+    onclick="addRecipeIngredientRow()">
+
+    + Add Ingredient
+
+</button>
+
+<hr>
+
 <h3>Recipe Components</h3>
 
 <div id="recipeComponentRows"></div>
@@ -1100,7 +1115,11 @@ function addRecipeIngredientRow(
 
 }
 
-function addRecipeComponentRow(recipeId = "", quantity = "", unit = "g") {
+function addRecipeComponentRow(
+    recipeId = "",
+    quantity = "",
+    unit = "item"
+) {
 
     const container =
         document.getElementById("recipeComponentRows");
@@ -1111,7 +1130,7 @@ function addRecipeComponentRow(recipeId = "", quantity = "", unit = "g") {
     const row =
         document.createElement("div");
 
-    row.className = "recipe-ingredient-row";
+    row.className = "recipe-component-row";
 
     row.innerHTML = `
 
@@ -1124,6 +1143,7 @@ ${recipes
 .map(recipe => `
 <option value="${recipe.id}">
 ${escapeHtml(recipe.name)}
+(${recipe.yield_quantity} ${recipe.yield_unit})
 </option>
 `).join("")}
 
@@ -1137,15 +1157,14 @@ placeholder="Quantity">
 
 <select class="recipeComponentUnit">
 
-<option value="g">g</option>
+    <option value="item">item</option>
+    <option value="each">each</option>
 
-<option value="kg">kg</option>
+    <option value="g">g</option>
+    <option value="kg">kg</option>
 
-<option value="mL">mL</option>
-
-<option value="L">L</option>
-
-<option value="each">each</option>
+    <option value="mL">mL</option>
+    <option value="L">L</option>
 
 </select>
 
@@ -1209,8 +1228,8 @@ async function saveRecipe() {
         .eq("recipe_id", recipeId);
 
     const ingredientRows = [
-        ...document.querySelectorAll(".recipe-ingredient-row")
-    ];
+    ...document.querySelectorAll("#recipeIngredientRows .recipe-ingredient-row")
+];
 
     const recipeIngredients = ingredientRows
         .map(row => ({
