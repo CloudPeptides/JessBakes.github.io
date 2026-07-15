@@ -517,30 +517,83 @@ async function updateOrderStatus(orderId, status) {
 
     if (status === "completed") {
 
-        await createSaleFromOrder(orderId);
+    await createSaleFromOrder(orderId);
 
-    }
+}
+
+if (status === "cancelled") {
+
+    await removeSaleFromOrder(orderId);
+
+}
 
     await loadOrderManager();
 
 }
 
-async function createSaleFromOrder(orderId) {
+async function removeSaleFromOrder(orderId) {
 
-   const { data: existingSale } =
-    await supabaseClient
-        .from("sales")
-        .select("id")
-        .eq("order_id", orderId)
-        .maybeSingle();
+    const { data: sale, error } =
+        await supabaseClient
+            .from("sales")
+            .select("id")
+            .eq("order_id", orderId)
+            .maybeSingle();
 
-if (existingSale) {
+    if (error) {
 
-    return;
+        console.error(error);
+        return;
+
+    }
+
+    if (!sale) {
+
+        return;
+
+    }
+
+    const { error: saleItemsError } =
+        await supabaseClient
+            .from("sale_items")
+            .delete()
+            .eq("sale_id", sale.id);
+
+    if (saleItemsError) {
+
+        console.error(saleItemsError);
+        return;
+
+    }
+
+    const { error: saleError } =
+        await supabaseClient
+            .from("sales")
+            .delete()
+            .eq("id", sale.id);
+
+    if (saleError) {
+
+        console.error(saleError);
+
+    }
 
 }
 
-    alert("createSaleFromOrder() started");
+async function createSaleFromOrder(orderId) {
+
+    const { data: existingSale } =
+        await supabaseClient
+            .from("sales")
+            .select("id")
+            .eq("order_id", orderId)
+            .maybeSingle();
+
+    if (existingSale) {
+
+        return;
+
+    }
 
     const { data: order, error: orderError } =
         await supabaseClient
@@ -550,9 +603,11 @@ if (existingSale) {
             .single();
 
     if (orderError) {
-        alert("Failed to load order");
-        alert(orderError.message);
+
+        console.error(orderError);
+        alert("Unable to load order.");
         return;
+
     }
 
     const { data: items, error: itemsError } =
@@ -562,191 +617,213 @@ if (existingSale) {
             .eq("order_id", orderId);
 
     if (itemsError) {
-        alert("Failed to load order items");
-        alert(itemsError.message);
+
+        console.error(itemsError);
+        alert("Unable to load order items.");
         return;
+
     }
 
     const { data: sale, error: saleError } =
         await supabaseClient
             .from("sales")
             .insert({
+
                 order_id: order.id,
+
                 customer_name: order.customer_name,
+
                 revenue: Number(order.subtotal || 0),
+
                 food_cost: 0,
+
                 packaging_cost: 0,
+
                 total_cost: 0,
+
                 profit: 0
+
             })
             .select()
             .single();
 
     if (saleError) {
-        alert("Insert failed");
-        alert(saleError.message);
+
+        console.error(saleError);
+        alert("Unable to create sale.");
         return;
+
     }
 
-   const { data: menuItems, error: menuError } =
-    await supabaseClient
-        .from("menu_items")
-        .select("*");
+    const { data: menuItems, error: menuError } =
+        await supabaseClient
+            .from("menu_items")
+            .select("*");
 
-if (menuError) {
+    if (menuError) {
 
-    alert(menuError.message);
-    return;
+        console.error(menuError);
+        return;
 
-}
+    }
 
-const { data: recipeCosts, error: recipeCostError } =
-    await supabaseClient
-        .from("recipe_costs")
-        .select("*");
+    const { data: recipeCosts, error: recipeCostError } =
+        await supabaseClient
+            .from("recipe_costs")
+            .select("*");
 
-if (recipeCostError) {
+    if (recipeCostError) {
 
-    alert(recipeCostError.message);
-    return;
+        console.error(recipeCostError);
+        return;
 
-}
+    }
 
-const { data: packagingCosts, error: packagingCostError } =
-    await supabaseClient
-        .from("packaging_profile_costs")
-        .select("*");
+    const { data: packagingCosts, error: packagingCostError } =
+        await supabaseClient
+            .from("packaging_profile_costs")
+            .select("*");
 
-if (packagingCostError) {
+    if (packagingCostError) {
 
-    alert(packagingCostError.message);
-    return;
+        console.error(packagingCostError);
+        return;
 
-}
+    }
 
-const menuMap =
-    new Map(menuItems.map(item => [
-        item.id,
-        item
-    ]));
+    const menuMap =
+        new Map(
+            menuItems.map(item => [
+                item.id,
+                item
+            ])
+        );
 
-const recipeCostMap =
-    new Map(recipeCosts.map(recipe => [
-        recipe.id,
-        recipe
-    ]));
+    const recipeCostMap =
+        new Map(
+            recipeCosts.map(recipe => [
+                recipe.id,
+                recipe
+            ])
+        );
 
-const packagingCostMap =
-    new Map(packagingCosts.map(profile => [
-        profile.id,
-        profile
-    ]));
+    const packagingCostMap =
+        new Map(
+            packagingCosts.map(profile => [
+                profile.id,
+                profile
+            ])
+        );
 
     const saleItems = items.map(item => {
 
-    const menuItem =
-        menuMap.get(item.menu_item_id);
+        const menuItem =
+            menuMap.get(item.menu_item_id);
 
-    const recipeCost =
-        recipeCostMap.get(menuItem?.recipe_id);
+        const recipeCost =
+            recipeCostMap.get(menuItem?.recipe_id);
 
-    const packagingCost =
-        packagingCostMap.get(menuItem?.packaging_profile_id);
+        const packagingCost =
+            packagingCostMap.get(menuItem?.packaging_profile_id);
 
-    const foodCost =
-        Number(recipeCost?.ingredient_cost || 0);
+        const foodCost =
+            Number(recipeCost?.cost_per_yield_item || 0) *
+            Number(menuItem?.recipe_units_used || 1);
 
-    const packaging =
-        Number(packagingCost?.packaging_cost || 0);
+        const packaging =
+            Number(packagingCost?.packaging_cost || 0);
 
-    const totalCost =
-        foodCost + packaging;
+        const totalCost =
+            foodCost + packaging;
 
-    const revenue =
-        Number(item.line_total);
+        const revenue =
+            Number(item.line_total);
 
-    const profit =
-        revenue - (totalCost * item.quantity);
+        const profit =
+            revenue - (totalCost * item.quantity);
 
-    return {
+        return {
 
-        sale_id: sale.id,
+            sale_id: sale.id,
 
-        menu_item_id: item.menu_item_id,
+            menu_item_id: item.menu_item_id,
 
-        item_name: item.item_name,
+            item_name: item.item_name,
 
-        quantity: item.quantity,
+            quantity: item.quantity,
 
-        unit_price: item.price_at_purchase,
+            unit_price: item.price_at_purchase,
 
-        food_cost: foodCost,
+            food_cost: foodCost,
 
-        packaging_cost: packaging,
+            packaging_cost: packaging,
 
-        total_cost: totalCost,
+            total_cost: totalCost,
 
-        line_revenue: revenue,
+            line_revenue: revenue,
 
-        line_profit: profit
+            line_profit: profit
 
-    };
+        };
 
-});
+    });
+
     const { error: saleItemsError } =
         await supabaseClient
             .from("sale_items")
             .insert(saleItems);
 
     if (saleItemsError) {
-        alert(saleItemsError.message);
+
+        console.error(saleItemsError);
+        alert("Unable to save sale items.");
         return;
+
     }
 
-   const foodCost =
-    saleItems.reduce(
-        (sum, item) =>
-            sum + (item.food_cost * item.quantity),
-        0
-    );
+    const foodCost =
+        saleItems.reduce(
+            (sum, item) =>
+                sum + (item.food_cost * item.quantity),
+            0
+        );
 
-const packagingCost =
-    saleItems.reduce(
-        (sum, item) =>
-            sum + (item.packaging_cost * item.quantity),
-        0
-    );
+    const packagingCost =
+        saleItems.reduce(
+            (sum, item) =>
+                sum + (item.packaging_cost * item.quantity),
+            0
+        );
 
-const totalCost =
-    foodCost + packagingCost;
+    const totalCost =
+        foodCost + packagingCost;
 
-const profit =
-    Number(order.subtotal) - totalCost;
+    const profit =
+        Number(order.subtotal) - totalCost;
 
-   const { error: updateSaleError } =
-    await supabaseClient
-        .from("sales")
-        .update({
+    const { error: updateSaleError } =
+        await supabaseClient
+            .from("sales")
+            .update({
 
-            food_cost: foodCost,
+                food_cost: foodCost,
 
-            packaging_cost: packagingCost,
+                packaging_cost: packagingCost,
 
-            total_cost: totalCost,
+                total_cost: totalCost,
 
-            profit: profit
+                profit: profit
 
-        })
-        .eq("id", sale.id);
+            })
+            .eq("id", sale.id);
 
-if (updateSaleError) {
+    if (updateSaleError) {
 
-    alert(updateSaleError.message);
-    return;
+        console.error(updateSaleError);
+        alert("Unable to finalize sale.");
+        return;
 
-}
-
-    alert("Sale created successfully");
+    }
 
 }
 
@@ -1217,49 +1294,7 @@ async function reopenOrder(orderId) {
         return;
     }
 
-    const { data: sale, error: saleError } =
-        await supabaseClient
-            .from("sales")
-            .select("id")
-            .eq("order_id", orderId)
-            .maybeSingle();
-
-    if (saleError) {
-
-        alert(saleError.message);
-        return;
-
-    }
-
-    if (sale) {
-
-        const { error: saleItemsError } =
-            await supabaseClient
-                .from("sale_items")
-                .delete()
-                .eq("sale_id", sale.id);
-
-        if (saleItemsError) {
-
-            alert(saleItemsError.message);
-            return;
-
-        }
-
-        const { error: deleteSaleError } =
-            await supabaseClient
-                .from("sales")
-                .delete()
-                .eq("id", sale.id);
-
-        if (deleteSaleError) {
-
-            alert(deleteSaleError.message);
-            return;
-
-        }
-
-    }
+    await removeSaleFromOrder(orderId);
 
     const { error: orderError } =
         await supabaseClient
