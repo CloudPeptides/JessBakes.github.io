@@ -231,8 +231,8 @@ const recipeUnitsUsed =
     Number(item.recipe_units_used || 1);
 
 const recipeCost =
-    (recipeTotalCost / recipeYield) *
-    recipeUnitsUsed;
+    Number(getRecipeCost(item.recipe_id)) *
+    Number(item.recipe_units_used || 1);
 
     const packagingCost =
         Number(getPackagingCost(item.packaging_profile_id));
@@ -1600,7 +1600,9 @@ function getPackaging(profileId) {
 
 function getRecipeCost(recipeId) {
 
-    return recipeCosts.get(recipeId)?.ingredient_cost || 0;
+    return Number(
+        recipeCosts.get(recipeId)?.cost_per_yield_item || 0
+    );
 
 }
 
