@@ -599,14 +599,6 @@ function renderProfitBreakdown(orders) {
 
     const profit = calculateProfit(orders);
 
-    if (!profit.hasCostData) {
-        container.innerHTML = `
-            <p>Revenue is being tracked, but ingredient or product costs are not attached to completed order items yet.</p>
-            <p>Gross profit will calculate automatically once a cost field such as <code>unit_cost</code>, <code>cost_at_purchase</code>, or <code>ingredient_cost</code> is available.</p>
-        `;
-        return;
-    }
-
     container.innerHTML = `
         <div class="sales-metric-list">
             <div><span>Revenue</span><strong>${euro(profit.revenue)}</strong></div>
@@ -617,27 +609,22 @@ function renderProfitBreakdown(orders) {
     `;
 }
 
-function calculateProfit(orders) {
+function calculateProfit(sales) {
 
-    let revenue = 0;
+    const revenue = sales.reduce(
+        (sum, sale) => sum + Number(sale.revenue || 0),
+        0
+    );
 
-    let cost = 0;
+    const cost = sales.reduce(
+        (sum, sale) => sum + Number(sale.total_cost || 0),
+        0
+    );
 
-    orders.forEach(order => {
-
-        revenue += Number(order.subtotal || 0);
-
-        order.order_items.forEach(item => {
-
-            cost +=
-                Number(item.total_cost || 0) *
-                Number(item.quantity || 0);
-
-        });
-
-    });
-
-    const grossProfit = revenue - cost;
+    const grossProfit = sales.reduce(
+        (sum, sale) => sum + Number(sale.profit || 0),
+        0
+    );
 
     return {
 
@@ -647,14 +634,15 @@ function calculateProfit(orders) {
 
         grossProfit,
 
-        margin:
-            revenue > 0
-                ? (grossProfit / revenue) * 100
-                : 0,
+        margin: revenue > 0
+            ? (grossProfit / revenue) * 100
+            : 0,
 
         hasCostData: true
 
     };
+
+}
 
 }
 function exportSalesCsv() {
