@@ -1257,7 +1257,7 @@ async function saveRecipe() {
     .eq("parent_recipe_id", recipeId);
 
 const componentRows = [
-    ...document.querySelectorAll("#recipeComponentRows .recipe-ingredient-row")
+    ...document.querySelectorAll("#recipeComponentRows .recipe-component-row")
 ];
 
 const recipeComponents = componentRows
