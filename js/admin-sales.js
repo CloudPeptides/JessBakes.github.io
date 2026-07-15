@@ -165,7 +165,7 @@ function updateSalesCards(completedOrders, activeOrders) {
     setText("pendingRevenue", euro(pendingRevenue));
 
     const profit = calculateProfit(completedOrders);
-    setText("grossProfit", profit.hasCostData ? euro(profit.grossProfit) : "Not tracked");
+    setText("grossProfit", euro(profit.grossProfit));
 }
 
 function updateLifetimeCards(completedOrders) {
@@ -645,7 +645,7 @@ function calculateProfit(sales) {
 }
 
 function exportSalesCsv() {
-    const completedOrders = salesOrders.filter((order) => order.status === "completed");
+    const completedOrders = salesOrders;
     const rows = [["Order ID", "Customer", "Date", "Status", "Items", "Subtotal"]];
 
     completedOrders.forEach((order) => {
@@ -657,7 +657,7 @@ function exportSalesCsv() {
             order.id,
             order.customer_name,
             formatDate(order.completed_at),
-            order.status,
+            "Completed",
             itemSummary,
             Number(order.subtotal).toFixed(2)
         ]);
