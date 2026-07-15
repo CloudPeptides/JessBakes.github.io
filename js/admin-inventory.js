@@ -102,30 +102,42 @@ async function loadIngredients() {
 }
 
 async function loadRecipes() {
+
     const { data, error } = await supabaseClient
         .from("recipes")
         .select(`
-    *,
-    recipe_ingredients(
-        *,
-        ingredients(*)
-    ),
-    recipe_components(
-        *,
-        component_recipe:recipes(*)
-    )
-`)
+            *,
+            recipe_ingredients(
+                *,
+                ingredients(*)
+            ),
+            recipe_components!recipe_components_parent_recipe_id_fkey(
+                *,
+                component_recipe:recipes!recipe_components_component_recipe_id_fkey(
+                    id,
+                    name,
+                    category,
+                    yield_quantity,
+                    yield_unit,
+                    notes
+                )
+            )
+        `)
         .order("name", { ascending: true });
 
     if (error) {
-        console.error(error);
+
+        console.error("Unable to load recipes:", error);
+
         recipes = [];
+
         return;
+
     }
 
     recipes = data || [];
-}
 
+}
 
 /*==================================================
     OVERVIEW
@@ -1025,6 +1037,67 @@ document.getElementById("recipeModal").style.display = "flex";
 
 function closeRecipeModal() {
     document.getElementById("recipeModal").style.display = "none";
+}
+
+function addRecipeIngredientRow(
+    ingredientId = "",
+    quantity = ""
+) {
+
+    const container =
+        document.getElementById(
+            "recipeIngredientRows"
+        );
+
+    if (!container) return;
+
+    const row =
+        document.createElement("div");
+
+    row.className =
+        "recipe-ingredient-row";
+
+    row.innerHTML = `
+        <select class="recipeIngredientSelect">
+
+            <option value="">
+                Choose Ingredient
+            </option>
+
+            ${ingredients.map(ingredient => `
+                <option value="${ingredient.id}">
+                    ${escapeHtml(ingredient.name)}
+                </option>
+            `).join("")}
+
+        </select>
+
+        <input
+            class="recipeIngredientQuantity"
+            type="number"
+            step="0.01"
+            placeholder="Quantity">
+
+        <button
+            class="delete-btn"
+            type="button"
+            onclick="this.parentElement.remove()">
+
+            Remove
+
+        </button>
+    `;
+
+    container.appendChild(row);
+
+    row.querySelector(
+        ".recipeIngredientSelect"
+    ).value = ingredientId;
+
+    row.querySelector(
+        ".recipeIngredientQuantity"
+    ).value = quantity;
+
 }
 
 function addRecipeComponentRow(recipeId = "", quantity = "", unit = "g") {
