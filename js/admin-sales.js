@@ -87,7 +87,7 @@ async function loadSalesDashboard() {
         console.warn("Unable to load menu categories:", menuResult.error);
     }
 
-    salesOrders = (ordersResult.data || []).map((sale) => ({
+ salesOrders = (ordersResult.data || []).map((sale) => ({
     ...sale,
 
     subtotal: Number(sale.revenue) || 0,
@@ -98,8 +98,17 @@ async function loadSalesDashboard() {
 
 }));
 
-    salesMenuItems = menuResult.data || [];
-    renderSalesDashboard();
+console.log(
+    salesOrders.map(s => ({
+        customer: s.customer_name,
+        revenue: s.revenue,
+        completed_at: s.completed_at
+    }))
+);
+
+salesMenuItems = menuResult.data || [];
+
+renderSalesDashboard();
 }
 
 function renderSalesDashboard() {
