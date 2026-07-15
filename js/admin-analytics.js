@@ -216,27 +216,75 @@ function renderProductPopularity(sales) {
     if (popularityChart) popularityChart.destroy();
 
     popularityChart = new Chart(canvas, {
-        type: "doughnut",
-        data: {
-            labels: entries.map(([name]) => name),
-            datasets: [{
-                data: entries.map(([, quantity]) => quantity),
-                borderWidth: 1
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-                legend: { position: "bottom" },
-                tooltip: {
-                    callbacks: {
-                        label: context => `${context.label}: ${context.parsed} sold`
+
+    type: "doughnut",
+
+    data: {
+
+        labels: entries.map(([name]) => name),
+
+        datasets: [{
+
+            data: entries.map(([, quantity]) => quantity),
+
+            borderWidth: 1
+
+        }]
+
+    },
+
+    options: {
+
+        responsive: true,
+
+        maintainAspectRatio: false,
+
+        cutout: "62%",
+
+        plugins: {
+
+            legend: {
+
+                display: true,
+
+                position: "bottom",
+
+                labels: {
+
+                    padding: 18,
+
+                    usePointStyle: true,
+
+                    pointStyle: "circle",
+
+                    boxWidth: 12,
+
+                    font: {
+
+                        size: 13
+
                     }
+
                 }
+
+            },
+
+            tooltip: {
+
+                callbacks: {
+
+                    label: (context) =>
+                        `${context.label}: ${context.parsed} sold`
+
+                }
+
             }
+
         }
-    });
+
+    }
+
+});
 }
 
 function renderProductRankings(sales) {
