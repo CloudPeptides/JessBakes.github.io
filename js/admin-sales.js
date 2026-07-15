@@ -644,7 +644,6 @@ function calculateProfit(sales) {
 
 }
 
-}
 function exportSalesCsv() {
     const completedOrders = salesOrders.filter((order) => order.status === "completed");
     const rows = [["Order ID", "Customer", "Date", "Status", "Items", "Subtotal"]];
