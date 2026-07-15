@@ -37,25 +37,67 @@ function bindAnalyticsFilters(){
   }));
 }
 
-async function loadAnalytics(){
-  const {data,error}=await supabaseClient.from('orders').select(`*,order_items(*)`).order('created_at',{ascending:false});
-  if(error){console.error('Unable to load analytics:',error);showAnalyticsError('Unable to load analytics data.');return;}
-  analyticsOrders=(data||[]).map(order=>({...order,subtotal:Number(order.subtotal)||0,order_items:Array.isArray(order.order_items)?order.order_items:[]}));
-  renderAnalytics();
+async function loadAnalytics() {
+
+    const { data, error } =
+        await supabaseClient
+            .from("sales")
+            .select(`
+                *,
+                sale_items(*)
+            `)
+            .order("completed_at", { ascending: false });
+
+    if (error) {
+
+        console.error(error);
+        showAnalyticsError("Unable to load analytics.");
+        return;
+
+    }
+
+    analyticsOrders = (data || []).map(sale => ({
+
+        ...sale,
+
+        subtotal: Number(sale.revenue) || 0,
+
+        order_items: sale.sale_items || []
+
+    }));
+
+    renderAnalytics();
+
 }
 
-function renderAnalytics(){
-  const completed=analyticsOrders.filter(order=>order.status==='completed');
-  const filtered=filterOrdersByRange(completed,currentAnalyticsRange);
-  updateOverview(filtered);
-  renderOrdersOverTime(filtered);
-  renderProductPopularity(filtered);
-  renderProductRankings(filtered);
-  renderCustomerInsights(filtered);
-  renderPickupTrends(filtered);
-  renderBakeryInsights(filtered);
-  renderTopCustomers(filtered);
-  renderProductBreakdown(filtered);
+function renderAnalytics() {
+
+    const completed = analyticsOrders;
+
+    const filtered =
+        filterOrdersByRange(
+            completed,
+            currentAnalyticsRange
+        );
+
+    updateOverview(filtered);
+
+    renderOrdersOverTime(filtered);
+
+    renderProductPopularity(filtered);
+
+    renderProductRankings(filtered);
+
+    renderCustomerInsights(filtered);
+
+    renderPickupTrends(filtered);
+
+    renderBakeryInsights(filtered);
+
+    renderTopCustomers(filtered);
+
+    renderProductBreakdown(filtered);
+
 }
 
 function updateOverview(orders){
