@@ -907,11 +907,26 @@ document.querySelector(
 
 function closeManualOrderModal() {
 
-    const modal = document.getElementById("manualOrderModal");
+    const modal =
+        document.getElementById("manualOrderModal");
 
     if (modal) {
+
         modal.style.display = "none";
+
     }
+
+    document.getElementById("editingOrderId").value = "";
+
+    document.querySelector(
+        "#manualOrderModal .modal-header h2"
+    ).textContent = "New Order";
+
+    document.querySelector(
+        "#manualOrderModal .modal-footer .primary-btn"
+    ).textContent = "Save Order";
+
+    manualOrderItems = {};
 
 }
 
