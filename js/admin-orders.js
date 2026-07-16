@@ -371,14 +371,35 @@ function renderOrderCard(order) {
             </div>
 
             <div class="order-actions">
-                ${renderStatusButtons(order)}
 
+    ${renderStatusButtons(order)}
+
+    ${
+        order.status === "pending" ||
+        order.status === "confirmed"
+
+            ? `
                 <button
-                    class="delete-btn"
-                    onclick="deleteOrder('${order.id}')">
-                    Delete
+                    class="secondary-btn"
+                    onclick="editOrder('${order.id}')">
+
+                    Edit
+
                 </button>
-            </div>
+            `
+
+            : ""
+    }
+
+    <button
+        class="delete-btn"
+        onclick="deleteOrder('${order.id}')">
+
+        Delete
+
+    </button>
+
+</div>
 
         </article>
     `;
@@ -1315,6 +1336,12 @@ async function reopenOrder(orderId) {
 
 }
 
+function editOrder(orderId) {
+
+    console.log("Editing order:", orderId);
+
+}
+
 
 /* ==========================================
    GLOBAL EXPORTS
@@ -1324,6 +1351,7 @@ window.toggleOrderSection = toggleOrderSection;
 window.updateOrderStatus = updateOrderStatus;
 window.deleteOrder = deleteOrder;
 window.reopenOrder = reopenOrder;
+window.editOrder = editOrder;
 
 window.openManualOrderModal = openManualOrderModal;
 window.closeManualOrderModal = closeManualOrderModal;
