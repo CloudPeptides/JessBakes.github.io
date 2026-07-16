@@ -1098,6 +1098,8 @@ function getManualOrderSubtotal() {
 
 async function saveManualOrder() {
 
+   
+    const editingOrderId = document.getElementById("editingOrderId").value;
     const customer_name = document.getElementById("manualCustomerName")?.value.trim();
     const customer_phone = document.getElementById("manualCustomerPhone")?.value.trim();
     const customer_email = document.getElementById("manualCustomerEmail")?.value.trim();
@@ -1164,22 +1166,55 @@ async function saveManualOrder() {
 
     const subtotal = getManualOrderSubtotal();
 
-    const { data: order, error } = await supabaseClient
-        .from("orders")
-        .insert({
-            customer_name,
-            customer_phone,
-            customer_email,
-            preferred_contact,
-            order_type,
-            pickup_date,
-            event_date,
-            notes,
-            subtotal,
-            status
-        })
-        .select()
-        .single();
+    let order;
+let error;
+
+if (editingOrderId) {
+
+    ({ data: order, error } =
+        await supabaseClient
+            .from("orders")
+            .update({
+
+                customer_name,
+                customer_phone,
+                customer_email,
+                preferred_contact,
+                order_type,
+                pickup_date,
+                event_date,
+                notes,
+                subtotal,
+                status
+
+            })
+            .eq("id", editingOrderId)
+            .select()
+            .single());
+
+} else {
+
+    ({ data: order, error } =
+        await supabaseClient
+            .from("orders")
+            .insert({
+
+                customer_name,
+                customer_phone,
+                customer_email,
+                preferred_contact,
+                order_type,
+                pickup_date,
+                event_date,
+                notes,
+                subtotal,
+                status
+
+            })
+            .select()
+            .single());
+
+}
 
     if (error) {
 
@@ -1188,6 +1223,24 @@ async function saveManualOrder() {
         return;
 
     }
+
+   if (editingOrderId) {
+
+    const { error: deleteError } =
+        await supabaseClient
+            .from("order_items")
+            .delete()
+            .eq("order_id", editingOrderId);
+
+    if (deleteError) {
+
+        console.error(deleteError);
+        alert(deleteError.message);
+        return;
+
+    }
+
+}
 
     const orderItems = items.map(item => ({
         order_id: order.id,
