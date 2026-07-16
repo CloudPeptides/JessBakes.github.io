@@ -1014,8 +1014,8 @@ function renderManualMenuItem(item) {
                 </button>
 
                 <span id="manualQty-${item.id}">
-                    0
-                </span>
+    ${manualOrderItems[item.id]?.quantity || 0}
+</span>
 
                 <button
                     type="button"
@@ -1395,6 +1395,27 @@ async function editOrder(orderId) {
     }
 
     toggleManualOrderType();
+
+   manualOrderItems = {};
+
+(order.order_items || []).forEach(item => {
+
+    manualOrderItems[item.menu_item_id] = {
+
+        id: item.menu_item_id,
+
+        name: item.item_name,
+
+        price: Number(item.price_at_purchase),
+
+        quantity: Number(item.quantity)
+
+    };
+
+});
+
+   renderManualMenuItems();
+updateManualOrderSummary();
 
 }
 
