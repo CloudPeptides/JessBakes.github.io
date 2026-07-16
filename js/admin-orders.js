@@ -883,6 +883,14 @@ function openManualOrderModal() {
 
     manualOrderItems = {};
 
+   document.querySelector(
+    "#manualOrderModal .modal-header h2"
+).textContent = "New Order";
+
+document.querySelector(
+    "#manualOrderModal .modal-footer .primary-btn"
+).textContent = "Save Order";
+
     const modal = document.getElementById("manualOrderModal");
 
     if (!modal) return;
@@ -1336,9 +1344,57 @@ async function reopenOrder(orderId) {
 
 }
 
-function editOrder(orderId) {
+async function editOrder(orderId) {
 
-    console.log("Editing order:", orderId);
+    const { data: order, error } =
+        await supabaseClient
+            .from("orders")
+            .select(`
+                *,
+                order_items(*)
+            `)
+            .eq("id", orderId)
+            .single();
+
+    if (error) {
+
+        console.error(error);
+        alert(error.message);
+        return;
+
+    }
+
+    openManualOrderModal();
+
+    document.getElementById("editingOrderId").value = order.id;
+
+    document.querySelector("#manualOrderModal .modal-header h2").textContent =
+        "Edit Order";
+
+    document.querySelector(
+        "#manualOrderModal .modal-footer .primary-btn"
+    ).textContent = "Save Changes";
+
+    setInputValue("manualCustomerName", order.customer_name);
+    setInputValue("manualCustomerPhone", order.customer_phone);
+    setInputValue("manualCustomerEmail", order.customer_email);
+    setInputValue("manualContact", order.preferred_contact || "text");
+    setInputValue("manualOrderType", order.order_type || "weekly");
+    setInputValue("manualStatus", order.status || "pending");
+    setInputValue("manualNotes", order.notes || "");
+
+    if (order.order_type === "weekly") {
+
+        setInputValue("manualPickupDate", order.pickup_date);
+
+    } else {
+
+        setInputValue("manualEventDate", order.event_date);
+        setInputValue("manualCustomPickupDate", order.pickup_date);
+
+    }
+
+    toggleManualOrderType();
 
 }
 
