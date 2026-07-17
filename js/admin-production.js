@@ -136,8 +136,31 @@ function buildPlan() {
 
         (order.order_items || []).forEach(orderItem => {
 
-            const quantity =
-                Number(orderItem.quantity || 0);
+            const itemsToProcess = [];
+
+if (orderItem.builder_details?.selections?.length) {
+
+    orderItem.builder_details.selections.forEach(selection => {
+
+        itemsToProcess.push({
+            menu_item_id: selection.id,
+            item_name: selection.name,
+            quantity: Number(selection.quantity),
+            line_total: 0
+        });
+
+    });
+
+} else {
+
+    itemsToProcess.push(orderItem);
+
+}
+
+            itemsToProcess.forEach(orderItem => {
+
+    const quantity =
+        Number(orderItem.quantity || 0);
 
             itemCount += quantity;
 
@@ -270,6 +293,7 @@ function buildPlan() {
                     ) * quantity;
 
             }
+                });
 
         });
 
