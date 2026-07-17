@@ -92,6 +92,36 @@ function changeCartQuantity(itemId, change) {
    BUILDER PRODUCTS
 ========================================== */
 
+async function openBuilderModal(builderId){
+
+    const builder =
+        cartMenuItems.find(i => i.id === builderId);
+
+    if(!builder) return;
+
+    const {data:options,error}=await supabaseClient
+        .from("menu_items")
+        .select("*")
+        .eq("builder_group",builder.builder_group)
+        .eq("product_type","standard")
+        .eq("available",true)
+        .order("name");
+
+    if(error){
+        console.error(error);
+        alert(error.message);
+        return;
+    }
+
+    showBuilderModal(builder,options);
+}
+
+function showBuilderModal(builder,options){
+
+    alert("Builder modal goes here.");
+
+}
+
 function addBuilderToCart(builderProduct) {
 
     const existing = cart.find(item =>
