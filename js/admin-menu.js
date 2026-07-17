@@ -713,13 +713,16 @@ async function saveMenuItem() {
     const productType =
         document.getElementById("menuProductType").value;
 
-    const builderSize =
+   const builderGroup =
+    document.getElementById("menuBuilderGroup").value.trim() || null;
+
+const builderSize =
     Number(
         document.getElementById("menuBuilderSize").value
     ) || 4;
 
-    const recipeId =
-        document.getElementById("menuRecipe").value || null;
+const recipeId =
+    document.getElementById("menuRecipe").value || null;
 
     const packagingProfileId =
         document.getElementById("menuPackaging").value || null;
