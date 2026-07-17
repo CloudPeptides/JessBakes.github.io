@@ -118,6 +118,8 @@ async function openBuilderModal(builderId){
 
 function showBuilderModal(builder, options) {
 
+   const builderSize = Number(builderSize) || 4;
+
     let modal = document.getElementById("builderModal");
 
     if (!modal) {
@@ -166,7 +168,7 @@ function showBuilderModal(builder, options) {
 
 <p>
 
-Pick exactly <strong>${builder.builder_size}</strong> items.
+Pick exactly <strong>${builderSize}</strong> items.
 
 </p>
 
@@ -226,7 +228,7 @@ Selected
 
 <strong>
 
-${totalSelected()} / ${builder.builder_size}
+${totalSelected()} / ${builderSize}
 
 </strong>
 
@@ -236,7 +238,7 @@ ${totalSelected()} / ${builder.builder_size}
 
 class="primary-btn"
 
-${totalSelected() !== builder.builder_size ? "disabled" : ""}
+${totalSelected() !== builderSize ? "disabled" : ""}
 
 onclick="finishBuilderSelection()">
 
@@ -252,7 +254,7 @@ Add Box
 
     window.updateBuilderSelection=function(id,change){
 
-        if (change > 0 && totalSelected() >= builder.builder_size)
+        if (change > 0 && totalSelected() >= builderSize)
     return;
 
         selections[id]+=change;
@@ -269,10 +271,10 @@ Add Box
 
     window.finishBuilderSelection=function(){
 
-       if (totalSelected() !== builder.builder_size) {
+       if (totalSelected() !== builderSize) {
 
     alert(
-        `Please select exactly ${builder.builder_size} items.`
+        `Please select exactly ${builderSize} items.`
     );
 
     return;
