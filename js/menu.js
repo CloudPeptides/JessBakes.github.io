@@ -172,7 +172,11 @@ function renderMenuCard(item) {
                     <button
                         type="button"
                         class="add-cart-btn"
-                        onclick="changeCartQuantity('${item.id}',1)">
+                        onclick="${
+    item.product_type === 'builder'
+        ? `openBuilderModal('${item.id}')`
+        : `changeCartQuantity('${item.id}',1)`
+}"
 
                         Add to Cart
 
