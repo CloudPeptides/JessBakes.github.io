@@ -1704,3 +1704,21 @@ JESS NOTE
     text-align:center;
     font-weight:bold;
 }
+
+.builder-order-details{
+
+    margin-top:8px;
+
+    margin-left:18px;
+
+    font-size:.9rem;
+
+    color:#666;
+
+}
+
+.builder-order-line{
+
+    margin:2px 0;
+
+}
