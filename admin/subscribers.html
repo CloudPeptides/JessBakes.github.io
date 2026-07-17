@@ -1,6 +1,8 @@
 <!DOCTYPE html>
 <html lang="en">
 
+    <link href="https://cdn.jsdelivr.net/npm/quill@2/dist/quill.snow.css" rel="stylesheet">
+
 <head>
 
     <meta charset="UTF-8">
@@ -54,6 +56,54 @@
     <main class="admin-content">
 
         <header class="page-header">
+
+            <div class="card">
+
+    <h2>Email Newsletter</h2>
+
+    <div class="form-group">
+
+        <label>Subject</label>
+
+        <input
+            type="text"
+            id="newsletterSubject"
+            placeholder="This Week's Menu Is Here!">
+
+    </div>
+
+    <div class="form-group">
+
+        <label>Message</label>
+
+        <div
+            id="newsletterEditor"
+            style="height:300px;"></div>
+
+    </div>
+
+    <div
+        style="display:flex;gap:12px;">
+
+        <button
+            class="secondary-btn"
+            id="testNewsletterBtn">
+
+            Send Test Email
+
+        </button>
+
+        <button
+            class="primary-btn"
+            id="sendNewsletterBtn">
+
+            Send Newsletter
+
+        </button>
+
+    </div>
+
+</div>
 
             <div>
 
@@ -126,6 +176,8 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
 
 <script src="../js/supabase.js"></script>
+
+<script src="https://cdn.jsdelivr.net/npm/quill@2/dist/quill.js"></script>
 
 <script src="../js/admin-subscribers.js"></script>
 
