@@ -1,1 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
 
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0">
+
+    <title>Subscribers | Jess Bakes Sourdough</title>
+
+    <link rel="stylesheet"
+          href="../css/admin.css">
+
+</head>
+
+<body>
+
+<div class="admin-shell">
+
+    <!-- Sidebar -->
+
+    <aside class="sidebar">
+
+        <div class="sidebar-brand">
+
+            <h2>Jess Bakes</h2>
+
+            <span>SOURDOUGH</span>
+
+        </div>
+
+        <nav class="sidebar-nav">
+
+            <a href="dashboard.html">Dashboard</a>
+            <a href="orders.html">Orders</a>
+            <a href="menu.html">Menu</a>
+            <a href="production.html">Production</a>
+            <a href="inventory.html">Inventory</a>
+            <a href="sales.html">Sales</a>
+            <a href="analytics.html">Analytics</a>
+          <a href="packaging.html">Packaging</a>
+            <a href="subscribers.html"
+               class="active">
+                Subscribers
+            </a>
+            <a href="settings.html">Settings</a>
+
+        </nav>
+
+    </aside>
+
+    <main class="admin-content">
+
+        <header class="page-header">
+
+            <div>
+
+                <h1>Email Subscribers</h1>
+
+                <p>
+                    Manage customers who receive email updates.
+                </p>
+
+            </div>
+
+        </header>
+
+        <div class="stats-grid">
+
+            <div class="stat-card">
+
+                <h3>Total Subscribers</h3>
+
+                <span id="subscriberCount">
+                    0
+                </span>
+
+            </div>
+
+        </div>
+
+        <div class="card">
+
+            <div class="card-header">
+
+                <input
+                    type="text"
+                    id="subscriberSearch"
+                    placeholder="Search by name or email...">
+
+            </div>
+
+            <div class="table-wrapper">
+
+                <table class="admin-table">
+
+                    <thead>
+
+                    <tr>
+
+                        <th>Name</th>
+                        <th>Email</th>
+                        <th>Joined</th>
+                        <th></th>
+
+                    </tr>
+
+                    </thead>
+
+                    <tbody id="subscriberTableBody">
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
+        </div>
+
+    </main>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+
+<script src="../js/supabase.js"></script>
+
+<script src="../js/admin-subscribers.js"></script>
+
+</body>
+
+</html>
