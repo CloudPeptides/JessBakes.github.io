@@ -1667,3 +1667,40 @@ JESS NOTE
     cursor: not-allowed;
 
 }
+
+.builder-options{
+    display:flex;
+    flex-direction:column;
+    gap:12px;
+    margin:20px 0;
+}
+
+.builder-row{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    padding:12px;
+    border:1px solid #ddd;
+    border-radius:10px;
+}
+
+.builder-counter{
+    display:flex;
+    align-items:center;
+    gap:10px;
+}
+
+.builder-counter button{
+    width:36px;
+    height:36px;
+    border:none;
+    border-radius:8px;
+    cursor:pointer;
+    font-size:22px;
+}
+
+.builder-counter span{
+    min-width:24px;
+    text-align:center;
+    font-weight:bold;
+}
