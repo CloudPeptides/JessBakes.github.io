@@ -290,15 +290,21 @@ Add Box
 
         addBuilderToCart({
 
-            id:builder.id,
+    type:"builder",
 
-            name:builder.name,
+    id:builder.id,
 
-            price:builder.price,
+    name:builder.name,
 
-            selections:chosen
+    price:Number(builder.price),
 
-        });
+    quantity:1,
+
+    builder_group:builder.builder_group,
+
+    selections:chosen
+
+});
 
         modal.style.display="none";
 
@@ -985,9 +991,12 @@ if (order_type === "weekly") {
         item.price * item.quantity,
 
     builder_details:
-        item.type === "builder"
-            ? item.selections
-            : null
+    item.type === "builder"
+        ? {
+            builder_group: item.builder_group,
+            selections: item.selections
+        }
+        : null
 
 }));
 
