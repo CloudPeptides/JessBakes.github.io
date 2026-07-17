@@ -166,7 +166,7 @@ function showBuilderModal(builder, options) {
 
 <p>
 
-Pick exactly <strong>4</strong> cinnamon rolls.
+Pick exactly <strong>${builder.builder_size}</strong> items.
 
 </p>
 
@@ -226,7 +226,7 @@ Selected
 
 <strong>
 
-${totalSelected()} / 4
+${totalSelected()} / ${builder.builder_size}
 
 </strong>
 
@@ -236,7 +236,7 @@ ${totalSelected()} / 4
 
 class="primary-btn"
 
-${totalSelected()!==4 ? "disabled" : ""}
+${totalSelected() !== builder.builder_size ? "disabled" : ""}
 
 onclick="finishBuilderSelection()">
 
@@ -252,7 +252,8 @@ Add Box
 
     window.updateBuilderSelection=function(id,change){
 
-        if(change>0 && totalSelected()>=4) return;
+        if (change > 0 && totalSelected() >= builder.builder_size)
+    return;
 
         selections[id]+=change;
 
@@ -267,6 +268,16 @@ Add Box
     }
 
     window.finishBuilderSelection=function(){
+
+       if (totalSelected() !== builder.builder_size) {
+
+    alert(
+        `Please select exactly ${builder.builder_size} items.`
+    );
+
+    return;
+
+}
 
         const chosen=[];
 
