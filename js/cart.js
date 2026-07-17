@@ -62,11 +62,16 @@ function changeCartQuantity(itemId, change) {
 
     if (!existing && change > 0) {
         cart.push({
-            id: menuItem.id,
-            name: menuItem.name,
-            price: Number(menuItem.price),
-            quantity: 1
-        });
+    type: "standard",
+
+    id: menuItem.id,
+
+    name: menuItem.name,
+
+    price: Number(menuItem.price),
+
+    quantity: 1
+});
     } else if (existing) {
         existing.quantity += change;
 
@@ -81,6 +86,52 @@ function changeCartQuantity(itemId, change) {
     if (rerenderMenu) {
         rerenderMenu();
     }
+}
+
+/* ==========================================
+   BUILDER PRODUCTS
+========================================== */
+
+function addBuilderToCart(builderProduct) {
+
+    const existing = cart.find(item =>
+        item.type === "builder" &&
+        item.id === builderProduct.id &&
+        JSON.stringify(item.selections) === JSON.stringify(builderProduct.selections)
+    );
+
+    if (existing) {
+
+        existing.quantity++;
+
+    } else {
+
+        cart.push({
+
+            type: "builder",
+
+            id: builderProduct.id,
+
+            name: builderProduct.name,
+
+            price: Number(builderProduct.price),
+
+            quantity: 1,
+
+            selections: builderProduct.selections
+
+        });
+
+    }
+
+    saveCart();
+
+    renderCart();
+
+    if (rerenderMenu) {
+        rerenderMenu();
+    }
+
 }
 
 /* ==========================================
@@ -130,12 +181,69 @@ function renderCart() {
         </div>
 
         <div class="floating-cart-items">
-            ${cart.map(item => `
-                <div class="floating-cart-line">
-                    <span>${escapeHtml(item.name)} × ${item.quantity}</span>
-                    <strong>€${formatPrice(item.quantity * item.price)}</strong>
+            ${cart.map(item => {
+
+    if (item.type === "builder") {
+
+        return `
+
+            <div class="floating-cart-line builder-cart-line">
+
+                <div>
+
+                    <strong>${escapeHtml(item.name)}</strong>
+
+                    ${item.selections.map(selection => `
+
+                        <div class="builder-selection">
+
+                            • ${escapeHtml(selection.name)} × ${selection.quantity}
+
+                        </div>
+
+                    `).join("")}
+
+                    <div>
+
+                        Box × ${item.quantity}
+
+                    </div>
+
                 </div>
-            `).join("")}
+
+                <strong>
+
+                    €${formatPrice(item.price * item.quantity)}
+
+                </strong>
+
+            </div>
+
+        `;
+
+    }
+
+    return `
+
+        <div class="floating-cart-line">
+
+            <span>
+
+                ${escapeHtml(item.name)} × ${item.quantity}
+
+            </span>
+
+            <strong>
+
+                €${formatPrice(item.quantity * item.price)}
+
+            </strong>
+
+        </div>
+
+    `;
+
+}).join("")}
         </div>
 
         <div class="floating-cart-total">
@@ -471,12 +579,69 @@ function renderCheckoutSummary() {
 
     summary.innerHTML = `
         <div class="checkout-summary">
-            ${cart.map(item => `
-                <div class="checkout-line">
-                    <span>${escapeHtml(item.name)} × ${item.quantity}</span>
-                    <strong>€${formatPrice(item.price * item.quantity)}</strong>
+            ${cart.map(item => {
+
+    if (item.type === "builder") {
+
+        return `
+
+            <div class="checkout-line">
+
+                <div>
+
+                    <strong>${escapeHtml(item.name)}</strong>
+
+                    ${item.selections.map(selection => `
+
+                        <div class="builder-selection">
+
+                            • ${escapeHtml(selection.name)} × ${selection.quantity}
+
+                        </div>
+
+                    `).join("")}
+
+                    <div>
+
+                        Box × ${item.quantity}
+
+                    </div>
+
                 </div>
-            `).join("")}
+
+                <strong>
+
+                    €${formatPrice(item.price * item.quantity)}
+
+                </strong>
+
+            </div>
+
+        `;
+
+    }
+
+    return `
+
+        <div class="checkout-line">
+
+            <span>
+
+                ${escapeHtml(item.name)} × ${item.quantity}
+
+            </span>
+
+            <strong>
+
+                €${formatPrice(item.price * item.quantity)}
+
+            </strong>
+
+        </div>
+
+    `;
+
+}).join("")}
 
             <div class="checkout-total">
                 <span>Subtotal</span>
@@ -584,13 +749,29 @@ if (order_type === "weekly") {
     }
 
     const items = cart.map(item => ({
-        order_id: order.id,
-        menu_item_id: item.id,
-        item_name: item.name,
-        quantity: item.quantity,
-        price_at_purchase: item.price,
-        line_total: item.price * item.quantity
-    }));
+
+    order_id: order.id,
+
+    menu_item_id:
+        item.type === "builder"
+            ? null
+            : item.id,
+
+    item_name: item.name,
+
+    quantity: item.quantity,
+
+    price_at_purchase: item.price,
+
+    line_total:
+        item.price * item.quantity,
+
+    builder_details:
+        item.type === "builder"
+            ? item.selections
+            : null
+
+}));
 
     const { error: itemError } = await supabaseClient
         .from("order_items")
