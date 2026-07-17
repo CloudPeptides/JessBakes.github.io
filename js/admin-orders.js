@@ -419,25 +419,69 @@ function renderOrderItems(items) {
 
     return `
         <div class="order-items-list">
-            ${items.map(item => `
-                <div class="order-item-row">
+           ${items.map(item => {
 
-                    <div class="order-item-left">
-                        <span class="order-item-qty">
-                            ${item.quantity}×
-                        </span>
+    let builderHtml = "";
 
-                        <span class="order-item-name">
-                            ${escapeHtml(item.item_name)}
-                        </span>
+    if (item.builder_details?.selections?.length) {
+
+        builderHtml = `
+            <div class="builder-order-details">
+
+                ${item.builder_details.selections.map(selection => `
+
+                    <div class="builder-order-line">
+
+                        • ${escapeHtml(selection.name)}
+
+                        × ${selection.quantity}
+
                     </div>
 
-                    <div class="order-item-right">
-                        €${Number(item.line_total || 0).toFixed(2)}
-                    </div>
+                `).join("")}
+
+            </div>
+        `;
+
+    }
+
+    return `
+
+        <div class="order-item-row">
+
+            <div class="order-item-left">
+
+                <span class="order-item-qty">
+
+                    ${item.quantity}×
+
+                </span>
+
+                <div>
+
+                    <span class="order-item-name">
+
+                        ${escapeHtml(item.item_name)}
+
+                    </span>
+
+                    ${builderHtml}
 
                 </div>
-            `).join("")}
+
+            </div>
+
+            <div class="order-item-right">
+
+                €${Number(item.line_total || 0).toFixed(2)}
+
+            </div>
+
+        </div>
+
+    `;
+
+}).join("")}
         </div>
     `;
 
@@ -736,7 +780,13 @@ async function createSaleFromOrder(orderId) {
             ])
         );
 
-    const saleItems = items.map(item => {
+const saleItems = [];
+
+for (const item of items) {
+
+    // ---------- STANDARD PRODUCTS ----------
+
+    if (!item.builder_details) {
 
         const menuItem =
             menuMap.get(item.menu_item_id);
@@ -757,13 +807,7 @@ async function createSaleFromOrder(orderId) {
         const totalCost =
             foodCost + packaging;
 
-        const revenue =
-            Number(item.line_total);
-
-        const profit =
-            revenue - (totalCost * item.quantity);
-
-        return {
+        saleItems.push({
 
             sale_id: sale.id,
 
@@ -781,13 +825,74 @@ async function createSaleFromOrder(orderId) {
 
             total_cost: totalCost,
 
-            line_revenue: revenue,
+            line_revenue: Number(item.line_total),
 
-            line_profit: profit
+            line_profit:
+                Number(item.line_total) -
+                (totalCost * item.quantity)
 
-        };
+        });
 
-    });
+        continue;
+
+    }
+
+    // ---------- BUILDER PRODUCTS ----------
+
+    for (const selection of item.builder_details.selections) {
+
+        const selectedMenuItem =
+            menuItems.find(menu =>
+                String(menu.id) === String(selection.id)
+            );
+
+        if (!selectedMenuItem)
+            continue;
+
+        const recipeCost =
+            recipeCostMap.get(selectedMenuItem.recipe_id);
+
+        const packagingCost =
+            packagingCostMap.get(selectedMenuItem.packaging_profile_id);
+
+        const foodCost =
+            Number(recipeCost?.cost_per_yield_item || 0) *
+            Number(selectedMenuItem.recipe_units_used || 1);
+
+        const packaging =
+            Number(packagingCost?.packaging_cost || 0);
+
+        const totalCost =
+            foodCost + packaging;
+
+        saleItems.push({
+
+            sale_id: sale.id,
+
+            menu_item_id: selectedMenuItem.id,
+
+            item_name: selectedMenuItem.name,
+
+            quantity:
+                selection.quantity * item.quantity,
+
+            unit_price: 0,
+
+            food_cost: foodCost,
+
+            packaging_cost: packaging,
+
+            total_cost: totalCost,
+
+            line_revenue: 0,
+
+            line_profit: 0
+
+        });
+
+    }
+
+}
 
     const { error: saleItemsError } =
         await supabaseClient
@@ -819,8 +924,12 @@ async function createSaleFromOrder(orderId) {
     const totalCost =
         foodCost + packagingCost;
 
-    const profit =
-        Number(order.subtotal) - totalCost;
+const revenue = saleItems.reduce(
+    (sum, item) => sum + Number(item.line_revenue),
+    0
+);
+
+const profit = revenue - totalCost;
 
     const { error: updateSaleError } =
         await supabaseClient
