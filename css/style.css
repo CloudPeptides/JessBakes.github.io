@@ -1627,3 +1627,43 @@ JESS NOTE
     pointer-events:none;
     user-select:none;
 }
+
+.newsletter button {
+
+    background: #7a2d1d;
+    color: #fff;
+
+    border: none;
+    border-radius: 10px;
+
+    padding: 14px 28px;
+
+    font-size: 1rem;
+    font-weight: 600;
+
+    cursor: pointer;
+
+    transition: all 0.2s ease;
+
+}
+
+.newsletter button:hover {
+
+    background: #642417;
+
+    transform: translateY(-2px);
+
+}
+
+.newsletter button:active {
+
+    transform: translateY(0);
+
+}
+
+.newsletter button:disabled {
+
+    opacity: .6;
+    cursor: not-allowed;
+
+}
