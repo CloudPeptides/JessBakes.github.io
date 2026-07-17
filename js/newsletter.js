@@ -13,13 +13,18 @@ if (newsletterForm) {
 async function subscribeToNewsletter(e) {
 
     e.preventDefault();
+const name =
+    document
+        .getElementById("newsletterName")
+        .value
+        .trim();
 
-    const email =
-        document
-            .getElementById("newsletterEmail")
-            .value
-            .trim()
-            .toLowerCase();
+const email =
+    document
+        .getElementById("newsletterEmail")
+        .value
+        .trim()
+        .toLowerCase();
 
     const message =
         document.getElementById("newsletterMessage");
@@ -29,9 +34,10 @@ async function subscribeToNewsletter(e) {
             .from("subscribers")
             .insert({
 
-                email
+    name,
+    email
 
-            });
+});
 
     if (error) {
 
