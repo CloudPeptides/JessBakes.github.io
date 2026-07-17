@@ -1,3 +1,4 @@
+let quill;
 let subscribers = [];
 
 document.addEventListener("DOMContentLoaded", () => {
@@ -7,6 +8,36 @@ document.addEventListener("DOMContentLoaded", () => {
     document
         .getElementById("subscriberSearch")
         .addEventListener("input", filterSubscribers);
+
+    const editor =
+        document.getElementById("newsletterEditor");
+
+    if (editor) {
+
+        quill = new Quill(editor, {
+
+            theme: "snow",
+
+            placeholder:
+                "Write this week's newsletter..."
+
+        });
+
+    }
+
+    document
+        .getElementById("testNewsletterBtn")
+        .addEventListener(
+            "click",
+            sendTestNewsletter
+        );
+
+    document
+        .getElementById("sendNewsletterBtn")
+        .addEventListener(
+            "click",
+            sendNewsletter
+        );
 
 });
 
@@ -24,6 +55,7 @@ async function loadSubscribers() {
     if (error) {
 
         console.error(error);
+
         return;
 
     }
@@ -133,5 +165,171 @@ function formatDate(date) {
 
     return new Date(date)
         .toLocaleDateString();
+
+}
+
+async function sendTestNewsletter() {
+
+    const button =
+        document.getElementById("testNewsletterBtn");
+
+    button.disabled = true;
+
+    try {
+
+        const subject =
+            document
+                .getElementById("newsletterSubject")
+                .value
+                .trim();
+
+        const html =
+            quill.root.innerHTML;
+
+        if (!subject) {
+
+            alert("Please enter a subject.");
+
+            return;
+
+        }
+
+        if (
+            !html ||
+            html === "<p><br></p>"
+        ) {
+
+            alert("Please write your newsletter.");
+
+            return;
+
+        }
+
+        const { error } =
+            await supabaseClient
+                .functions
+                .invoke(
+                    "rapid-worker",
+                    {
+                        body: {
+
+                            mode: "test",
+
+                            subject,
+
+                            html
+
+                        }
+                    }
+                );
+
+        if (error) {
+
+            alert(error.message);
+
+            return;
+
+        }
+
+        alert(
+            "Test email sent to jessica.holsopple3@gmail.com."
+        );
+
+    } finally {
+
+        button.disabled = false;
+
+    }
+
+}
+
+async function sendNewsletter() {
+
+    if (
+
+        !confirm(
+
+            `Send this newsletter to ${subscribers.length} subscribers?`
+
+        )
+
+    ) {
+
+        return;
+
+    }
+
+    const button =
+        document.getElementById("sendNewsletterBtn");
+
+    button.disabled = true;
+
+    try {
+
+        const subject =
+            document
+                .getElementById("newsletterSubject")
+                .value
+                .trim();
+
+        const html =
+            quill.root.innerHTML;
+
+        if (!subject) {
+
+            alert("Please enter a subject.");
+
+            return;
+
+        }
+
+        if (
+            !html ||
+            html === "<p><br></p>"
+        ) {
+
+            alert("Please write your newsletter.");
+
+            return;
+
+        }
+
+        const { data, error } =
+            await supabaseClient
+                .functions
+                .invoke(
+                    "rapid-worker",
+                    {
+                        body: {
+
+                            mode: "newsletter",
+
+                            subject,
+
+                            html
+
+                        }
+                    }
+                );
+
+        if (error) {
+
+            alert(error.message);
+
+            return;
+
+        }
+
+        alert(
+
+            `Newsletter sent to ${data?.sent ?? 0} subscribers!`
+
+        );
+
+    } finally {
+
+        button.disabled = false;
+
+    }
 
 }
