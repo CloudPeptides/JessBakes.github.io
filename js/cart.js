@@ -118,7 +118,7 @@ async function openBuilderModal(builderId){
 
 function showBuilderModal(builder, options) {
 
-   const builderSize = Number(builderSize) || 4;
+   const builderSize = Number(builder.builder_size) || 4;
 
     let modal = document.getElementById("builderModal");
 
