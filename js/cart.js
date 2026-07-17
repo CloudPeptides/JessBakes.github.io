@@ -116,9 +116,197 @@ async function openBuilderModal(builderId){
     showBuilderModal(builder,options);
 }
 
-function showBuilderModal(builder,options){
+function showBuilderModal(builder, options) {
 
-    alert("Builder modal goes here.");
+    let modal = document.getElementById("builderModal");
+
+    if (!modal) {
+
+        modal = document.createElement("div");
+
+        modal.id = "builderModal";
+        modal.className = "checkout-modal";
+
+        document.body.appendChild(modal);
+
+    }
+
+    const selections = {};
+
+    options.forEach(option => {
+
+        selections[option.id] = 0;
+
+    });
+
+    function totalSelected() {
+
+        return Object.values(selections)
+            .reduce((a,b)=>a+b,0);
+
+    }
+
+    function render() {
+
+        modal.innerHTML = `
+
+<div class="checkout-card">
+
+<div class="checkout-header">
+
+<h2>${builder.name}</h2>
+
+<button onclick="document.getElementById('builderModal').style.display='none'">
+
+×
+
+</button>
+
+</div>
+
+<p>
+
+Pick exactly <strong>4</strong> cinnamon rolls.
+
+</p>
+
+<div class="builder-options">
+
+${options.map(option=>`
+
+<div class="builder-row">
+
+<div>
+
+<strong>${option.name}</strong>
+
+</div>
+
+<div class="builder-counter">
+
+<button
+type="button"
+onclick="updateBuilderSelection('${option.id}',-1)">
+
+−
+
+</button>
+
+<span>
+
+${selections[option.id]}
+
+</span>
+
+<button
+type="button"
+onclick="updateBuilderSelection('${option.id}',1)">
+
++
+
+</button>
+
+</div>
+
+</div>
+
+`).join("")}
+
+</div>
+
+<hr>
+
+<div class="checkout-total">
+
+<span>
+
+Selected
+
+</span>
+
+<strong>
+
+${totalSelected()} / 4
+
+</strong>
+
+</div>
+
+<button
+
+class="primary-btn"
+
+${totalSelected()!==4 ? "disabled" : ""}
+
+onclick="finishBuilderSelection()">
+
+Add Box
+
+</button>
+
+</div>
+
+`;
+
+    }
+
+    window.updateBuilderSelection=function(id,change){
+
+        if(change>0 && totalSelected()>=4) return;
+
+        selections[id]+=change;
+
+        if(selections[id]<0){
+
+            selections[id]=0;
+
+        }
+
+        render();
+
+    }
+
+    window.finishBuilderSelection=function(){
+
+        const chosen=[];
+
+        options.forEach(option=>{
+
+            if(selections[option.id]>0){
+
+                chosen.push({
+
+                    id:option.id,
+
+                    name:option.name,
+
+                    quantity:selections[option.id]
+
+                });
+
+            }
+
+        });
+
+        addBuilderToCart({
+
+            id:builder.id,
+
+            name:builder.name,
+
+            price:builder.price,
+
+            selections:chosen
+
+        });
+
+        modal.style.display="none";
+
+    }
+
+    modal.style.display="flex";
+
+    render();
 
 }
 
