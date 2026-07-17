@@ -304,7 +304,11 @@ ${isBuilder
 </strong>
 
 <span>
-${isBuilder ? "Mix & Match" : `$${formatMoney(recipeCost)}`}
+${
+    isBuilder
+        ? `${item.builder_size || 4} Items`
+        : `$${formatMoney(recipeCost)}`
+}
 </span>
 
 </div>
@@ -438,6 +442,9 @@ function openMenuItemModal(category = null, itemId = null) {
     document.getElementById("menuBuilderGroup").value =
         item?.builder_group || "";
 
+    document.getElementById("menuBuilderSize").value =
+    item?.builder_size ?? 4;
+
     const recipeSelect =
         document.getElementById("menuRecipe");
 
@@ -548,19 +555,36 @@ function buildMenuItemModal() {
                     <option value="builder">Mix & Match Builder</option>
                 </select>
 
-                <div id="menuBuilderFields">
-                    <label for="menuBuilderGroup">Builder Group</label>
-                    <input
-                        type="text"
-                        id="menuBuilderGroup"
-                        placeholder="cinnamon-roll">
+               <div id="menuBuilderFields">
 
-                    <p class="field-help">
-                        Use the same builder group on this builder and every
-                        standard product that should appear as one of its choices.
-                        Example: cinnamon-roll
-                    </p>
-                </div>
+    <label for="menuBuilderGroup">Builder Group</label>
+
+    <input
+        type="text"
+        id="menuBuilderGroup"
+        placeholder="cinnamon-roll">
+
+    <label for="menuBuilderSize">
+        Number of Items
+    </label>
+
+    <input
+        id="menuBuilderSize"
+        type="number"
+        min="1"
+        value="4">
+
+    <p class="field-help">
+        Number of products required to complete this Mix & Match box.
+    </p>
+
+    <p class="field-help">
+        Use the same builder group on this builder and every standard product
+        that should appear as one of its choices.
+        Example: cinnamon-roll
+    </p>
+
+</div>
 
                 <div id="menuStandardFields">
                     <label for="menuRecipe">Recipe</label>
@@ -689,8 +713,10 @@ async function saveMenuItem() {
     const productType =
         document.getElementById("menuProductType").value;
 
-    const builderGroup =
-        document.getElementById("menuBuilderGroup").value.trim() || null;
+    const builderSize =
+    Number(
+        document.getElementById("menuBuilderSize").value
+    ) || 4;
 
     const recipeId =
         document.getElementById("menuRecipe").value || null;
@@ -744,6 +770,11 @@ async function saveMenuItem() {
         category,
         product_type: productType,
         builder_group: builderGroup,
+
+builder_size:
+    productType === "builder"
+        ? builderSize
+        : null,
         recipe_id:
             productType === "standard"
                 ? recipeId
