@@ -169,31 +169,35 @@ if (orderItem.builder_details?.selections?.length) {
                     String(orderItem.menu_item_id)
                 );
 
-            const productKey =
-                String(
-                    orderItem.menu_item_id ||
-                    orderItem.item_name
-                );
+            if (!orderItem.builder_details?.selections?.length) {
 
-            const product =
-                products.get(productKey) || {
-                    name:
-                        orderItem.item_name ||
-                        menuItem?.name ||
-                        "Unknown",
-                    quantity: 0,
-                    revenue: 0,
-                    category:
-                        menuItem?.category ||
-                        "Unassigned"
-                };
+    const productKey =
+        String(
+            orderItem.menu_item_id ||
+            orderItem.item_name
+        );
 
-            product.quantity += quantity;
+    const product =
+        products.get(productKey) || {
+            name:
+                orderItem.item_name ||
+                menuItem?.name ||
+                "Unknown",
+            quantity: 0,
+            revenue: 0,
+            category:
+                menuItem?.category ||
+                "Unassigned"
+        };
 
-            product.revenue +=
-                Number(orderItem.line_total || 0);
+    product.quantity += quantity;
 
-            products.set(productKey, product);
+    product.revenue +=
+        Number(orderItem.line_total || 0);
+
+    products.set(productKey, product);
+
+}
 
             if (!menuItem) {
 
