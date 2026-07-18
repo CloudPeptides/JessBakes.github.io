@@ -138,6 +138,9 @@ function buildPlan() {
 
             const itemsToProcess = [];
 
+            const isBuilder =
+    !!orderItem.builder_details?.selections?.length;
+
 if (orderItem.builder_details?.selections?.length) {
 
     orderItem.builder_details.selections.forEach(selection => {
@@ -169,7 +172,7 @@ if (orderItem.builder_details?.selections?.length) {
                     String(orderItem.menu_item_id)
                 );
 
-            if (!orderItem.builder_details?.selections?.length) {
+            if (!isBuilder) {
 
     const productKey =
         String(
