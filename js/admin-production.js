@@ -160,51 +160,63 @@ if (orderItem.builder_details?.selections?.length) {
 
 }
 
-            itemsToProcess.forEach(orderItem => {
+         itemsToProcess.forEach(processedItem => {
 
-                const quantity = Number(orderItem.quantity || 0);
+    const quantity =
+        Number(processedItem.quantity || 0);
 
-                const menuItem =
-                menuMap.get(
-                    String(orderItem.menu_item_id)
-                );
+    itemCount += quantity;
 
-            itemCount += quantity;
-
-            if (!isBuilder) {
-
-    const productKey =
-        String(
-            orderItem.menu_item_id ||
-            orderItem.item_name
+    const menuItem =
+        menuMap.get(
+            String(processedItem.menu_item_id)
         );
 
-    const product =
-        products.get(productKey) || {
-            name:
-                orderItem.item_name ||
-                menuItem?.name ||
-                "Unknown",
-            quantity: 0,
-            revenue: 0,
-            category:
-                menuItem?.category ||
-                "Unassigned"
-        };
+    if (menuItem) {
 
-    product.quantity += quantity;
+        const productKey =
+            String(menuItem.id);
 
-    product.revenue +=
-        Number(orderItem.line_total || 0);
+        const product =
+            products.get(productKey) || {
 
-    products.set(productKey, product);
+                name: menuItem.name,
 
-}
+                quantity: 0,
+
+                revenue: 0,
+
+                category:
+                    menuItem.category ||
+                    "Unassigned"
+
+            };
+
+        product.quantity += quantity;
+
+        // Only real order lines contribute revenue.
+        if (!isBuilder) {
+
+            product.revenue +=
+                Number(
+                    processedItem.line_total || 0
+                );
+
+        }
+
+        products.set(
+            productKey,
+            product
+        );
+
+    }
+
+    if (!menuItem) {   
 
             if (!menuItem) {
 
                 warnings.push(
-                    `${orderItem.item_name} is not linked to a current menu item.`
+                    `${processedItem.item_name} is not linked to a current menu item.`
                 );
 
                 return;
