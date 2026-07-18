@@ -162,15 +162,17 @@ if (orderItem.builder_details?.selections?.length) {
 
             itemsToProcess.forEach(orderItem => {
 
+                const quantity = Number(orderItem.quantity || 0);
+
+                const menuItem =
+                menuMap.get(
+                    String(orderItem.menu_item_id)
+                );
+
     const quantity =
         Number(orderItem.quantity || 0);
 
             itemCount += quantity;
-
-            const menuItem =
-                menuMap.get(
-                    String(orderItem.menu_item_id)
-                );
 
             if (!isBuilder) {
 
