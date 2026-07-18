@@ -628,7 +628,95 @@ function renderAll(){renderSubtitle();renderRun();renderWarnings();setText("prod
 function renderSubtitle(){const d=parseDate(plan.date),el=document.getElementById("productionSubtitle");if(el)el.textContent=d?`Production plan for ${d.toLocaleDateString("en-US",{weekday:"long",month:"long",day:"numeric",year:"numeric"})}.`:"Select a date.";}
 function renderRun(){document.getElementById("productionCompletedBanner")?.remove();const done=!!data.run?.inventory_deducted,btn=document.getElementById("finishProductionBtn");if(btn){btn.disabled=done;btn.textContent=done?"Production Completed":"Finish Production";}if(done){const b=document.createElement("div");b.id="productionCompletedBanner";b.className="production-completed-banner";b.textContent="Production is complete and inventory has already been deducted for this date.";document.querySelector(".production-kpi-grid")?.before(b);}}
 function renderWarnings(){const el=document.getElementById("productionWarnings"),messages=[];if(!plan.orders.length)messages.push(["info","No pending, confirmed, or ready orders are scheduled for this date."]);plan.warnings.forEach(x=>messages.push(["warning",x]));plan.combined.filter(x=>!x.convertible).forEach(x=>messages.push(["warning",`${x.name}: ${x.purchaseUnit} cannot be converted to ${x.recipeUnit}. Correct its inventory units before finishing production.`]));if(plan.orders.length&&!plan.shortages.length&&!plan.warnings.length)messages.push(["success","All links are complete and inventory covers every calculated requirement."]);el.innerHTML=messages.map(([t,x])=>`<div class="production-warning production-warning-${t}">${esc(x)}</div>`).join("");}
-function renderProducts(){const el=document.getElementById("productionTotals");el.innerHTML=plan.products.length?`<div class="production-total-grid">${plan.products.map(x=>`<article class="production-total-card"><div><h3>${esc(x.name)}</h3><small>${esc(x.category)} · ${euro(x.revenue)}</small></div><strong>${fmt(x.quantity)}</strong></article>`).join("")}</div>`:empty("No products scheduled.");}
+
+function renderProducts() {
+
+    const el = document.getElementById("productionTotals");
+
+    if (!plan.products.length) {
+        el.innerHTML = empty("No products scheduled.");
+        return;
+    }
+
+    const grouped = new Map();
+
+    plan.products.forEach(product => {
+
+        const category = product.category || "Other";
+
+        if (!grouped.has(category)) {
+            grouped.set(category, []);
+        }
+
+        grouped.get(category).push(product);
+
+    });
+
+    grouped.forEach(items => {
+        items.sort((a, b) => a.name.localeCompare(b.name));
+    });
+
+    const categoryOrder = [
+    "Bread",
+    "Cookies",
+    "Cinnamon Rolls",
+    "Desserts",
+    "Other"
+];
+
+const html = [...grouped.entries()]
+    .sort((a, b) => {
+
+        const aIndex = categoryOrder.indexOf(a[0]);
+        const bIndex = categoryOrder.indexOf(b[0]);
+
+        const aSort = aIndex === -1 ? 999 : aIndex;
+        const bSort = bIndex === -1 ? 999 : bIndex;
+
+        return aSort - bSort;
+
+    })
+    .map(([category, items]) => {
+
+        const total = items.reduce(
+            (sum, item) => sum + item.quantity,
+            0
+        );
+
+        return `
+            <section class="production-category">
+
+                <h2 class="production-category-title">
+                    ${esc(category)} (${fmt(total)})
+                </h2>
+
+                <div class="production-total-grid">
+
+                    ${items.map(item => `
+                        <article class="production-total-card">
+
+                            <div>
+                                <h3>${esc(item.name)}</h3>
+                                <small>${euro(item.revenue)}</small>
+                            </div>
+
+                            <strong>${fmt(item.quantity)}</strong>
+
+                        </article>
+                    `).join("")}
+
+                </div>
+
+            </section>
+        `;
+
+    }).join("");
+
+    el.innerHTML = html;
+
+}
+
+    
 function renderBatches(){const el=document.getElementById("recipeBatches");el.innerHTML=plan.batches.length?plan.batches.map(x=>`<article class="production-batch-card"><div class="production-batch-top"><div><h3>${esc(x.name)}</h3><p>Produces ${fmt(x.recipeUnits)} ${esc(x.yieldUnit)} from a ${fmt(x.yieldQuantity)} ${esc(x.yieldUnit)} base yield.</p></div><span class="production-batch-amount">${fmt(x.batches)}×</span></div>${x.notes?`<p>${esc(x.notes)}</p>`:""}</article>`).join(""):empty("No linked recipes for this date.");}
 function renderCosts(){document.getElementById("productionCosts").innerHTML=`<div class="production-metric-list">${metric("Expected Revenue",euro(plan.revenue))}${metric("Ingredient Cost",euro(plan.foodCost))}${metric("Packaging Cost",euro(plan.packagingCost))}${metric("Total Estimated Cost",euro(plan.totalCost))}${metric("Estimated Profit",euro(plan.profit))}${metric("Estimated Margin",`${plan.margin.toFixed(1)}%`)}</div>`;}
 function renderIngredients(){const el=document.getElementById("ingredientRequirements"),badge=document.getElementById("ingredientStatusBadge"),rows=plan.combined.filter(x=>x.sources.includes("ingredient"));if(!rows.length){el.innerHTML=empty("No ingredient requirements calculated.");badge.textContent="No data";return;}badge.textContent=rows.some(x=>x.status==="short")?"Shopping required":"Inventory covered";el.innerHTML=`<div class="production-list">${rows.map(reqRow).join("")}</div>`;}
