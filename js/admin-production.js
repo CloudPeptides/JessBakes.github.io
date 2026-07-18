@@ -169,9 +169,6 @@ if (orderItem.builder_details?.selections?.length) {
                     String(orderItem.menu_item_id)
                 );
 
-    const quantity =
-        Number(orderItem.quantity || 0);
-
             itemCount += quantity;
 
             if (!isBuilder) {
