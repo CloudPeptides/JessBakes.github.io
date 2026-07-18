@@ -172,45 +172,10 @@ if (orderItem.builder_details?.selections?.length) {
             String(processedItem.menu_item_id)
         );
 
-    if (menuItem) {
 
-        const productKey =
-            String(menuItem.id);
 
-        const product =
-            products.get(productKey) || {
 
-                name: menuItem.name,
-
-                quantity: 0,
-
-                revenue: 0,
-
-                category:
-                    menuItem.category ||
-                    "Unassigned"
-
-            };
-
-        product.quantity += quantity;
-
-        // Only real order lines contribute revenue.
-        if (!isBuilder) {
-
-            product.revenue +=
-                Number(
-                    processedItem.line_total || 0
-                );
-
-        }
-
-        products.set(
-            productKey,
-            product
-        );
-
-    }
-
+             
     if (!menuItem) {   
 
                 warnings.push(
@@ -314,6 +279,66 @@ if (orderItem.builder_details?.selections?.length) {
         });
 
     });
+
+    // Build production totals separately from recipe calculations.
+data.orders.forEach(order => {
+
+    (order.order_items || []).forEach(orderItem => {
+
+        // Builder product
+        if (orderItem.builder_details?.selections?.length) {
+
+            orderItem.builder_details.selections.forEach(selection => {
+
+                const menuItem =
+                    menuMap.get(String(selection.id));
+
+                if (!menuItem) return;
+
+                const key = String(menuItem.id);
+
+                const product =
+                    products.get(key) || {
+                        name: menuItem.name,
+                        quantity: 0,
+                        revenue: 0,
+                        category: menuItem.category || "Other"
+                    };
+
+                product.quantity += Number(selection.quantity || 0);
+
+                products.set(key, product);
+
+            });
+
+        } else {
+
+            // Regular product
+            const menuItem =
+                menuMap.get(String(orderItem.menu_item_id));
+
+            if (!menuItem) return;
+
+            const key = String(menuItem.id);
+
+            const product =
+                products.get(key) || {
+                    name: menuItem.name,
+                    quantity: 0,
+                    revenue: 0,
+                    category: menuItem.category || "Other"
+                };
+
+            product.quantity += Number(orderItem.quantity || 0);
+            product.revenue += Number(orderItem.line_total || 0);
+
+            products.set(key, product);
+
+        }
+
+    });
+
+});
 
     const ingredientRequirements =
         [...ingredients.values()]
