@@ -213,8 +213,6 @@ if (orderItem.builder_details?.selections?.length) {
 
     if (!menuItem) {   
 
-            if (!menuItem) {
-
                 warnings.push(
                     `${processedItem.item_name} is not linked to a current menu item.`
                 );
