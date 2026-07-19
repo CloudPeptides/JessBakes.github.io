@@ -4,6 +4,13 @@
 
 let salesOrders = [];
 let salesMenuItems = [];
+
+let salesRecipes = [];
+let salesRecipeIngredients = [];
+let salesIngredients = [];
+let salesPackagingItems = [];
+let salesPackagingProfiles = [];
+
 let revenueChart = null;
 let categoryChart = null;
 let currentSalesRange = "today";
@@ -63,19 +70,55 @@ function bindSalesControls() {
 }
 
 async function loadSalesDashboard() {
-    const [ordersResult, menuResult] = await Promise.all([
-       supabaseClient
-    .from("sales")
-    .select(`
-        *,
-        sale_items(*)
-    `)
-    .order("completed_at", { ascending: false }),
+    const [
+    ordersResult,
+    menuResult,
+    recipesResult,
+    recipeIngredientsResult,
+    ingredientsResult,
+    packagingItemsResult,
+    packagingProfilesResult
+] = await Promise.all([
 
-        supabaseClient
-            .from("menu_items")
-            .select("id,name,category")
-    ]);
+    supabaseClient
+        .from("sales")
+        .select(`
+            *,
+            sale_items(*)
+        `)
+        .order("completed_at", { ascending: false }),
+
+    supabaseClient
+        .from("menu_items")
+        .select(`
+            id,
+            name,
+            category,
+            recipe_id,
+            recipe_units_used,
+            packaging_profile_id
+        `),
+
+    supabaseClient
+        .from("recipes")
+        .select("*"),
+
+    supabaseClient
+        .from("recipe_ingredients")
+        .select("*"),
+
+    supabaseClient
+        .from("ingredients")
+        .select("*"),
+
+    supabaseClient
+        .from("packaging_profile_items")
+        .select("*"),
+
+    supabaseClient
+        .from("packaging_profiles")
+        .select("*")
+]);
 
     if (ordersResult.error) {
         console.error("Unable to load orders:", ordersResult.error);
@@ -107,6 +150,12 @@ console.log(
 );
 
 salesMenuItems = menuResult.data || [];
+
+    salesRecipes = recipesResult.data || [];
+salesRecipeIngredients = recipeIngredientsResult.data || [];
+salesIngredients = ingredientsResult.data || [];
+salesPackagingItems = packagingItemsResult.data || [];
+salesPackagingProfiles = packagingProfilesResult.data || [];
 
 renderSalesDashboard();
 }
@@ -467,7 +516,9 @@ function renderSaleCard(order) {
 
             <strong>
 
-                ${euro(order.profit)}
+                ${euro(
+    calculateProfit([order]).grossProfit
+)}
 
             </strong>
 
@@ -614,41 +665,117 @@ function calculateProfit(sales) {
     let revenue = 0;
     let cost = 0;
 
+
     sales.forEach(order => {
 
-        revenue += Number(order.revenue || 0);
+        revenue += Number(order.revenue || order.subtotal || 0);
+
 
         order.order_items.forEach(item => {
 
-            const menuItem = salesMenuItems.find(
-                menu =>
-                    String(menu.id) === String(item.menu_item_id)
-            );
+            const menuItem =
+                salesMenuItems.find(
+                    menu =>
+                        String(menu.id) ===
+                        String(item.menu_item_id)
+                );
+
 
             if (!menuItem) return;
 
-            const itemCost =
-                Number(menuItem.cost || 0) *
+
+            const quantity =
                 Number(item.quantity || 0);
 
-            cost += itemCost;
+
+            const recipe =
+                salesRecipes.find(
+                    r =>
+                        String(r.id) ===
+                        String(menuItem.recipe_id)
+                );
+
+
+            if (recipe) {
+
+                const recipeMultiplier =
+                    quantity *
+                    Number(menuItem.recipe_units_used || 1) /
+                    Number(recipe.yield_quantity || 1);
+
+
+                const recipeCosts =
+                    salesRecipeIngredients
+                    .filter(
+                        ri =>
+                        String(ri.recipe_id) ===
+                        String(recipe.id)
+                    )
+                    .reduce((sum, ri)=>{
+
+                        const ingredient =
+                            salesIngredients.find(
+                                ing =>
+                                String(ing.id) ===
+                                String(ri.ingredient_id)
+                            );
+
+
+                        if (!ingredient) return sum;
+
+
+                        return sum +
+                            (
+                                Number(ri.quantity || 0) *
+                                Number(ingredient.cost_per_unit || 0)
+                            );
+
+                    },0);
+
+
+                cost += recipeCosts * recipeMultiplier;
+
+            }
+
+
+            if (menuItem.packaging_profile_id) {
+
+                const packaging =
+                    salesPackagingProfiles.find(
+                        p =>
+                        String(p.id) ===
+                        String(menuItem.packaging_profile_id)
+                    );
+
+
+                if (packaging) {
+
+                    const packagingCost =
+                        Number(
+                            packaging.cost || 0
+                        );
+
+                    cost += packagingCost * quantity;
+                }
+            }
 
         });
 
     });
 
 
-    const grossProfit = revenue - cost;
+    const grossProfit =
+        revenue - cost;
 
 
     return {
         revenue,
         cost,
         grossProfit,
-        margin: revenue > 0
-            ? (grossProfit / revenue) * 100
-            : 0,
-        hasCostData: true
+        margin:
+            revenue > 0
+                ? (grossProfit / revenue) * 100
+                : 0
     };
 
 }
