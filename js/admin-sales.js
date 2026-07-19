@@ -671,101 +671,158 @@ function calculateProfit(sales) {
         revenue += Number(order.revenue || order.subtotal || 0);
 
 
-        order.order_items.forEach(item => {
+        order.order_items.forEach(orderItem => {
 
-            const menuItem =
-                salesMenuItems.find(
-                    menu =>
-                        String(menu.id) ===
-                        String(item.menu_item_id)
-                );
+            let items = [];
 
 
-            if (!menuItem) return;
+            if (orderItem.builder_details?.selections?.length) {
 
+                items = orderItem.builder_details.selections.map(selection => ({
+                    menu_item_id: selection.id,
+                    quantity: Number(selection.quantity || 0)
+                }));
 
-            const quantity =
-                Number(item.quantity || 0);
+            } else {
 
-
-            const recipe =
-                salesRecipes.find(
-                    r =>
-                        String(r.id) ===
-                        String(menuItem.recipe_id)
-                );
-
-
-            if (recipe) {
-
-                const recipeMultiplier =
-                    quantity *
-                    Number(menuItem.recipe_units_used || 1) /
-                    Number(recipe.yield_quantity || 1);
-
-
-                const recipeCosts =
-                    salesRecipeIngredients
-                    .filter(
-                        ri =>
-                        String(ri.recipe_id) ===
-                        String(recipe.id)
-                    )
-                    .reduce((sum, ri)=>{
-
-                        const ingredient =
-                            salesIngredients.find(
-                                ing =>
-                                String(ing.id) ===
-                                String(ri.ingredient_id)
-                            );
-
-
-                        if (!ingredient) return sum;
-
-
-                        const unitCost =
-    Number(ingredient.purchase_price || 0) /
-    Number(ingredient.purchase_size || 1);
-
-return sum +
-    (
-        Number(ri.quantity || 0) *
-        unitCost
-    );
-
-                    },0);
-
-
-                cost += recipeCosts * recipeMultiplier;
+                items = [orderItem];
 
             }
 
 
-            if (menuItem.packaging_profile_id) {
+            items.forEach(item => {
 
-                const packaging =
-                    salesPackagingProfiles.find(
-                        p =>
-                        String(p.id) ===
-                        String(menuItem.packaging_profile_id)
+
+                const menuItem =
+                    salesMenuItems.find(
+                        m =>
+                        String(m.id) ===
+                        String(item.menu_item_id)
                     );
 
 
-                if (packaging) {
+                if (!menuItem) return;
 
-                    const packagingCost =
-                        Number(
-                            packaging.cost || 0
+
+                const quantity =
+                    Number(item.quantity || 0);
+
+
+
+                const recipe =
+                    salesRecipes.find(
+                        r =>
+                        String(r.id) ===
+                        String(menuItem.recipe_id)
+                    );
+
+
+                if (recipe) {
+
+
+                    const multiplier =
+                        quantity *
+                        Number(menuItem.recipe_units_used || 1) /
+                        Number(recipe.yield_quantity || 1);
+
+
+
+                    const recipeCost =
+                        salesRecipeIngredients
+                        .filter(
+                            ri =>
+                            String(ri.recipe_id) ===
+                            String(recipe.id)
+                        )
+                        .reduce((sum, ri)=>{
+
+
+                            const ingredient =
+                                salesIngredients.find(
+                                    ing =>
+                                    String(ing.id) ===
+                                    String(ri.ingredient_id)
+                                );
+
+
+                            if (!ingredient) return sum;
+
+
+
+                            const purchaseSize =
+                                Number(ingredient.purchase_size || 0);
+
+
+                            const purchasePrice =
+                                Number(ingredient.purchase_price || 0);
+
+
+
+                            if (!purchaseSize) return sum;
+
+
+
+                            return sum +
+                                (
+                                    Number(ri.quantity || 0) *
+                                    (purchasePrice / purchaseSize)
+                                );
+
+
+                        },0);
+
+
+
+                    cost += recipeCost * multiplier;
+
+                }
+
+
+
+                if(menuItem.packaging_profile_id){
+
+
+                    const profileItems =
+                        salesPackagingItems.filter(
+                            p =>
+                            String(p.profile_id) ===
+                            String(menuItem.packaging_profile_id)
                         );
 
-                    cost += packagingCost * quantity;
+
+                    profileItems.forEach(p=>{
+
+                        const ingredient =
+                            salesIngredients.find(
+                                i =>
+                                String(i.id) ===
+                                String(p.ingredient_id)
+                            );
+
+
+                        if(!ingredient) return;
+
+
+                        cost +=
+                            Number(p.quantity || 0) *
+                            (
+                                Number(ingredient.purchase_price || 0) /
+                                Number(ingredient.purchase_size || 1)
+                            ) *
+                            quantity;
+
+
+                    });
+
                 }
-            }
+
+
+            });
 
         });
 
     });
+
 
 
     const grossProfit =
@@ -773,13 +830,18 @@ return sum +
 
 
     return {
+
         revenue,
+
         cost,
+
         grossProfit,
+
         margin:
             revenue > 0
-                ? (grossProfit / revenue) * 100
-                : 0
+            ? (grossProfit / revenue) * 100
+            : 0
+
     };
 
 }
