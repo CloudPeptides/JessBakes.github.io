@@ -724,11 +724,15 @@ function calculateProfit(sales) {
                         if (!ingredient) return sum;
 
 
-                        return sum +
-                            (
-                                Number(ri.quantity || 0) *
-                                Number(ingredient.cost_per_unit || 0)
-                            );
+                        const unitCost =
+    Number(ingredient.purchase_price || 0) /
+    Number(ingredient.purchase_size || 1);
+
+return sum +
+    (
+        Number(ri.quantity || 0) *
+        unitCost
+    );
 
                     },0);
 
