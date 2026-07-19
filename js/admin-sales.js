@@ -611,35 +611,44 @@ function renderProfitBreakdown(orders) {
 
 function calculateProfit(sales) {
 
-    const revenue = sales.reduce(
-        (sum, sale) => sum + Number(sale.revenue || 0),
-        0
-    );
+    let revenue = 0;
+    let cost = 0;
 
-    const cost = sales.reduce(
-        (sum, sale) => sum + Number(sale.total_cost || 0),
-        0
-    );
+    sales.forEach(order => {
 
-    const grossProfit = sales.reduce(
-        (sum, sale) => sum + Number(sale.profit || 0),
-        0
-    );
+        revenue += Number(order.revenue || 0);
+
+        order.order_items.forEach(item => {
+
+            const menuItem = salesMenuItems.find(
+                menu =>
+                    String(menu.id) === String(item.menu_item_id)
+            );
+
+            if (!menuItem) return;
+
+            const itemCost =
+                Number(menuItem.cost || 0) *
+                Number(item.quantity || 0);
+
+            cost += itemCost;
+
+        });
+
+    });
+
+
+    const grossProfit = revenue - cost;
+
 
     return {
-
         revenue,
-
         cost,
-
         grossProfit,
-
         margin: revenue > 0
             ? (grossProfit / revenue) * 100
             : 0,
-
         hasCostData: true
-
     };
 
 }
