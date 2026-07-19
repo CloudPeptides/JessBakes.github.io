@@ -659,7 +659,6 @@ function renderProfitBreakdown(orders) {
         </div>
     `;
 }
-
 function calculateProfit(sales) {
 
     let revenue = 0;
@@ -668,33 +667,40 @@ function calculateProfit(sales) {
 
     sales.forEach(order => {
 
-        revenue += Number(order.revenue || order.subtotal || 0);
+        revenue += Number(order.revenue || 0);
 
 
-        order.order_items.forEach(orderItem => {
+        (order.items || []).forEach(orderItem => {
 
-            let items = [];
+
+            let itemsToCost = [];
 
 
             if (orderItem.builder_details?.selections?.length) {
 
-                items = orderItem.builder_details.selections.map(selection => ({
-                    menu_item_id: selection.id,
-                    quantity: Number(selection.quantity || 0)
-                }));
+                orderItem.builder_details.selections.forEach(selection => {
+
+                    itemsToCost.push({
+                        menu_item_id: selection.id,
+                        quantity: Number(selection.quantity || 0)
+                    });
+
+                });
+
 
             } else {
 
-                items = [orderItem];
+                itemsToCost.push(orderItem);
 
             }
 
 
-            items.forEach(item => {
+
+            itemsToCost.forEach(item => {
 
 
                 const menuItem =
-                    salesMenuItems.find(
+                    data.menu.find(
                         m =>
                         String(m.id) ===
                         String(item.menu_item_id)
@@ -704,129 +710,121 @@ function calculateProfit(sales) {
                 if (!menuItem) return;
 
 
-                const quantity =
-                    Number(item.quantity || 0);
-
-
 
                 const recipe =
-                    salesRecipes.find(
+                    data.recipes.find(
                         r =>
                         String(r.id) ===
                         String(menuItem.recipe_id)
                     );
 
 
-                if (recipe) {
-
-
-                    const multiplier =
-                        quantity *
-                        Number(menuItem.recipe_units_used || 1) /
-                        Number(recipe.yield_quantity || 1);
+                if (!recipe) return;
 
 
 
-                    const recipeCost =
-                        salesRecipeIngredients
-                        .filter(
-                            ri =>
-                            String(ri.recipe_id) ===
-                            String(recipe.id)
-                        )
-                        .reduce((sum, ri)=>{
-
-
-                            const ingredient =
-                                salesIngredients.find(
-                                    ing =>
-                                    String(ing.id) ===
-                                    String(ri.ingredient_id)
-                                );
-
-
-                            if (!ingredient) return sum;
+                const multiplier =
+                    Number(item.quantity || 0) *
+                    Number(menuItem.recipe_units_used || 1) /
+                    Number(recipe.yield_quantity || 1);
 
 
 
-                            const purchaseSize =
-                                Number(ingredient.purchase_size || 0);
+                const recipeCost =
+                    data.recipeIngredients
+                    .filter(
+                        ri =>
+                        String(ri.recipe_id) ===
+                        String(recipe.id)
+                    )
+                    .reduce((sum, ri)=>{
 
-
-                            const purchasePrice =
-                                Number(ingredient.purchase_price || 0);
-
-
-
-                            if (!purchaseSize) return sum;
-
-
-
-                            return sum +
-                                (
-                                    Number(ri.quantity || 0) *
-                                    (purchasePrice / purchaseSize)
-                                );
-
-
-                        },0);
-
-
-
-                    cost += recipeCost * multiplier;
-
-                }
-
-
-
-                if(menuItem.packaging_profile_id){
-
-
-                    const profileItems =
-                        salesPackagingItems.filter(
-                            p =>
-                            String(p.profile_id) ===
-                            String(menuItem.packaging_profile_id)
-                        );
-
-
-                    profileItems.forEach(p=>{
 
                         const ingredient =
-                            salesIngredients.find(
+                            data.ingredients.find(
                                 i =>
                                 String(i.id) ===
-                                String(p.ingredient_id)
+                                String(ri.ingredient_id)
                             );
 
 
-                        if(!ingredient) return;
+                        if (!ingredient) return sum;
 
 
-                        cost +=
-                            Number(p.quantity || 0) *
+
+                        const gramsPerPurchase =
+                            ingredient.purchase_unit === "lb"
+                            ? Number(ingredient.purchase_size) * 453.592
+                            : Number(ingredient.purchase_size);
+
+
+
+                        const costPerGram =
+                            Number(ingredient.purchase_price) /
+                            gramsPerPurchase;
+
+
+
+                        return sum +
                             (
-                                Number(ingredient.purchase_price || 0) /
-                                Number(ingredient.purchase_size || 1)
-                            ) *
-                            quantity;
+                                Number(ri.quantity) *
+                                costPerGram
+                            );
 
 
-                    });
+                    },0);
 
-                }
+
+
+                cost += recipeCost * multiplier;
+
+
+
+                // packaging
+                const packagingItems =
+                    data.packagingItems.filter(
+                        p =>
+                        String(p.profile_id) ===
+                        String(menuItem.packaging_profile_id)
+                    );
+
+
+                packagingItems.forEach(p=>{
+
+                    const ingredient =
+                        data.ingredients.find(
+                            i =>
+                            String(i.id) ===
+                            String(p.ingredient_id)
+                        );
+
+
+                    if (!ingredient) return;
+
+
+                    const grams =
+                        ingredient.purchase_unit === "lb"
+                        ? Number(ingredient.purchase_size) * 453.592
+                        : Number(ingredient.purchase_size);
+
+
+                    cost +=
+                        Number(p.quantity) *
+                        (
+                            Number(ingredient.purchase_price) /
+                            grams
+                        );
+
+                });
 
 
             });
 
+
         });
 
+
     });
-
-
-
-    const grossProfit =
-        revenue - cost;
 
 
     return {
@@ -835,11 +833,12 @@ function calculateProfit(sales) {
 
         cost,
 
-        grossProfit,
+        grossProfit:
+            revenue - cost,
 
         margin:
-            revenue > 0
-            ? (grossProfit / revenue) * 100
+            revenue
+            ? ((revenue-cost)/revenue)*100
             : 0
 
     };
