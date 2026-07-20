@@ -130,10 +130,14 @@ async function loadSalesDashboard() {
         console.warn("Unable to load menu categories:", menuResult.error);
     }
 
- salesOrders = (ordersResult.data || []).map((sale) => ({
+salesOrders = (ordersResult.data || []).map((sale) => ({
     ...sale,
 
     subtotal: Number(sale.revenue) || 0,
+
+    revenue: Number(sale.revenue || 0),
+    total_cost: Number(sale.total_cost || 0),
+    profit: Number(sale.profit || 0),
 
     order_items: Array.isArray(sale.sale_items)
         ? sale.sale_items
@@ -730,6 +734,8 @@ function renderProfitBreakdown(orders) {
     const container = document.getElementById("profitBreakdown");
     if (!container) return;
 
+    console.log("PROFIT INPUT:", orders);
+
     const profit = calculateProfit(orders);
 
     container.innerHTML = `
@@ -741,157 +747,22 @@ function renderProfitBreakdown(orders) {
         </div>
     `;
 }
+
 function calculateProfit(sales) {
 
     let revenue = 0;
     let cost = 0;
-
+    let grossProfit = 0;
 
     sales.forEach(order => {
 
         revenue += Number(order.revenue || 0);
 
+        cost += Number(order.total_cost || 0);
 
-        (order.order_items || []).forEach(orderItem => {
+        grossProfit += Number(order.profit || 0);
 
-            let itemsToCost = [];
-
-
-            if (orderItem.builder_details?.selections?.length) {
-
-                orderItem.builder_details.selections.forEach(selection => {
-
-                    itemsToCost.push({
-                        menu_item_id: selection.id,
-                        quantity: Number(selection.quantity || 0)
-                    });
-
-                });
-
-            } else {
-
-                itemsToCost.push(orderItem);
-
-            }
-
-
-            itemsToCost.forEach(item => {
-
-
-                const menuItem =
-                    salesMenuItems.find(
-                        m =>
-                        String(m.id) ===
-                        String(item.menu_item_id)
-                    );
-
-
-                if (!menuItem) return;
-
-
-                const recipe =
-                    salesRecipes.find(
-                        r =>
-                        String(r.id) ===
-                        String(menuItem.recipe_id)
-                    );
-
-
-                if (recipe) {
-
-                    const multiplier =
-                        Number(item.quantity || 0) *
-                        Number(menuItem.recipe_units_used || 1) /
-                        Number(recipe.yield_quantity || 1);
-
-
-                    const recipeCost =
-                        salesRecipeIngredients
-                        .filter(
-                            ri =>
-                            String(ri.recipe_id) ===
-                            String(recipe.id)
-                        )
-                        .reduce((sum, ri)=>{
-
-                            const ingredient =
-                                salesIngredients.find(
-                                    i =>
-                                    String(i.id) ===
-                                    String(ri.ingredient_id)
-                                );
-
-
-                            if (!ingredient) return sum;
-
-
-                            const purchaseSize =
-                                ingredient.purchase_unit === "lb"
-                                ? Number(ingredient.purchase_size) * 453.592
-                                : Number(ingredient.purchase_size);
-
-
-                            const costPerGram =
-                                Number(ingredient.purchase_price) /
-                                purchaseSize;
-
-
-                            return sum +
-                                Number(ri.quantity || 0) *
-                                costPerGram;
-
-
-                        },0);
-
-
-                    cost += recipeCost * multiplier;
-
-                }
-
-
-
-                // packaging
-const packagingItems =
-    salesPackagingItems.filter(
-        p =>
-        String(p.profile_id) ===
-        String(menuItem.packaging_profile_id)
-    );
-
-
-packagingItems.forEach(p => {
-
-    const ingredient =
-        salesIngredients.find(
-            i =>
-            String(i.id) ===
-            String(p.ingredient_id)
-        );
-
-
-    if (!ingredient) return;
-
-
-    // packaging is purchased by item, not grams
-    const itemCost =
-        Number(ingredient.purchase_price) /
-        Number(ingredient.purchase_size || 1);
-
-
-    cost +=
-        itemCost *
-        Number(p.quantity || 0) *
-        Number(item.quantity || 1);
-
-});
-
-                });
-
-
-            });
-
-
-        });
+    });
 
 
     return {
@@ -900,17 +771,18 @@ packagingItems.forEach(p => {
 
         cost,
 
-        grossProfit:
-            revenue - cost,
+        grossProfit,
 
         margin:
             revenue
-            ? ((revenue-cost)/revenue)*100
+            ? (grossProfit / revenue) * 100
             : 0
 
     };
 
 }
+
+
 function exportSalesCsv() {
     const completedOrders = salesOrders;
     const rows = [["Order ID", "Customer", "Date", "Status", "Items", "Subtotal"]];
