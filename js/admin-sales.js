@@ -894,9 +894,6 @@ packagingItems.forEach(p => {
         });
 
 
-    });
-
-
     return {
 
         revenue,
