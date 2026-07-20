@@ -851,39 +851,39 @@ function calculateProfit(sales) {
 
 
                 // packaging
-                const packagingItems =
-                    salesPackagingItems.filter(
-                        p =>
-                        String(p.profile_id) ===
-                        String(menuItem.packaging_profile_id)
-                    );
+const packagingItems =
+    salesPackagingItems.filter(
+        p =>
+        String(p.profile_id) ===
+        String(menuItem.packaging_profile_id)
+    );
 
 
-                packagingItems.forEach(p => {
+packagingItems.forEach(p => {
 
-                    const ingredient =
-                        salesIngredients.find(
-                            i =>
-                            String(i.id) ===
-                            String(p.ingredient_id)
-                        );
-
-
-                    if (!ingredient) return;
+    const ingredient =
+        salesIngredients.find(
+            i =>
+            String(i.id) ===
+            String(p.ingredient_id)
+        );
 
 
-                    const purchaseSize =
-                        ingredient.purchase_unit === "lb"
-                        ? Number(ingredient.purchase_size) * 453.592
-                        : Number(ingredient.purchase_size);
+    if (!ingredient) return;
 
 
-                    cost +=
-                        Number(p.quantity || 0) *
-                        (
-                            Number(ingredient.purchase_price) /
-                            purchaseSize
-                        );
+    // packaging is purchased by item, not grams
+    const itemCost =
+        Number(ingredient.purchase_price) /
+        Number(ingredient.purchase_size || 1);
+
+
+    cost +=
+        itemCost *
+        Number(p.quantity || 0) *
+        Number(item.quantity || 1);
+
+});
 
                 });
 
