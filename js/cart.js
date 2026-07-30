@@ -697,15 +697,15 @@ function updatePickupInfo() {
             <p>
 
                *** Custom orders must have a have a total of over €30 ***
-               -- For example, a single loaf, a single order of cinnamon rolls, 
-               or single order cookies may not be ordered for pickup
+               <br>
+               -- For example, an order with a total less than €30 may not be ordered for pickup
                outside of the weekly Sunday pickup day. --
+               <br>
 
-                Select the date you need your order 
+                Select the date you need your order.
+                <br>
 
-                Use the notes below for
-
-                anything else you'd like me to know.
+                Use the notes below for anything else you'd like me to know.
 
             </p>
 
