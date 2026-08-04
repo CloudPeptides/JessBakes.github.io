@@ -285,10 +285,11 @@ async function submitVote() {
             }
 
             return {
-                option_id: selected.value,
-                category: selected.dataset.category,
-                voter_hash: getVoterHash()
-            };
+    ballot_id: ballotSettings.id,
+    option_id: selected.value,
+    category: selected.dataset.category,
+    voter_hash: getVoterHash()
+};
         })
         .filter(Boolean);
 
