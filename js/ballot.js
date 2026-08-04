@@ -9,12 +9,14 @@ const CATEGORY_LABELS = {
 function getVoteStorageKey() {
 
     if (!ballotSettings) {
-
         return "jess_bakes_ballot";
-
     }
 
-    return `jess_bakes_ballot_${ballotSettings.id}`;
+    const ballotRound =
+        ballotSettings.end_date ||
+        ballotSettings.id;
+
+    return `jess_bakes_ballot_${ballotSettings.id}_${ballotRound}`;
 
 }
 
