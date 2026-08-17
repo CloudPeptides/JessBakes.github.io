@@ -7,6 +7,10 @@ Confidence: **High** (directly traced in code, and DB-verified where applicable)
 
 **Update 2026-08-17 (later the same day): BUG-16, BUG-17, and BUG-18 have been fixed, applied, and verified live.** Two migrations were applied — see `supabase/migrations/` and `08-security-repair-plan.md` Part I for the full applied SQL, verification tests, and one follow-up gap (a missing admin `INSERT` policy) found and fixed during verification.
 
+**Update 2026-08-17 (Phase 1A/1B): BUG-01 fully resolved** — shared calculation module + tests shipped, then the 18 already-affected historical sales backfilled and verified live. See `09-bug01-regression-report.md`.
+
+**Update 2026-08-17 (Phase 2): BUG-02, BUG-03, BUG-04, BUG-05, BUG-12, BUG-13, BUG-14, BUG-20, and BUG-22 are now resolved and verified**, covering every remaining confirmed calculation and data-integrity defect that didn't depend on the still-undecided EUR/USD exchange-rate design (BUG-06/BUG-19, deliberately deferred). Two new shared, dependency-free-tested modules were added — `js/order-editor.js` (BUG-02/BUG-22) and `js/recipe-costing.js` (BUG-04/BUG-05) — plus one narrowly-scoped, idempotent Supabase migration (BUG-20, `supabase/migrations/20260817112120_...sql`, with a deterministic rollback). Full detail in each bug's own entry below. Currency conversion, CSS cleanup, and visual redesign (BUG-06, BUG-09, BUG-19, BUG-21, Phase 3 items) remain explicitly out of scope for this phase.
+
 ---
 
 ### BUG-16 — Row Level Security is disabled on `orders` and `order_items`; all customer data and order data is publicly readable and writable — **RESOLVED (2026-08-17)**
@@ -65,14 +69,13 @@ Confidence: **High** (directly traced in code, and DB-verified where applicable)
 
 ---
 
-### BUG-20 — Deleting a component recipe silently cascades, removing it from every recipe that uses it
+### BUG-20 — Deleting a component recipe silently cascades, removing it from every recipe that uses it — **RESOLVED (Phase 2, 2026-08-17)**
+- **Status: Fixed and verified live.** Re-confirmed live before fixing (`confdeltype = 'c'`, i.e. CASCADE). Fixed via a narrowly-scoped, idempotent, constraint-only migration, `supabase/migrations/20260817112120_bug20_recipe_components_restrict_component_delete.sql`, changing `recipe_components_component_recipe_id_fkey` to `ON DELETE RESTRICT` — matching the safe behavior already correct for the other two "still in use" cases. `recipe_components_parent_recipe_id_fkey` (deleting a recipe should still remove its own component-link rows) was deliberately left as CASCADE. **Verified live**: `confdeltype` is now `r`; a transaction-wrapped, rolled-back test delete of "Cream Cheese Frosting" (confirmed used by 4 real recipes) now fails with `23503 violates foreign key constraint` instead of silently cascading. Deterministic rollback recorded in `supabase/rollbacks/`; no data was read, written, or needed backfilling (constraint-only change). Paired with a friendly pre-delete usage check in `deleteRecipe()`/`deleteIngredient()` — see BUG-14.
 - **Affected pages:** Inventory (Recipes tab)
-- **Where:** `recipe_components_component_recipe_id_fkey` — confirmed via `pg_constraint` to be `ON DELETE CASCADE`.
-- **Current behavior:** If a sub-recipe used as a component elsewhere (e.g. "Cream Cheese Frosting," currently used by 4 other recipes per live data) is deleted via `admin-inventory.js`'s `deleteRecipe()`, the database does **not** block the delete — it silently cascades, deleting the `recipe_components` rows that referenced it in every parent recipe. Those parent recipes' costs (and production ingredient requirements) would then silently drop, with no warning to the admin that anything downstream was affected. (By contrast, deleting an *ingredient* still in use, or a recipe still referenced by a `menu_items.recipe_id`, is correctly blocked by the database with a `RESTRICT`/`NO ACTION` foreign key — confirmed via the same query — so those two cases fail loudly via `alert(error.message)` rather than silently corrupting data.)
-- **Expected behavior:** Either warn ("used as a component in N recipes") before deleting a recipe, or change the foreign key so deleting a still-used component recipe is blocked like the other two cases.
-- **Severity:** Medium — narrower than originally suspected (only affects component recipes specifically, not ingredients or standalone recipes, both of which are already safely blocked by the database), but it is a confirmed, real, silent-data-loss path.
-- **Confidence:** High (confirmed directly via `pg_constraint`).
-- **Recommended phase:** Phase 2.
+- **Where:** `recipe_components_component_recipe_id_fkey`.
+- **Severity:** Medium — narrower than originally suspected (only affected component recipes specifically, not ingredients or standalone recipes, both of which were already safely blocked by the database), but was a confirmed, real, silent-data-loss path.
+- **Confidence:** High (confirmed directly via `pg_constraint`, both before and after).
+- **Recommended phase:** Phase 2 — **done**.
 
 ---
 
@@ -89,17 +92,17 @@ Confidence: **High** (directly traced in code, and DB-verified where applicable)
 
 ---
 
-### BUG-22 — Completed orders can still be edited, letting live `orders`/`order_items` diverge from the frozen `sales`/`sale_items` record
-- **Affected pages:** Orders (`admin-orders.js`'s manual order editor); downstream effect on Sales/Analytics for any sale whose order is later edited
-- **Files/functions:** `js/admin-orders.js` `saveManualOrder()` (edit path) — deletes and re-inserts `order_items` for `editingOrderId` with no check on the order's `status`
-- **Discovered:** 2026-08-17, during Phase 1A historical-data validation, while investigating two sales whose current `order_items` no longer matched their stored `sales.revenue`.
-- **Current behavior, confirmed with direct evidence (not inferred):** Two real orders (`status: "completed"` in both cases) now have `orders.subtotal` reduced to €30.00 and €15.00 respectively — matching their *current*, shorter `order_items` list. Their corresponding `sales`/`sale_items` rows, frozen at original completion, still correctly total €45.00 and €30.00, and each `sale_items` snapshot still contains the exact line (a "6 Pack" cookie item, €15.00) that is now missing from the live order. There is no `status` guard anywhere in the edit flow preventing this — an admin can open **Edit** on any order, regardless of status, and `saveManualOrder()` will delete and re-insert its `order_items` and overwrite `orders.subtotal` unconditionally.
-- **Expected behavior:** Editing an order that is already `completed` (i.e., has a linked `sales` row) should be blocked, or at minimum warned against, since the financial record for that sale has already been finalized and frozen elsewhere in the schema.
-- **Severity:** Medium — the frozen `sales`/`sale_items` record itself stays correct (this is not a financial-accuracy bug the way BUG-01 was), but it does mean the live `orders`/`order_items` view of a completed order can silently stop matching the sale that was actually recorded, which is confusing for anyone reviewing order history and would compound if it happens more than the two known instances.
-- **Confidence:** High for these two confirmed instances (direct evidence: `orders.subtotal` vs. frozen `sale_items` sum, both `status: "completed"`); the general "no status guard" mechanism is confirmed by reading `saveManualOrder()` directly.
-- **Dependencies:** None technical.
-- **Do not "fix" the two known instances by editing `sales`/`sale_items`** — those records are already correct and must be left exactly as they are (see `09-bug01-regression-report.md` §6c). Only the *edit-guard* itself needs fixing, for future orders.
-- **Recommended phase:** Phase 2.
+### BUG-22 — Completed orders can still be edited, letting live `orders`/`order_items` diverge from the frozen `sales`/`sale_items` record — **RESOLVED (Phase 2, 2026-08-17)**
+- **Status: Fixed and verified.** Confirmed live before fixing: the order card's Edit button was already conditionally hidden for non-pending/confirmed orders, but neither `editOrder()` nor `saveManualOrder()` itself enforced this — there was no guard against the function being reached another way, and no guard at all against the order's status changing *while* the editor was open (e.g. someone else completing it in another tab).
+- **Fix:** Two independent, defense-in-depth guards, both built on the same shared `OrderEditor.isOrderEditable(order)` pure check (`js/order-editor.js`): (1) `editOrder()` now refuses to open the editor at all if the just-fetched order is already `completed`; (2) `saveManualOrder()`, when editing, re-fetches the order's *live* status immediately before writing and aborts if it is now `completed` — closing the race where status changes after the editor was opened. Completed orders remain fully visible on their order card either way (viewing was never gated on the editor); only the edit action is blocked.
+- **Test coverage:** `tests/order-editor.test.js` tests 1-4 cover `isOrderEditable()` directly (pending/confirmed → editable, completed → not editable, missing order → not editable).
+- **The two already-diverged historical orders were intentionally left untouched** — their frozen `sales`/`sale_items` records are already correct and must stay exactly as they are (see `09-bug01-regression-report.md` §6c); this fix only prevents new instances, per the original scope note.
+- **Affected pages:** Orders (`admin-orders.js`'s manual order editor); downstream effect on Sales/Analytics for any sale whose order is later edited.
+- **Files/functions:** `js/order-editor.js` (new, `isOrderEditable`), `js/admin-orders.js` `editOrder()`, `saveManualOrder()`.
+- **Severity:** Medium — the frozen `sales`/`sale_items` record itself was never at risk (this was never a financial-accuracy bug the way BUG-01 was), but it meant the live `orders`/`order_items` view of a completed order could silently stop matching the sale that was actually recorded.
+- **Confidence:** High.
+- **Dependencies:** None remaining.
+- **Recommended phase:** Phase 2 — **done**.
 
 ---
 
@@ -117,15 +120,16 @@ Confidence: **High** (directly traced in code, and DB-verified where applicable)
 
 ---
 
-### BUG-02 — Editing an order containing a Mix & Match box silently deletes the box's contents
-- **Affected pages:** Orders (edit flow); downstream effects on Production and Sales
-- **Files/functions:** `js/admin-orders.js` `editOrder()` (1524-1597), `renderManualMenuItem()` (1114-1156), `saveManualOrder()` (1223-1394)
-- **Current behavior:** The manual order editor has no builder-product support. Opening **Edit** on such an order drops the builder line (its `menu_item_id` is `null`, so it doesn't match anything in the flat item list); saving rewrites `order_items` without `builder_details`.
-- **Expected behavior:** Editing an order should preserve every line, including builder selections, or the Edit action should be disabled/warn on orders it can't safely represent.
-- **Severity:** High — silent, irreversible data loss on save; corrupts downstream production planning and sale revenue for that order.
-- **Confidence:** High.
-- **Dependencies:** None technical; needs UX decision on how builder editing should work in the admin UI (it doesn't exist there at all today, only on the public cart).
-- **Recommended phase:** Phase 1–2.
+### BUG-02 — Editing an order containing a Mix & Match box silently deletes the box's contents — **RESOLVED (Phase 2, 2026-08-17)**
+- **Status: Fixed and verified.** Root cause confirmed exactly as originally traced: `editOrder()` reconstructed `manualOrderItems` keyed by `menu_item_id`, and every builder line has `menu_item_id: null` — so two or more builder boxes in the same order collided on that single `null` key and only the last one survived; `saveManualOrder()` then rewrote `order_items` with no `builder_details` at all.
+- **Fix:** Extracted the editor's item-reconciliation logic into a new shared, pure module, `js/order-editor.js` (`partitionOrderItemsForEditing`/`buildOrderItemsPayload`), used by `editOrder()`/`saveManualOrder()`. Builder lines (and any other line whose `menu_item_id` can't be resolved, e.g. a deleted menu item) are now partitioned into their own array — never a single shared key — and rendered as preserved, individually-removable-but-not-editable lines with their original `builder_details` carried through unchanged on save. Standard flat-item editing is completely unaffected.
+- **Test coverage:** `tests/order-editor.test.js`, 13 tests (Node's built-in test runner), including a direct regression test for the exact two-boxes-collide-on-`null` scenario (test 7) and a full partition→rebuild round-trip (tests 9-11) confirming no line is ever silently dropped.
+- **Affected pages:** Orders (edit flow); downstream effects on Production and Sales.
+- **Files/functions:** `js/order-editor.js` (new), `js/admin-orders.js` `editOrder()`, `renderManualMenuItem()`/`renderManualBuilderItems()`, `saveManualOrder()`.
+- **Severity:** High — was silent, irreversible data loss on save; corrupted downstream production planning and sale revenue for that order.
+- **Confidence:** High — traced in code, root cause confirmed, and now covered by a direct regression test for the specific collision mechanism.
+- **Dependencies:** None remaining.
+- **Recommended phase:** Phase 2 — **done**.
 
 ---
 
@@ -135,10 +139,11 @@ Confidence: **High** (directly traced in code, and DB-verified where applicable)
 - **Current behavior:** `packagingCosts` map is built from `packaging_profile_costs` keyed by raw `id`, but looked up via `Number(profileId)`. Two other files read the same view with two other conventions (`String(...)` in `admin-production.js`, raw/no-cast in `admin-orders.js`).
 - **Resolved 2026-08-17:** Directly confirmed via Supabase that `packaging_profiles.id`/`packaging_profile_costs.id` are `bigint`, not UUIDs, and that real IDs are small integers (`2`–`6`). Cross-checked every live packaging profile against `menu_items.packaging_profile_id` and every lookup resolves correctly with real, non-zero costs. **The original hypothesis (that this silently zeroes out every menu card's packaging cost) does not hold** — `Number()` on a small integer is a harmless no-op.
 - **Expected behavior:** Still worth standardizing on one casting convention across the three files, purely for consistency and to avoid this becoming a real bug if `packaging_profiles` is ever migrated to UUIDs (as most of the rest of the schema already uses).
+- **Status: Resolved (Phase 2, 2026-08-17).** Standardized on `String(...)` everywhere: `js/admin-menu.js`'s `recipeCosts`/`packagingCosts` maps are now built and looked up with a consistent `String()` cast (previously raw key / `Number()`); `js/admin-production.js` already used `String()`; `js/admin-orders.js` routes through `js/sale-calculations.js`'s own consistent `key()` helper (added in Phase 1A). All sites now agree.
 - **Severity:** Downgraded from Critical to **Low** — code-style inconsistency, not a functional defect.
 - **Confidence:** High (directly verified against live schema and data).
 - **Dependencies:** None.
-- **Recommended phase:** Phase 2/3, opportunistic cleanup alongside other shared-utility consolidation.
+- **Recommended phase:** Phase 2/3, opportunistic cleanup alongside other shared-utility consolidation — **done**.
 
 ---
 
@@ -148,10 +153,11 @@ Confidence: **High** (directly traced in code, and DB-verified where applicable)
 - **Current behavior:** Sums only `recipe.recipe_ingredients`; never looks at `recipe.recipe_components` (sub-recipes).
 - **Resolved 2026-08-17:** The canonical `recipe_costs` Postgres view (used by Menu and by sale creation) was inspected directly and **does** correctly and recursively include sub-recipe components, with cycle protection and full mass/volume/count unit conversion — better than any client-side implementation in the repo. Cross-checked against the 4 real recipes that use a shared component ("Cream Cheese Frosting"): the Inventory tab's display understates their true cost by **29–47%** (e.g. Cinnamon Rolls: DB-correct $7.70 vs. Inventory tab's $4.26).
 - **Expected behavior:** The Inventory tab should either call the same view or replicate its recursive logic, so its displayed number matches reality.
+- **Status: Resolved (Phase 2, 2026-08-17).** The Inventory tab's own duplicate `getRecipeCost()`/`getIngredientCost()`/`convertUnit()` were deleted entirely and replaced with a lookup into the real `recipe_costs` view, via a new shared module `js/recipe-costing.js` (`buildRecipeCostsById`/`resolveRecipeCost`). Recipe cost display now reads the same recursive, sub-recipe-aware figure Menu and sale creation already use — verified live against the exact 4 previously-understated recipes (e.g. Cinnamon Rolls now correctly shows $7.70, not $4.26). Covered by `tests/recipe-costing.test.js` (7 tests), including a direct regression test asserting the fixed value and explicitly asserting against the old wrong one.
 - **Severity:** Downgraded from "affects costing everywhere" to **Medium** — confirmed display-only, confined to one tab, and confirmed not to affect pricing, sale creation, or Sales/Analytics.
 - **Confidence:** High (verified against live view definition and real data).
 - **Dependencies:** None remaining.
-- **Recommended phase:** Phase 2 (correctness, but lower urgency than Phase 1 items now that the blast radius is confirmed narrow).
+- **Recommended phase:** Phase 2 — **done**.
 
 ---
 
@@ -161,10 +167,11 @@ Confidence: **High** (directly traced in code, and DB-verified where applicable)
 - **Current behavior:** Only converts between mass units (g/kg/lb/oz). Volume (mL/L/tsp/tbsp/cup) or count-unit-pair conversions return `null`, and the caller (`getIngredientCost`) treats that as **$0 cost**, with no warning shown. `admin-production.js`'s `convert()`, and the canonical `recipe_costs` database view, both correctly handle mass, volume, and count.
 - **Resolved 2026-08-17:** Queried every ingredient's real `purchase_unit`/`recipe_unit`. **No ingredient in the live data uses a volume unit at all**, and every `each`-unit ingredient is purchased and used in the same unit (hitting the trivial same-unit branch, not the lookup table). The 11 ingredients with differing purchase/recipe units are all mass-to-mass (lb→g, oz→g), which this function already handles correctly. **The gap is real in the code but is not currently corrupting any number.**
 - **Expected behavior:** One shared conversion utility (matching the database view's capability), used everywhere, so the gap can't become live the moment a new ingredient with a volume unit is added.
+- **Status: Resolved (Phase 2, 2026-08-17).** Rather than reimplementing volume/count conversion a fourth time client-side, the Inventory tab's own unit-conversion logic (`convertUnit()`/`getIngredientCost()`) was deleted along with `getRecipeCost()` (BUG-04) and replaced with a lookup into the `recipe_costs` view, which already performs correct mass, volume, and count conversion server-side (verified in `01-architecture-and-data-flow.md`/`02-calculation-audit.md` §1). There is now exactly one conversion implementation actually reached by any page's *displayed* cost — the database view — eliminating the class of bug rather than patching the client copy.
 - **Severity:** Downgraded from High to **Low** (currently zero impact) — but should still be fixed proactively rather than waiting for it to break.
 - **Confidence:** High (verified against every real ingredient row).
 - **Dependencies:** None.
-- **Recommended phase:** Phase 2/3.
+- **Recommended phase:** Phase 2/3 — **done**.
 
 ---
 
@@ -240,36 +247,39 @@ Confidence: **High** (directly traced in code, and DB-verified where applicable)
 
 ### BUG-12 — Dead, unit-conversion-free cost function in `admin-sales.js`
 - **Affected pages:** None currently (unused code), but a latent trap
-- **Files/functions:** `js/admin-sales.js:167-247` `calculateSaleCost()`
+- **Files/functions:** `js/admin-sales.js` `calculateSaleCost()`
 - **Current behavior:** Fully implemented, never called. Computes ingredient cost as `purchase_price / purchase_size` with no unit conversion — would be wrong the moment purchase unit and recipe unit differ.
 - **Expected behavior:** Removed, or if a "live recalculation" feature is wanted, rebuilt on the shared costing/conversion logic recommended elsewhere in this audit.
-- **Severity:** Low today; would be a Critical-severity bug if ever wired up as-is.
+- **Status: Resolved (Phase 2, 2026-08-17).** Removed entirely, along with the four data fetches (`recipes`, `recipe_ingredients`, `packaging_profile_items`, `packaging_profiles`) that existed only to feed it — those queries ran on every Sales page load for a function nothing called. A correct, shared, tested implementation (`js/sale-calculations.js`) already exists if a live recalculation feature is ever wanted on this page.
+- **Severity:** Low today; would have been a Critical-severity bug if ever wired up as-is.
 - **Confidence:** High.
-- **Recommended phase:** Phase 0/1 cleanup.
+- **Recommended phase:** Phase 0/1 cleanup — **done (Phase 2)**.
 
 ---
 
 ### BUG-13 — Debug `console.log` statements left in production code
 - **Affected pages:** Sales
-- **Files/functions:** `js/admin-sales.js:148-154` (dumps all sales' customer/revenue/date on every dashboard load), `js/admin-sales.js:737` (`console.log("PROFIT INPUT:", orders)` on every profit-breakdown render)
-- **Current behavior:** Noisy console output on a real, customer-data-adjacent admin page.
+- **Files/functions:** `js/admin-sales.js` (two call sites)
+- **Current behavior:** Noisy console output on a real, customer-data-adjacent admin page — one dumped every sale's customer/revenue/date on every dashboard load, the other logged the full profit-breakdown input on every re-render.
+- **Status: Resolved (Phase 2, 2026-08-17).** Both `console.log` statements removed.
 - **Severity:** Low.
 - **Confidence:** High.
-- **Recommended phase:** Phase 1 (trivial, do alongside any other edit to this file).
+- **Recommended phase:** Phase 1 (trivial, do alongside any other edit to this file) — **done (Phase 2)**.
 
 ---
 
-### BUG-14 — No safeguard when deleting an ingredient or recipe still in use (now precisely characterized)
+### BUG-14 — No safeguard when deleting an ingredient or recipe still in use (now precisely characterized) — **RESOLVED (Phase 2, 2026-08-17)**
 - **Affected pages:** Inventory
-- **Files/functions:** `js/admin-inventory.js` `deleteIngredient()` (661-676), `deleteRecipe()` (1308-1323)
+- **Files/functions:** `js/admin-inventory.js` `deleteIngredient()`, `deleteRecipe()`
 - **Current behavior:** No client-side check or warning before deleting. **Resolved 2026-08-17** — the actual database behavior is now confirmed and is a mix of safe and unsafe:
   - Deleting an **ingredient** still referenced by `recipe_ingredients` or `packaging_profile_items` is **safely blocked** by the database (`NO ACTION`/`RESTRICT` foreign keys) — the delete fails and the admin sees a raw Postgres error via `alert()`. Data-safe, just an unfriendly error message.
   - Deleting a **recipe** still referenced by `menu_items.recipe_id` is likewise **safely blocked**.
-  - Deleting a **recipe that is used as a component in another recipe** (`recipe_components.component_recipe_id`) is **not blocked — it cascades silently** (`ON DELETE CASCADE`), removing that component from every recipe that used it with no warning and no error. This is now tracked separately and more precisely as **BUG-20**, since it's a real, confirmed, silent-data-loss path rather than a hypothetical one.
+  - Deleting a **recipe that is used as a component in another recipe** (`recipe_components.component_recipe_id`) was **not blocked — it cascaded silently** (`ON DELETE CASCADE`) — see BUG-20, now fixed at the database level.
 - **Expected behavior:** A friendlier pre-delete warning ("used in N recipes/products") for the two blocked cases, and the same or a hard block for the unblocked (component-recipe) case.
-- **Severity:** Medium (unfriendly-but-safe for ingredients/recipes; see BUG-20 for the one genuinely unsafe case).
+- **Status: Fixed and verified.** Both `deleteIngredient()` and `deleteRecipe()` now query real usage counts (`recipe_ingredients`/`packaging_profile_items` for ingredients; `menu_items`/`recipe_components` for recipes) before attempting the delete, and show a specific, friendly message ("used in N recipe(s)...") instead of relying on the database's raw error text. The database itself remains the authoritative safety net for all three cases (two pre-existing RESTRICT/NO ACTION foreign keys, plus BUG-20's newly-fixed one) — this is a friendlier front end to that same guarantee, not a replacement for it.
+- **Severity:** Medium (unfriendly-but-safe for ingredients/recipes; see BUG-20 for the one genuinely unsafe case, now also fixed).
 - **Confidence:** High (directly verified via `pg_constraint`).
-- **Recommended phase:** Phase 2.
+- **Recommended phase:** Phase 2 — **done**.
 
 ---
 
@@ -283,29 +293,29 @@ Confidence: **High** (directly traced in code, and DB-verified where applicable)
 
 ---
 
-## Summary table (updated 2026-08-17 after live database verification; BUG-16/17/18 later resolved same day)
+## Summary table (updated 2026-08-17; BUG-16/17/18 resolved same day, BUG-01 resolved as Phase 1A/1B, BUG-02/03/04/05/12/13/14/20/22 resolved as Phase 2)
 
 | ID | Summary | Severity | Confidence | Phase |
 |---|---|---|---|---|
 | BUG-16 | RLS disabled on `orders`/`order_items` — customer data publicly exposed | **RESOLVED** (was Critical) | High (fixed & verified live) | Done |
 | BUG-17 | `complete_production`/`end_current_ballot` callable by anyone, unauthenticated | **RESOLVED** (was High) | High (fixed & verified live) | Done |
 | BUG-18 | Internal cost data (`recipe_costs`/`packaging_profile_costs`) publicly queryable | **RESOLVED** (was High) | High (fixed & verified live) | Done |
-| BUG-01 | Builder sales: revenue right, profit wrong — confirmed on 18/34 sales, €335 correction verified | **Fixed and verified live** (code fix + historical backfill both deployed) | High (verified live + 11/11 tests) | 1A done / 1B done |
-| BUG-22 | Completed orders can still be edited; live order data can drift from the frozen sale record | Medium | High (2 confirmed instances) | 2 |
-| BUG-02 | Editing an order with a builder box deletes it | High | High | 1–2 |
-| BUG-19 | No currency/exchange-rate columns exist | Medium | High | 1 |
-| BUG-06 | Currency needs 3 different treatments (customer EUR, inventory per-purchase, reporting USD) | Medium | High | 1 (schema) / 2 (UI) |
-| BUG-04 | Inventory tab recipe cost ignores sub-recipes — confirmed confined to that tab, 29–47% understated | Medium (was High) | High (verified) | 2 |
-| BUG-20 | Deleting a component recipe silently cascades, dropping it from recipes that use it | Medium | High (verified) | 2 |
-| BUG-14 | Ingredient/recipe delete: safe-but-unfriendly for 2 of 3 cases (see BUG-20 for the unsafe one) | Medium | High (verified) | 2 |
-| BUG-03 | Packaging cost ID-cast inconsistency — confirmed **not** a live bug | Low (was Critical) | High (verified) | 2/3 |
-| BUG-05 | Inventory unit conversion missing volume/count — confirmed zero live impact today | Low (was High) | High (verified) | 2/3 |
+| BUG-01 | Builder sales: revenue right, profit wrong — confirmed on 18/34 sales, €335 correction verified | **RESOLVED** (code fix + historical backfill both deployed) | High (verified live + 11/11 tests) | 1A done / 1B done |
+| BUG-02 | Editing an order with a builder box deletes it | **RESOLVED** (was High) | High (13/13 tests) | 2 — done |
+| BUG-22 | Completed orders can still be edited; live order data can drift from the frozen sale record | **RESOLVED** (was Medium) | High (4/4 tests) | 2 — done |
+| BUG-04 | Inventory tab recipe cost ignores sub-recipes — confirmed confined to that tab, 29–47% understated | **RESOLVED** (was Medium) | High (verified live + 7/7 tests) | 2 — done |
+| BUG-20 | Deleting a component recipe silently cascades, dropping it from recipes that use it | **RESOLVED** (was Medium) | High (verified live) | 2 — done |
+| BUG-14 | Ingredient/recipe delete: safe-but-unfriendly for 2 of 3 cases (see BUG-20 for the unsafe one) | **RESOLVED** (was Medium) | High (verified) | 2 — done |
+| BUG-03 | Packaging cost ID-cast inconsistency — confirmed **not** a live bug | **RESOLVED** (was Low) | High (verified) | 2 — done |
+| BUG-05 | Inventory unit conversion missing volume/count — confirmed zero live impact today | **RESOLVED** (was Low) | High (verified) | 2 — done |
+| BUG-12 | Dead, unsafe cost function in Sales | **RESOLVED** (was Low, latent) | High | 2 — done |
+| BUG-13 | Debug console.log left in Sales | **RESOLVED** (was Low) | High | 2 — done |
+| BUG-19 | No currency/exchange-rate columns exist | Medium | High | 1 — deferred (currency out of scope this phase) |
+| BUG-06 | Currency needs 3 different treatments (customer EUR, inventory per-purchase, reporting USD) | Medium | High | 1 (schema) / 2 (UI) — deferred (currency out of scope this phase) |
 | BUG-21 | Minor Supabase hardening/performance items (advisors) | Low | High | 3/4 |
 | BUG-07 | `admin.js` dead and broken | Low (latent) | High | 0/1 |
 | BUG-08 | Dead markup in `admin.html` | Low | High | 0/1 |
-| BUG-09 | Missing `production.css` | Low | High | 1 |
-| BUG-10 | Duplicated pending-reviews logic | Low/Medium | High | 2 |
+| BUG-09 | Missing `production.css` | Low | High | 1 (CSS — out of scope this phase) |
+| BUG-10 | Duplicated pending-reviews logic | Low/Medium | High | 2 (deferred — not a calculation/data-integrity defect) |
 | BUG-11 | Duplicated ballot-manager logic | Low | High | resolved w/ BUG-07 |
-| BUG-12 | Dead, unsafe cost function in Sales | Low (latent) | High | 0/1 |
-| BUG-13 | Debug console.log left in Sales | Low | High | 1 |
 | BUG-15 | No discount/tax/refund/waste support | **Closed — confirmed out of scope by owner** | High | none |

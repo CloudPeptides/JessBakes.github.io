@@ -1,6 +1,8 @@
-# 07 — Phased Implementation Plan (Recommended, Not Yet Executed)
+# 07 — Phased Implementation Plan
 
-This is a proposed order of operations for a **future** phase, once the owner has answered the open questions raised in the calculation audit. Nothing in this plan has been implemented. It is sequenced to fix the highest-confidence, highest-severity money problems first, with the smallest, most reversible changes before anything structural.
+**Update 2026-08-17: Phase 1 (BUG-01) and the calculation/data-integrity portion of Phase 2 have been executed and verified live** — see `03-bug-register.md` for per-bug status and `09-bug01-regression-report.md` for the Phase 1 backfill detail. Specifically done: BUG-01 (Phase 1A code fix + Phase 1B historical backfill), BUG-02, BUG-03, BUG-04, BUG-05, BUG-12, BUG-13, BUG-14, BUG-20, BUG-22. Deliberately **not** done in this pass, per explicit scope: BUG-06/BUG-19 (currency — the EUR/USD exchange-rate design is still an open product decision), BUG-09/Phase 3 (CSS cleanup and visual redesign), and BUG-07/BUG-08/BUG-10/BUG-11/BUG-21 (dead-code/hardening cleanup that isn't a calculation or data-integrity defect). The plan below is preserved as originally written for the remaining phases.
+
+This was originally a proposed order of operations for a **future** phase, once the owner answered the open questions raised in the calculation audit. It was sequenced to fix the highest-confidence, highest-severity money problems first, with the smallest, most reversible changes before anything structural.
 
 ## Guiding principles for the repair phase
 
