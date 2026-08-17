@@ -15,6 +15,8 @@ Confidence: **High** (directly traced in code, and DB-verified where applicable)
 
 **Update 2026-08-17 (BUG-23 fix): Production's revenue/cost/profit/margin projections are now resolved and verified**, closing the currency-mixing gap discovered while implementing Phase 3 above. Reuses the same `js/currency-conversion.js` module and rate-resolution order, but with the CURRENT (not per-sale-snapshotted) rate, since Production plans unconfirmed, in-progress orders that have no completed sale yet — that rate is never written onto any order or sale. Historical `production_runs` snapshots are unaffected. Full detail in BUG-23's own entry below.
 
+**Update 2026-08-17 (Phase 4): admin dashboard reorganization and CSS refactor complete.** All 13 admin pages now share one nav-rendering module (`js/admin-shell.js`) instead of 13 hand-copied `<nav>` blocks, grouped into Overview/Orders/Production/Catalog/Inventory/Sales/Community with a working mobile off-canvas toggle. The CSS refactor consolidated 108 duplicate top-level selector groups in `css/admin.css` into single, cascade-correct definitions; removed a confirmed set of dead selectors (an old pre-multi-page admin.js-era layout, plus a few superseded component variants); and fixed a real structural bug — an unclosed `@media (max-width: 1000px)` had been silently trapping ~1,100 lines of Dashboard CSS so it only ever applied at narrow viewports. The stranded, minified `.production-*` block was moved into a real `css/production.css` (BUG-09). Two more undefined `var()` references (`--border-color`, `--burgundy`) were found and fixed. BUG-07/BUG-08/BUG-09/BUG-11 resolved; BUG-10 remains open (out of this phase's scope, see its own entry). No calculation, currency, or database logic was touched. Full detail in `04-admin-ux-audit.md` and `05-css-audit.md`'s Phase 4 updates.
+
 ---
 
 ### BUG-16 — Row Level Security is disabled on `orders` and `order_items`; all customer data and order data is publicly readable and writable — **RESOLVED (2026-08-17)**
@@ -206,58 +208,48 @@ Confidence: **High** (directly traced in code, and DB-verified where applicable)
 
 ---
 
-### BUG-07 — `js/admin.js` is dead, unreachable, and does not even parse
-- **Affected pages:** None currently rendered (it isn't loaded anywhere) — risk is latent
-- **Files/functions:** `js/admin.js` (entire file, 837 lines)
-- **Current behavior:** Not referenced by any `<script>` tag in the repository. Contains a duplicate, self-contained implementation of the login screen, dashboard, reviews, and ballot manager that predates the current multi-page admin structure. `node --check js/admin.js` fails with a syntax error at line 225.
-- **Expected behavior:** Either deleted (once confirmed truly unused) or clearly archived, not left in the live `js/` folder where a future edit could re-link it.
-- **Severity:** Low today (inert); would be a hard crash if ever re-linked.
+### BUG-07 — `js/admin.js` is dead, unreachable, and does not even parse — **RESOLVED (Phase 4, 2026-08-17)**
+- **Status: Fixed and verified.** Re-confirmed live before deleting: `grep`-searched every `admin/*.html`, `admin.html`, and every other page in the repo for `admin.js` — zero references anywhere (proof required before removal, per this bug's own remediation note). `js/admin.js` deleted outright (was 837 lines, didn't parse, contained a duplicate self-contained login/dashboard/reviews/ballot implementation predating the multi-page admin). Verified after deleting: `node --check` now passes on every remaining file in `js/`; `tests/admin-shell.test.js` test 10 asserts no admin page references it and that the file no longer exists, as a permanent regression guard.
+- **Affected pages:** None (it was never loaded).
+- **Severity:** Resolved (was Low/latent).
 - **Confidence:** High.
-- **Dependencies:** None.
-- **Recommended phase:** Phase 0/1 cleanup (removal is a source change and is out of scope for this audit phase; flagged for the owner's approval before anything is deleted).
+- **Recommended phase:** Phase 0/1 cleanup — **done (Phase 4)**.
 
 ---
 
-### BUG-08 — Leftover dead markup in `admin.html`
-- **Affected pages:** `admin.html` (the login gate)
-- **Files/functions:** `admin.html:76-144` (`#dashboard` div, `#editOptionModal`, `#newBallotModal`)
-- **Current behavior:** This HTML was built for `js/admin.js` (BUG-07) and is never used by the script that actually runs on this page (`login.js`, which only handles the login form and redirects). `admin-menu.js` independently rebuilds the same two modals from scratch at runtime for the real Menu page.
-- **Expected behavior:** `admin.html` should contain only what its actual script (`login.js`) needs.
-- **Severity:** Low.
+### BUG-08 — Leftover dead markup in `admin.html` — **RESOLVED (Phase 4, 2026-08-17)**
+- **Status: Fixed and verified.** Removed the `#dashboard`/`#editOptionModal`/`#newBallotModal` block (built for the now-deleted `js/admin.js`, never used by `login.js`, the script that actually runs on this page). `admin.html` now contains only the login screen and its three scripts (`supabase.js`, `login.js`, and the Supabase CDN tag).
+- **Affected pages:** `admin.html` (the login gate).
+- **Severity:** Resolved (was Low).
 - **Confidence:** High.
-- **Recommended phase:** Phase 0/1 cleanup.
+- **Recommended phase:** Phase 0/1 cleanup — **done (Phase 4)**.
 
 ---
 
-### BUG-09 — `css/production.css` is referenced but does not exist
-- **Affected pages:** `admin/production.html`
-- **Files/functions:** `admin/production.html:8`
-- **Current behavior:** 404 on page load. The page still looks correct today only because the actual `.production-*` rules were, at some point, appended directly to the very end of `css/admin.css` instead — see `05-css-audit.md`.
-- **Expected behavior:** Either the `<link>` should point at real CSS, or (more consistent with how the rest of the admin dashboard is structured, one shared `admin.css`) the reference should be removed once its rules are confirmed to live safely in `admin.css`.
-- **Severity:** Low functional impact (masked by the fallback), but is exactly the kind of broken reference that causes real breakage the next time someone touches `admin.css`'s ending.
+### BUG-09 — `css/production.css` is referenced but does not exist — **RESOLVED (Phase 4, 2026-08-17)**
+- **Status: Fixed and verified.** The ~9,000-character minified `.production-*` block that had been pasted onto the end of `admin.css` (see `05-css-audit.md`) was moved into a real, properly formatted `css/production.css` — exactly where `admin/production.html`'s existing `<link>` already pointed. Verified: `css/production.css` exists and is well-formed (brace-balanced); `tests/admin-shell.test.js` tests 11/15 assert the file exists and both `admin.css`/`production.css` are brace-balanced, as a permanent regression guard.
+- **Affected pages:** `admin/production.html`.
+- **Severity:** Resolved (was Low functional impact).
 - **Confidence:** High.
-- **Recommended phase:** Phase 1, bundled with the CSS cleanup (`05`).
+- **Recommended phase:** Phase 1, bundled with the CSS cleanup — **done (Phase 4)**.
 
 ---
 
-### BUG-10 — Duplicated pending-reviews logic (Dashboard vs. Reviews page)
+### BUG-10 — Duplicated pending-reviews logic (Dashboard vs. Reviews page) — not addressed this phase
 - **Affected pages:** Dashboard, Reviews
-- **Files/functions:** `js/admin-dashboard.js:242-328` vs. `js/admin-reviews.js:7-97` (near-identical `loadPendingReviews`/`renderPendingReviews`/`approveReview`/`deleteReview`)
-- **Current behavior:** Two independent copies of the same feature. Not currently inconsistent, but any future change (e.g. adding a rejection reason) has to be made twice and can easily be made once by mistake.
-- **Expected behavior:** One shared function/module.
+- **Files/functions:** `js/admin-dashboard.js` vs. `js/admin-reviews.js` (near-identical `loadPendingReviews`/`renderPendingReviews`/`approveReview`/`deleteReview`)
+- **Current behavior:** Unchanged — two independent copies of the same feature still exist. Phase 4 focused on the shared admin shell/navigation and the CSS refactor (docs/bakery-rebuild/05-css-audit.md); this JS-level de-duplication was not in that scope and was not touched.
 - **Severity:** Low (works today), Medium risk (future drift).
 - **Confidence:** High.
-- **Recommended phase:** Phase 2 (shared-utilities pass).
+- **Recommended phase:** A future shared-utilities pass, still open.
 
 ---
 
-### BUG-11 — Duplicated ballot-manager logic (three copies)
-- **Affected pages:** `admin.js` (dead, BUG-07), `admin-menu.js` (live)
-- **Files/functions:** `js/admin.js:330-803` and `js/admin-menu.js:948-1604` are near-line-for-line identical.
-- **Current behavior:** Same feature implemented twice; one copy is dead (BUG-07) so this isn't causing active inconsistency today, but it's evidence of the pattern that produced BUG-10 and should be cleaned up together.
-- **Severity:** Low.
+### BUG-11 — Duplicated ballot-manager logic (three copies) — **RESOLVED (Phase 4, 2026-08-17)**
+- **Status: Resolved automatically by BUG-07's fix**, exactly as this entry originally predicted — the dead copy in `js/admin.js` no longer exists. `js/admin-menu.js`'s live ballot manager is unaffected.
+- **Severity:** Resolved (was Low).
 - **Confidence:** High.
-- **Recommended phase:** Resolved automatically once BUG-07 is cleaned up.
+- **Recommended phase:** Done (Phase 4).
 
 ---
 
@@ -309,7 +301,7 @@ Confidence: **High** (directly traced in code, and DB-verified where applicable)
 
 ---
 
-## Summary table (updated 2026-08-17; BUG-16/17/18 resolved same day, BUG-01 resolved as Phase 1A/1B, BUG-02/03/04/05/12/13/14/20/22 resolved as Phase 2, BUG-06/19/23 resolved as Phase 3)
+## Summary table (updated 2026-08-17; BUG-16/17/18 resolved same day, BUG-01 resolved as Phase 1A/1B, BUG-02/03/04/05/12/13/14/20/22 resolved as Phase 2, BUG-06/19/23 resolved as Phase 3, BUG-07/08/09/11 resolved as Phase 4)
 
 | ID | Summary | Severity | Confidence | Phase |
 |---|---|---|---|---|
@@ -330,9 +322,9 @@ Confidence: **High** (directly traced in code, and DB-verified where applicable)
 | BUG-06 | Currency needs 3 different treatments (customer EUR, inventory/costs/Sales/Analytics USD) | **RESOLVED** (was Medium) | High (verified live + 23/23 tests) | 3 — done |
 | BUG-21 | Minor Supabase hardening/performance items (advisors) | Low | High | 3/4 |
 | BUG-23 | Production mixed EUR revenue with USD cost in its profit/margin figures, all labeled € | **RESOLVED** (was Medium) | High (verified + 7/7 tests) | 3 — done |
-| BUG-07 | `admin.js` dead and broken | Low (latent) | High | 0/1 |
-| BUG-08 | Dead markup in `admin.html` | Low | High | 0/1 |
-| BUG-09 | Missing `production.css` | Low | High | 1 (CSS — out of scope this phase) |
-| BUG-10 | Duplicated pending-reviews logic | Low/Medium | High | 2 (deferred — not a calculation/data-integrity defect) |
-| BUG-11 | Duplicated ballot-manager logic | Low | High | resolved w/ BUG-07 |
+| BUG-07 | `admin.js` dead and broken | **RESOLVED** (was Low) | High (verified, file deleted) | 4 — done |
+| BUG-08 | Dead markup in `admin.html` | **RESOLVED** (was Low) | High (verified) | 4 — done |
+| BUG-09 | Missing `production.css` | **RESOLVED** (was Low) | High (verified) | 4 — done |
+| BUG-10 | Duplicated pending-reviews logic | Low/Medium | High | still open — not this phase's scope |
+| BUG-11 | Duplicated ballot-manager logic | **RESOLVED** (was Low) | High | resolved w/ BUG-07 |
 | BUG-15 | No discount/tax/refund/waste support | **Closed — confirmed out of scope by owner** | High | none |
