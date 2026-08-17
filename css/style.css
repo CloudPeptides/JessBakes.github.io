@@ -15,12 +15,52 @@
 
 * { box-sizing:border-box; }
 
+/* ---------- Accessibility (Phase 5) ----------
+   A consistent keyboard-focus ring (the site's own burgundy, not a
+   generic blue) for every interactive element that doesn't already
+   define its own explicit :focus state, a skip-to-content link, and
+   reduced motion for anyone who has asked their OS for it. Additive
+   only -- no existing color, spacing, or content changes. */
+
+:focus-visible {
+  outline: 3px solid var(--burgundy);
+  outline-offset: 3px;
+}
+
+.skip-link {
+  position: absolute;
+  top: -100px;
+  left: 16px;
+  z-index: 999;
+  padding: 12px 20px;
+  background: var(--burgundy);
+  color: #fff8ef;
+  border-radius: 999px;
+  font-weight: 700;
+  font-size: .86rem;
+  transition: top .2s ease;
+}
+
+.skip-link:focus {
+  top: 16px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: .001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: .001ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
 body {
   margin:0;
   font-family:"Inter", sans-serif;
   color:var(--text);
   background:
-    background:
     radial-gradient(circle at top left,
         rgba(255,255,255,.18),
         transparent 38rem),
@@ -121,8 +161,7 @@ h3 {
 }
 
 .order-btn,
-.primary-btn,
-.secondary-btn {
+.primary-btn {
   display:inline-flex;
   align-items:center;
   justify-content:center;
@@ -133,29 +172,14 @@ h3 {
   letter-spacing:.13em;
   text-transform:uppercase;
   transition:background .25s ease, color .25s ease, transform .25s ease, box-shadow .25s ease;
-}
-
-.order-btn,
-.primary-btn {
   background:var(--burgundy);
   color:#fff8ef;
   box-shadow:0 12px 26px rgba(90,23,15,.2);
 }
 
-.secondary-btn {
-  border:1px solid var(--burgundy);
-  color:var(--burgundy);
-}
-
 .order-btn:hover,
 .primary-btn:hover {
   background:var(--burgundy-light);
-  transform:translateY(-2px);
-}
-
-.secondary-btn:hover {
-  background:var(--burgundy);
-  color:#fff8ef;
   transform:translateY(-2px);
 }
 
@@ -210,6 +234,7 @@ h3 {
 .section-heading {
   max-width:700px;
   margin:0 auto 26px;
+  margin-bottom:60px;
   text-align:center;
 }
 
@@ -257,6 +282,7 @@ h3 {
   border:1px solid var(--line);
   border-radius:var(--radius);
   box-shadow:var(--shadow);
+  padding:26px;
   transition:transform .25s ease, box-shadow .25s ease;
 }
 
@@ -267,14 +293,6 @@ h3 {
 .notice-card:hover {
   transform:translateY(-4px);
   box-shadow:0 24px 55px rgba(46,32,27,.13);
-}
-
-.card,
-.menu-item,
-.contact-card,
-.story-card,
-.notice-card {
-  padding:26px;
 }
 
 .card-top,
@@ -411,14 +429,14 @@ h3 {
 
 .footer p,
 .footer a {
-  color: var(--text);;
+  color: var(--text);
 }
 
 .footer-bottom {
   border-top: 1px solid rgba(90,23,15,.15);
   padding:18px 22px;
   text-align:center;
-  olor: var(--muted);
+  color: var(--muted);
   font-size:.86rem;
 }
 
@@ -430,11 +448,6 @@ h3 {
     max-width:1200px;
     margin:120px auto;
     padding:0 30px;
-}
-
-.section-heading{
-    text-align:center;
-    margin-bottom:60px;
 }
 
 .section-heading h2{
@@ -493,7 +506,7 @@ h3 {
 
     font-weight:500;
 
-    color:var(--text-light);
+    color:var(--muted);
 
     margin-bottom:14px;
 
@@ -506,7 +519,7 @@ h3 {
 
     font-weight: 700;
 
-    color: var(--deep-burgundy);
+    color: var(--burgundy);
 
 }
 
@@ -538,7 +551,7 @@ h3 {
 
     letter-spacing: .12em;
 
-    color: var(--text-light);
+    color: var(--muted);
 
     font-weight: 700;
 
@@ -558,67 +571,9 @@ h3 {
 
 }
 
-.ballot-card{
-
-    background:var(--surface);
-
-    border:1px solid var(--line);
-
-    border-radius:24px;
-
-    padding:32px;
-
-    box-shadow:var(--shadow);
-
-}
-
 .ballot-card h3{
 
     margin-bottom:8px;
-
-}
-
-.ballot-card small{
-
-    display:block;
-
-    margin-bottom:22px;
-
-    color:var(--text-light);
-
-    letter-spacing:.08em;
-
-    text-transform:uppercase;
-
-}
-
-.ballot-option{
-
-    display:flex;
-
-    align-items:center;
-
-    gap:12px;
-
-    padding:12px 0;
-
-}
-
-.ballot-option input{
-
-    accent-color:var(--deep-burgundy);
-
-    transform:scale(1.15);
-
-}
-
-.submit-vote{
-
-    grid-column:1/-1;
-
-    text-align:center;
-
-    margin-top:20px;
 
 }
 
@@ -1477,90 +1432,6 @@ COMMUNITY FAVORITES
 
 }
 
-/*==================================================
-JESS NOTE
-==================================================*/
-
-.jess-note{
-
-    max-width:1200px;
-
-    margin:90px auto 40px;
-
-    padding:0 24px;
-
-}
-
-.jess-note-card{
-
-    max-width:850px;
-
-    margin:0 auto;
-
-    padding:50px 60px;
-
-    background:#fbf6f0;
-
-    border:1px solid #eadfd6;
-
-    border-radius:24px;
-
-    text-align:center;
-
-    box-shadow:0 14px 35px rgba(0,0,0,.06);
-
-}
-
-.jess-note-card h2{
-
-    margin:12px 0 24px;
-
-    font-size:3rem;
-
-    color:#5d2017;
-
-}
-
-.jess-note-card p{
-
-    max-width:650px;
-
-    margin:18px auto;
-
-    line-height:1.8;
-
-    color:#5d4b42;
-
-}
-
-.note-highlight{
-
-    margin-top:35px;
-
-    font-weight:600;
-
-    color:#7a2417;
-
-    font-size:1.05rem;
-
-}
-
-@media(max-width:768px){
-
-    .jess-note-card{
-
-        padding:35px 28px;
-
-    }
-
-    .jess-note-card h2{
-
-        font-size:2.2rem;
-
-    }
-
-}
-
 .suggestion-section{
 
     max-width:900px;
@@ -1705,20 +1576,3 @@ JESS NOTE
     font-weight:bold;
 }
 
-.builder-order-details{
-
-    margin-top:8px;
-
-    margin-left:18px;
-
-    font-size:.9rem;
-
-    color:#666;
-
-}
-
-.builder-order-line{
-
-    margin:2px 0;
-
-}
