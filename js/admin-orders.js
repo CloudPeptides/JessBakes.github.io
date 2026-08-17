@@ -17,6 +17,13 @@ document.addEventListener("DOMContentLoaded", async () => {
 let menuItems = [];
 let manualOrderItems = {};
 
+// Order lines the flat POS-style editor below can't represent (Mix & Match
+// builder boxes, or any line whose linked menu item no longer exists) —
+// preserved verbatim when editing an existing order so opening Edit can
+// never silently drop them (BUG-02). Not addable from this editor; only
+// carried through unchanged or removed as a whole line.
+let manualBuilderItems = [];
+
 
 /* ==========================================
    MENU ITEMS FOR MANUAL ORDERS
@@ -869,6 +876,7 @@ async function deleteOrder(orderId) {
 function openManualOrderModal() {
 
     manualOrderItems = {};
+    manualBuilderItems = [];
 
    document.querySelector(
     "#manualOrderModal .modal-header h2"
@@ -914,6 +922,7 @@ function closeManualOrderModal() {
     ).textContent = "Save Order";
 
     manualOrderItems = {};
+    manualBuilderItems = [];
 
 }
 
@@ -970,6 +979,8 @@ function renderManualMenuItems() {
     }
 
     container.innerHTML = `
+        ${renderManualBuilderItems()}
+
         <div class="manual-pos-list">
             ${menuItems.map(item => renderManualMenuItem(item)).join("")}
         </div>
@@ -986,6 +997,56 @@ function renderManualMenuItems() {
             </div>
         </div>
     `;
+
+}
+
+function renderManualBuilderItems() {
+
+    if (!manualBuilderItems.length) return "";
+
+    return `
+        <div class="manual-pos-list" style="margin-bottom:16px;">
+            <p><strong>Mix &amp; Match / custom items in this order</strong></p>
+            <p><small>These can't be edited here — remove and have the customer re-build them at checkout if the contents need to change. Everything else on this order can still be edited normally.</small></p>
+
+            ${manualBuilderItems.map(item => `
+                <div class="manual-pos-item">
+                    <div>
+                        <strong>${escapeHtml(item.item_name)}</strong>
+                        <small>
+                            Qty ${item.quantity}
+                            •
+                            €${Number(item.price_at_purchase).toFixed(2)} each
+                        </small>
+                    </div>
+
+                    <div class="manual-pos-controls">
+                        <button
+                            type="button"
+                            class="delete-btn"
+                            onclick="removeManualBuilderItem('${item.localId}')">
+                            Remove
+                        </button>
+                    </div>
+                </div>
+            `).join("")}
+        </div>
+    `;
+
+}
+
+function removeManualBuilderItem(localId) {
+
+    if (!confirm(
+        "Remove this item from the order? Its full contents (including any Mix & Match selections) will be removed."
+    )) return;
+
+    manualBuilderItems = manualBuilderItems.filter(
+        item => String(item.localId) !== String(localId)
+    );
+
+    renderManualMenuItems();
+    updateManualOrderSummary();
 
 }
 
@@ -1069,12 +1130,7 @@ function changeManualItemQuantity(itemId, change) {
 
 function updateManualOrderSummary() {
 
-    const items = getManualOrderItems();
-
-    const totalItems = items.reduce(
-        (sum, item) => sum + item.quantity,
-        0
-    );
+    const totalItems = OrderEditor.computeManualOrderItemCount(manualOrderItems, manualBuilderItems);
 
     const subtotal = getManualOrderSubtotal();
 
@@ -1091,10 +1147,7 @@ function getManualOrderItems() {
 
 function getManualOrderSubtotal() {
 
-    return getManualOrderItems().reduce(
-        (sum, item) => sum + item.price * item.quantity,
-        0
-    );
+    return OrderEditor.computeManualOrderSubtotal(manualOrderItems, manualBuilderItems);
 
 }
 
@@ -1126,9 +1179,39 @@ async function saveManualOrder() {
 
     const items = getManualOrderItems();
 
-    if (!items.length) {
+    if (!items.length && !manualBuilderItems.length) {
         alert("Please add at least one item.");
         return;
+    }
+
+    // BUG-22 guard: re-check the order's *live* status right before writing,
+    // not just when the editor was opened, so a completed order's frozen
+    // sale record can never be silently invalidated by an edit — including
+    // if it was completed by someone else in the time the editor was open.
+    if (editingOrderId) {
+
+        const { data: liveOrder, error: statusCheckError } =
+            await supabaseClient
+                .from("orders")
+                .select("status")
+                .eq("id", editingOrderId)
+                .single();
+
+        if (statusCheckError) {
+            console.error(statusCheckError);
+            alert(statusCheckError.message);
+            return;
+        }
+
+        if (!OrderEditor.isOrderEditable(liveOrder)) {
+            alert(
+                "This order is already completed and its sale has been finalized, so it can no longer be edited. Its details are still visible on the order card."
+            );
+            closeManualOrderModal();
+            await loadOrderManager();
+            return;
+        }
+
     }
 
     if (order_type === "weekly") {
@@ -1244,14 +1327,11 @@ if (editingOrderId) {
 
 }
 
-    const orderItems = items.map(item => ({
-        order_id: order.id,
-        menu_item_id: item.id,
-        item_name: item.name,
-        quantity: item.quantity,
-        price_at_purchase: item.price,
-        line_total: item.price * item.quantity
-    }));
+    // BUG-02 fix: built by the shared, tested OrderEditor module. Preserved
+    // builder/unresolvable lines are carried through exactly as loaded,
+    // including their original builder_details, so re-inserting order_items
+    // on save can never silently drop a Mix & Match box.
+    const orderItems = OrderEditor.buildOrderItemsPayload(order.id, manualOrderItems, manualBuilderItems);
 
     const { error: itemError } = await supabaseClient
         .from("order_items")
@@ -1419,6 +1499,18 @@ async function editOrder(orderId) {
 
     }
 
+    // BUG-22: a completed order's sale/sale_items record is already frozen
+    // elsewhere in the schema. Editing it here would let orders/order_items
+    // silently drift out of sync with that finalized record, so the editor
+    // refuses to open at all for a completed order. The order itself stays
+    // fully visible on its card either way.
+    if (!OrderEditor.isOrderEditable(order)) {
+        alert(
+            "This order is already completed and its sale has been finalized, so it can no longer be edited. Its details are still visible on the order card."
+        );
+        return;
+    }
+
     openManualOrderModal();
 
     document.getElementById("editingOrderId").value = order.id;
@@ -1451,23 +1543,13 @@ async function editOrder(orderId) {
 
     toggleManualOrderType();
 
-   manualOrderItems = {};
-
-(order.order_items || []).forEach(item => {
-
-    manualOrderItems[item.menu_item_id] = {
-
-        id: item.menu_item_id,
-
-        name: item.item_name,
-
-        price: Number(item.price_at_purchase),
-
-        quantity: Number(item.quantity)
-
-    };
-
-});
+    // BUG-02 fix: partitioned by the shared, tested OrderEditor module so a
+    // builder line (or any line with no resolvable menu_item_id) can never
+    // collide with another under the single key `null` the way the old
+    // inline logic here did.
+    const partitioned = OrderEditor.partitionOrderItemsForEditing(order.order_items);
+    manualOrderItems = partitioned.flatItemsById;
+    manualBuilderItems = partitioned.builderItems;
 
    renderManualMenuItems();
 updateManualOrderSummary();
@@ -1489,4 +1571,5 @@ window.openManualOrderModal = openManualOrderModal;
 window.closeManualOrderModal = closeManualOrderModal;
 window.toggleManualOrderType = toggleManualOrderType;
 window.changeManualItemQuantity = changeManualItemQuantity;
+window.removeManualBuilderItem = removeManualBuilderItem;
 window.saveManualOrder = saveManualOrder;
