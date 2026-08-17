@@ -4,33 +4,43 @@ This document traces every place cost, price, yield, revenue, profit, margin, or
 
 ## 0. The short version
 
-**There is no single source of truth for "how much does one product cost to make."** At least **five separate implementations** of ingredient/recipe/packaging costing exist across the codebase, they use **different unit-conversion capabilities**, at least one of them **ignores sub-recipes entirely**, and the one page that shows both a live and a historical cost figure for the same order (`sales.html`) can show **numbers that don't reconcile with the underlying line items**, specifically for Mix & Match "builder" products. Three different currency-formatting conventions are used across pages that all describe the same bakery's money.
+**Update (2026-08-17): the live Supabase database was inspected directly and this section has been corrected accordingly.** The canonical cost source — the `recipe_costs` Postgres view — turns out to be well-built: it correctly walks sub-recipes recursively and correctly converts mass, volume, and count units. The client-side Inventory tab still duplicates this logic worse (ignores sub-recipes, mass-only conversion), but that gap is now confirmed **confined to that one tab's display** — it does not reach Menu, Sales, or Analytics. The genuinely serious, confirmed-in-production calculation problem is narrower and worse than it first appeared: the **Mix & Match revenue/profit gap (§5) is now empirically confirmed against real data — it currently affects 18 of the bakery's 34 completed sales (53%) and has removed €335.00 of revenue from the profit/margin figures shown on Sales and Analytics.** Three different currency-formatting conventions are still used across pages that all describe the same bakery's money, and the owner has now confirmed the intended rule (§4, §11). See `01-architecture-and-data-flow.md` §8 for the verification method.
 
-## 1. Unit conversion — three incompatible implementations
+## 1. Unit conversion — three incompatible client-side implementations, plus the (correct) database view
 
-| File | Function | Mass (g/kg/lb/oz) | Volume (mL/L/tsp/tbsp/cup) | Count (each/item/piece) | Behavior when unsupported |
-|---|---|---|---|---|---|
-| `js/admin-inventory.js:1473-1495` | `convertUnit()` | ✅ | ❌ | ❌ | returns `null` → caller treats cost as **0** |
-| `js/admin-production.js:838` | `convert()` | ✅ | ✅ | ✅ | returns `null` → caller surfaces a warning banner and blocks "Finish Production" |
-| `js/admin-sales.js` (`calculateSaleCost`, unused — see below) | inline division | N/A — **no conversion at all**, assumes purchase unit already equals recipe unit | | | silently wrong if units differ |
+| Location | Mass (g/kg/lb/oz) | Volume (mL/L/tsp/tbsp/cup) | Count (each/item/piece) | Behavior when unsupported |
+|---|---|---|---|---|
+| `js/admin-inventory.js:1473-1495` `convertUnit()` | ✅ | ❌ | ❌ | returns `null` → caller treats cost as **0** |
+| `js/admin-production.js:838` `convert()` | ✅ | ✅ | ✅ | returns `null` → caller surfaces a warning banner and blocks "Finish Production" |
+| `js/admin-sales.js` (`calculateSaleCost`, unused — see §7) | inline division | N/A — **no conversion at all**, assumes purchase unit already equals recipe unit | | silently wrong if units differ |
+| **`recipe_costs` (Postgres view — verified 2026-08-17)** | ✅ | ✅ | ✅ | Falls back to `NULL` (excluded from the sum) rather than silently costing as 0 for an unmapped unit pair |
 
-**Impact:** the "Recipe Costing" tab on `admin/inventory.html` (`getRecipeCost` → `getIngredientCost` → `convertUnit`, `js/admin-inventory.js:1446-1471`) will silently show **$0.00 cost** for any ingredient whose recipe is measured in mL, L, tsp, tbsp, cups, or "each"/"item" — this is common for a bakery (e.g. vanilla extract in tsp, eggs in "each"). The production page's `convert()` handles all three unit families and would compute a real number for the same ingredient. **These two pages will disagree about the same recipe's cost whenever a non-mass unit is involved**, and Inventory's version fails silently (no warning), while Production's fails loudly (a warning banner + a block on finishing production).
+**Database verification confirmed the view is the most complete of the four** — it independently implements the same three unit families as `admin-production.js`'s `convert()`, and it's the one actually used to price every sale.
 
-## 2. Recipe cost — at least three implementations, only one recursive
+**Live-data impact, confirmed by querying the real `ingredients` table:** every ingredient in production today uses `recipe_unit`/`purchase_unit` of only `g`, `kg`, `lb`, `oz`, or `each` — nothing uses mL, L, tsp, tbsp, or cups. Of the 11 ingredients whose purchase unit differs from its recipe unit, all 11 are mass-to-mass (`lb`→`g`, `oz`→`g`); every `each`-unit ingredient (eggs, bags, boxes, stickers, etc.) is purchased and used in the same unit, so it hits the trivial "already matching" branch in every implementation rather than exercising any lookup table. **Net effect: `admin-inventory.js`'s missing volume/count support is a real, latent gap in the code, but it is not currently corrupting any number, because the bakery's current ingredient list never triggers it.** It should still be fixed (the moment an ingredient like vanilla extract is purchased in fl oz and measured in tsp, or a liquid ingredient purchased in mass but measured by volume, this tab will silently show $0), but it is not urgent the way the Mix & Match gap (§5) is.
+
+## 2. Recipe cost — the database view is correct; only the Inventory tab's display is wrong
 
 | Location | Includes `recipe_ingredients`? | Includes `recipe_components` (sub-recipes)? | Divides by yield? | Result represents |
 |---|---|---|---|---|
 | `js/admin-inventory.js:1446-1452` `getRecipeCost(recipe)` | ✅ | ❌ **No** — sub-recipes are silently ignored | ❌ **No** | Total **batch** cost (not per-item) |
 | `js/admin-production.js:416-584` `collectRecipeRequirements()` (recursive) | ✅ | ✅ Yes, recursively, with circular-reference detection | Effectively yes, via `multiplier` scaling per order | Ingredient **requirements** for a specific set of orders, priced via `calculateRequirementCost()` (`js/admin-production.js:624-659`) |
-| `recipe_costs` (Postgres view, referenced but never defined in this repo) `.cost_per_yield_item` | **Unknown — cannot verify from the codebase** | **Unknown** | Presumably yes, given the field name | Used as the canonical "cost of one yield unit of this recipe" by `admin-menu.js` and `admin-orders.js` |
+| `recipe_costs.cost_per_yield_item` (Postgres view — **verified 2026-08-17**) | ✅ | ✅ **Yes** — a recursive CTE expands `recipe_components` to arbitrary depth, with cycle protection (`WHERE NOT component_recipe.id = ANY(recipe_path)`), and converts mass/volume/count units at every level | ✅ Yes — `total_ingredient_cost / yield_quantity` | The canonical "cost of one yield unit of this recipe," consumed by `admin-menu.js` and `admin-orders.js` (sale creation) |
 
-**Consequence:** the number labeled "Estimated ingredient cost" per recipe on `admin/inventory.html`'s Recipes tab (`js/admin-inventory.js:856`) is:
-- a **batch total**, not a per-item cost (so it's not directly comparable to a menu item's price), and
-- **wrong for any recipe that uses a sub-recipe/component** (e.g. a filling, a base dough used in two products) — it simply omits that portion of the cost.
+**This resolves the open question from the first pass of this audit.** `recipe_costs` correctly includes sub-recipes, so **Menu, sale creation, Sales, and Analytics all use the correct, complete recipe cost** — this defect never reached them.
 
-Meanwhile, the number actually used to price a sale (`recipe_costs.cost_per_yield_item`, consumed in `admin-menu.js:1686-1692` and `admin-orders.js:794-802`) lives entirely in Supabase and its formula cannot be confirmed from this repository. **Open question for the owner:** does the `recipe_costs` view account for `recipe_components` (sub-recipes)? If not, every product built from a sub-recipe is under-costed everywhere (menu cards, sale snapshots, and thus sales/analytics), not just in the Inventory tab.
+**What's still wrong, quantified against real data:** the four recipes in the database that use a sub-recipe component (Cinnamon Rolls, Blueberry Rolls, Strawberry Rolls, and Nutella Rolls, each of which folds in a shared "Cream Cheese Frosting" recipe) show the following gap between the correct database figure and what the Inventory tab's `getRecipeCost()` would display for the same recipe:
 
-## 3. Packaging cost — an ID type mismatch that plausibly zeroes out every menu card
+| Recipe | `recipe_costs.ingredient_cost` (correct, includes frosting) | Inventory tab's `getRecipeCost()` (direct ingredients only) | Understated by |
+|---|---|---|---|
+| Cinnamon Rolls | $7.70 | $4.26 | 45% |
+| Blueberry Rolls | $7.26 | $3.82 | 47% |
+| Strawberry Rolls | $5.41 | $3.69 | 32% |
+| Nutella Rolls | $5.83 | $4.11 | 29% |
+
+So the "Estimated ingredient cost" shown on `admin/inventory.html`'s Recipes tab (`js/admin-inventory.js:856`) is confirmed wrong today, by 29–47%, for every recipe that uses a shared component — but this is a **display-only bug confined to that one tab**. It does not affect pricing, sale creation, or anything on Sales/Analytics.
+
+## 3. Packaging cost — confirmed NOT a live bug; a code-style inconsistency only
 
 Three places read `packaging_profile_costs`, keyed three different ways:
 
@@ -40,7 +50,9 @@ Three places read `packaging_profile_costs`, keyed three different ways:
 | `js/admin-production.js:115-121` | `new Map(data.map(cost => [String(cost.id), cost]))` | looked up via `String(...)` |
 | `js/admin-orders.js:775-781` | `new Map(data.map(p => [p.id, p]))` | looked up via raw `menuItem?.packaging_profile_id` (no cast) |
 
-`admin-menu.js` is the odd one out: it explicitly casts the lookup key to `Number(...)`, while every other ID in the same file (`recipe_id`, `ingredient.id`, etc.) is compared as a string. If `packaging_profiles.id` / `packaging_profile_costs.id` is a UUID (which is consistent with how every other primary key in this schema is handled — `String(item.id)` comparisons are used throughout `admin-inventory.js`, `admin-production.js`, and elsewhere), then `Number("a1b2c3d4-...")` evaluates to `NaN`, and `Map.get(NaN)` never matches. **If that's the case, `getPackagingCost()` in `admin-menu.js` (line 1694) always returns 0**, meaning the "Packaging" cost box shown on every card in Menu Manager (`js/admin-menu.js:316-327`) is silently wrong for every product, every time. This does **not** affect the sale snapshot in `admin-orders.js` (which uses the raw, unconverted key) or production planning (which uses `String(...)`) — so this would be a case where the Menu page specifically under-reports cost/over-reports profit compared to every other page. **This needs to be confirmed against the actual Supabase column type** — flagged rather than assumed, per audit instructions.
+**Verified 2026-08-17: `packaging_profiles.id` and `packaging_profile_costs.id` are `bigint`, not UUIDs** (confirmed via `list_tables`, and via real row data — the five packaging profiles have IDs `2, 3, 4, 5, 6`, all well within JavaScript's safe-integer range). This overturns the original hypothesis: because these IDs are small integers, PostgREST serializes them as ordinary JSON numbers, `Number(2)` is a no-op, and `admin-menu.js`'s cast does not break the lookup. Directly confirmed by querying `packaging_profile_costs` and cross-referencing `menu_items.packaging_profile_id` for the same rows — every profile resolves to a real, non-zero `packaging_cost` (e.g. profile 2 "Bread Loaf" → $0.34, profile 5 "12 Pack" → $1.79).
+
+**What remains true and worth fixing:** this is still three different, inconsistent conventions for casting the same kind of ID across three files, which is exactly the sort of thing that becomes a real bug the day someone changes a primary key type (e.g. if `packaging_profiles` were ever migrated to UUIDs, as most of the rest of the schema already is). Downgraded from a correctness bug to a consistency/robustness cleanup — see `03-bug-register.md` BUG-03 for the corrected severity.
 
 ## 4. Currency — three different conventions describing the same money
 
@@ -53,7 +65,12 @@ Three places read `packaging_profile_costs`, keyed three different ways:
 | `admin-sales.js` / `admin-analytics.js` `euro()` | Same Euro formatter, duplicated verbatim in both files |
 | `admin-dashboard.html`, `admin-orders.js`, public `cart.js`/`menu.js` | Literal `€` throughout |
 
-The public-facing checkout, the dashboard KPIs, the orders queue, and the production/sales/analytics pages are all consistently **Euro**. **Inventory and Packaging are the outliers, formatted in USD**, and **Menu mixes both symbols on a single card**. Given the domain (`jessbakessourdough.com`) and the overwhelming majority of the app, EUR appears to be the intended currency everywhere — this audit is not fixing it, but it should be confirmed with the owner and corrected consistently in one pass rather than page by page.
+The public-facing checkout, the dashboard KPIs, the orders queue, and the production/sales/analytics pages are all consistently **Euro**. **Inventory and Packaging are the outliers, formatted in USD**, and **Menu mixes both symbols on a single card**.
+
+**Owner confirmed (2026-08-17), and this is more nuanced than "pick one currency" — three separate, correct rules apply to three different parts of the app:**
+1. **Customers always see and pay in EUR** — this is a European bakery; the public site, cart, checkout, and `orders.subtotal` should stay EUR. No change needed here; this is already how it works.
+2. **Inventory and Packaging being in USD is not a bug — it's currently mislabeled, not miscalculated.** The owner buys ingredients from both American suppliers (USD) and German suppliers (EUR), so individual ingredient purchase prices are genuinely in two different currencies today, and neither `ingredients` nor `purchases` has a currency column to say which is which (see §9, BUG-19). The immediate, correct fix is **not** "make Inventory show EUR" — it's adding a per-ingredient (or per-purchase) currency field so each ingredient's real purchase currency is recorded and displayed accurately, rather than the page defaulting to a blanket `usd()` formatter that's right for some ingredients and silently wrong for others.
+3. **Sales and Analytics should report in USD** — confirmed as the owner's own internal reporting currency, independent of what customers are charged. This means `admin-sales.js`/`admin-analytics.js`'s existing `euro()` formatter is actually the wrong one to standardize on — **the fix is the reverse of what the first pass of this audit assumed.** See §11 for the exchange-rate mechanics this requires, since a straight relabel to `$` would be wrong — the underlying EUR revenue amounts need to be converted, not just redisplayed.
 
 ## 5. The Mix & Match ("builder") revenue/profit gap — highest-confidence finding
 
@@ -69,6 +86,23 @@ Traced end to end:
 3. **Result:** for any completed order containing at least one Mix & Match box, the `sales` row ends up with `revenue` = correct (includes the box price) but `profit` = wrong (computed as if the box had €0 revenue, while its real ingredient/packaging cost is fully subtracted). **Profit and margin are understated by roughly the box's selling price**, for that order, everywhere `sales.profit` is read: `admin-sales.js`'s Gross Profit KPI, Profit Breakdown, and per-sale-card profit; `admin-analytics.js`'s Gross Margin, Profit Insights, Top Customers' profit, and Product Breakdown (where the box's own row doesn't exist at all, and its ingredients show €0 revenue with real cost, i.e. **negative profit** for products that were never actually sold at a loss).
 
 This is a single root cause with a wide, mechanically traceable blast radius across Sales and Analytics — exactly the kind of "inventory/recipe cost not reaching sales/analytics correctly" issue the owner asked to have documented.
+
+### Empirical confirmation against the live database (2026-08-17)
+
+A read-only, non-PII aggregate query (selecting only sale IDs, revenue/cost/profit figures, and a `builder_details is not null` flag joined through `orders`/`order_items` — no customer name/email/phone was retrieved) was run directly against Supabase to check every one of the bakery's actual completed sales:
+
+- **34 total completed sales**, of which **18 (53%) contain at least one Mix & Match item.**
+- **All 18 of those 18** show `sum(sale_items.line_revenue) < sales.revenue` — a 100% hit rate, exactly as the code trace predicts.
+- **Every one of the other 16 (non-builder) sales shows `sum(sale_items.line_revenue) = sales.revenue` exactly** — confirming standard-product sales are computed correctly and consistently.
+- **€335.00 of real revenue is currently excluded from the profit/margin calculation** across those 18 sales, combined. Several individual sales currently display a *negative* profit in the database (e.g. one sale with €15.00 of real revenue and €5.17 of real cost shows `profit: -5.17`, because its entire revenue came from a builder box that contributed €0 to the profit calculation) — meaning Sales and Analytics have likely already shown the owner orders that looked like money-losers when they were not.
+
+This moves BUG-01 from "confirmed by code tracing" to "confirmed by code tracing **and** directly measured against every affected row in production." See `03-bug-register.md` BUG-01 for the updated severity/confidence and the confirmed fix design below.
+
+### Confirmed fix design (owner decision, 2026-08-17)
+
+> Record the box as the parent sale line containing all revenue. Record its selected products as child components that contribute costs and quantities — but don't count their revenue again.
+
+Concretely, this means `createSaleFromOrder()` in `admin-orders.js` should insert **one additional `sale_items` row per builder order line** — using the builder's own `menu_items` row (its `id`, `name`, the packaging cost of its own `packaging_profile_id`) — carrying the **real** `unit_price`/`line_revenue` (from `item.price_at_purchase`/`item.line_total`) and `food_cost: 0` (the builder product itself has no recipe; its food cost lives entirely in its child selections, which is already computed correctly today). The existing per-selection child rows stay exactly as they are now — cost and quantity only, `unit_price`/`line_revenue` at 0 — so nothing double-counts. Once the parent row exists, the existing `revenue = saleItems.reduce(sum + item.line_revenue)` calculation (`js/admin-orders.js:927-930`) will naturally include the box's price without any other change, and `sales.revenue` and `sales.profit` will agree again. This is a source-code change and is not made in this audit-only pass — flagged here as the specific, owner-approved design for Phase 1.
 
 ## 6. `orders.subtotal` vs `sales.revenue`/`sale_items.line_total` — same word, different meanings
 
@@ -104,12 +138,32 @@ This is a single root cause with a wide, mechanically traceable blast radius acr
 - Deleting a recipe (`deleteRecipe`) has the same gap against `menu_items.recipe_id` and `recipe_components.component_recipe_id`.
 - Renaming an ingredient or recipe is safe for cost math (everything is joined by ID, not name) but `sale_items.item_name`/`order_items.item_name` are copied at the time of the order, so historical order/sale displays correctly keep the old name — this is good, intentional behavior.
 
-## 10. Summary table — what to ask the owner
+## 10. Summary table — resolved vs. still open (updated 2026-08-17)
 
-| # | Conflict | Where | Needs owner decision because |
+| # | Item | Where | Status |
 |---|---|---|---|
-| 1 | Recipe cost ignores sub-recipes on the Inventory tab but (presumably) not in `recipe_costs` | §2 | Can't inspect the DB view's formula from this repo |
-| 2 | Packaging cost lookup casts to `Number()` in Menu but not elsewhere | §3 | Can't inspect the actual column type of `packaging_profiles.id` from this repo |
-| 3 | Site-wide currency should be EUR or USD | §4 | Business decision, not inferable from code alone |
-| 4 | Builder-box revenue/profit gap | §5 | Confirms the bug, but the *correct* fix (insert a synthetic "box" `sale_items` row? attribute box revenue proportionally to selections? something else?) is a product decision |
-| 5 | Whether discounts/taxes/refunds should exist at all | §9 | Not present today; needs to be a deliberate scope decision, not silently added during a "repair" pass |
+| 1 | Recipe cost ignores sub-recipes on the Inventory tab but not in `recipe_costs` | §2 | **Resolved.** DB-verified: `recipe_costs` is correct; only the Inventory tab's own display is wrong (29–47% understated for recipes with components), and it doesn't reach Menu/Sales/Analytics. |
+| 2 | Packaging cost lookup casts to `Number()` in Menu but not elsewhere | §3 | **Resolved — not a live bug.** DB-verified `packaging_profiles.id` is `bigint`, not UUID; the cast is a harmless no-op. Still worth standardizing for consistency. |
+| 3 | Site-wide currency should be EUR or USD | §4, §11 | **Resolved by owner.** Three-way rule confirmed: customers always EUR; Inventory/Packaging need a *currency field* (purchases are genuinely mixed USD/EUR), not a blanket relabel; Sales/Analytics should report in USD, converted from the underlying EUR amounts. |
+| 4 | Builder-box revenue/profit gap | §5 | **Confirmed empirically** (18/34 sales, €335 missing revenue) and **fix design confirmed by owner**: parent line carries all revenue, child lines carry cost/quantity only. |
+| 5 | Whether discounts/taxes/refunds/waste should exist at all | §9 | **Resolved by owner: none exist, none are wanted in this phase.** Confirmed absent from the schema too — no code or database change needed here. |
+
+New items opened by database verification (not visible from source code alone) are in §12 below and in `03-bug-register.md` BUG-16 through BUG-20.
+
+## 11. Currency conversion design — evaluation of the owner's proposed approach
+
+The owner proposed:
+> Preserve the original customer total in EUR. Capture the EUR-to-USD exchange rate when the sale is completed. Preserve the resulting USD reporting value. Never recalculate historical sales using today's exchange rate.
+
+**This is the correct design**, and it's consistent with the one thing this codebase already does well: `sale_items` already freezes `unit_price`/`food_cost`/`packaging_cost` at completion time so a later recipe or price change can't retroactively alter a historical sale (see §9 of the original audit, confirmed still true — the database has no trigger that would ever re-touch a `sales`/`sale_items` row after insert). Adding a frozen exchange rate is the same pattern applied to currency, not a new one.
+
+**What's needed to build it (schema-only sketch, not implemented in this audit-only pass):**
+- `sales` needs new columns: an `exchange_rate` (EUR→USD, numeric, captured once at the moment `createSaleFromOrder()` runs) and either (a) stored `revenue_usd`/`total_cost_usd`/`profit_usd` columns computed and written at that same moment, or (b) just the rate, with USD values computed on read as `revenue * exchange_rate`. **(a) is recommended** — it means Sales/Analytics never need to know the conversion happened, they just read a USD column directly, and it protects against the conversion formula ever changing out from under historical data (the same reasoning that makes freezing `sale_items.food_cost` correct instead of recomputing it from current ingredient prices).
+- The exchange rate itself needs a source. Nothing in this codebase currently fetches one (no exchange-rate API call exists anywhere in the repo). This has to be a deliberate decision: a manually-entered rate the owner updates periodically, or an automated fetch at sale-completion time. Not something this audit can decide — flagged as an open question below.
+- `orders`/`order_items` do **not** need any currency change — they should stay EUR-only, since the customer-facing side of the business is correctly, entirely EUR today and the owner confirmed that's correct.
+
+## 12. Remaining uncertainty after database verification
+
+- **The exchange-rate source is not yet decided.** Manual entry vs. an automated FX API are both reasonable; this is a product decision, not something inferable from the existing code (there is no precedent for it anywhere in this repo).
+- **Whether "today's rate" should ever be used for *unconfirmed/in-progress* orders** (i.e., is there a live USD-equivalent shown anywhere before a sale completes?) wasn't specified by the owner and isn't implied by the current code — flagged as a question for Phase 1 scoping, not answered here.
+- Everything else opened by this pass of the audit is either fully resolved above or listed as a database/security finding in `01-architecture-and-data-flow.md` §9 and `03-bug-register.md`.

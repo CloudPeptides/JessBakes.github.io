@@ -19,10 +19,11 @@ All two "libraries" the app depends on (`@supabase/supabase-js@2`, Chart.js) are
 | `node --check` (syntax-only parse, no execution) against every file in `js/*.js` | **All pass except `js/admin.js`**, which fails with a syntax error at line 225 (see `03-bug-register.md` BUG-07). This file is currently unreferenced by any HTML page, so the error has no live effect today. |
 | Verified every local `<script src>` / `<link href>` in every HTML file resolves to a real file | **One broken reference found:** `admin/production.html` links `css/production.css`, which does not exist (BUG-09). |
 | Attempted `npm`/build/lint/test commands | None exist to run — confirmed by absence of `package.json` and any config file. |
-| Live Supabase schema/RLS/views/RPC inspection | **Not possible from this environment/repo.** Everything reported about `recipe_costs`, `packaging_profile_costs`, `prepare_new_ballot()`, and `complete_production()` is inferred from how the client code calls them, not verified against the actual database. |
+| Live Supabase schema/RLS/views/RPC inspection | **Completed 2026-08-17**, via the Supabase MCP tools connected to this project (read-only: `list_tables`, `information_schema.views`/`triggers`/`role_table_grants`, `pg_proc`/`pg_get_functiondef`, `pg_policies`, `pg_constraint`, plus the security and performance advisors). Findings folded into `01-architecture-and-data-flow.md` §8, `02-calculation-audit.md`, and `03-bug-register.md` (BUG-16 through BUG-21). No writes, migrations, policy changes, or function deployments were made. |
+| Supabase security & performance advisors (`get_advisors`) | **Run 2026-08-17.** Surfaced BUG-16 (RLS disabled on `orders`/`order_items`), BUG-17 (two `SECURITY DEFINER` RPCs callable by `anon`), BUG-18 (cost-data views readable by `anon`), plus lower-priority hardening/performance notes (BUG-21). Per Supabase's own guidance, this should be run again after any schema change, and ideally on a recurring basis regardless — it is a genuine, low-effort diagnostic this project should use going forward, not a one-time audit artifact. |
 | Browser rendering / visual QA / accessibility scan | **Not performed.** This audit is a static code review; no page was rendered in a browser, so CSS layout correctness, color contrast, and actual mobile behavior are not verified — only inferred from the source. |
 
-No dependencies were installed, removed, or upgraded to produce any of the above, per the phase-0 constraints.
+No dependencies were installed, removed, or upgraded, and no database writes/migrations/policy changes were made, to produce any of the above, per the phase-0 (and this pass's inspect-only) constraints.
 
 ## 3. Missing tests that matter most
 
