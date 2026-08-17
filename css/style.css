@@ -432,6 +432,11 @@ h3 {
   color: var(--text);
 }
 
+.footer .primary-btn,
+.footer .order-btn {
+  color:#fff8ef;
+}
+
 .footer-bottom {
   border-top: 1px solid rgba(90,23,15,.15);
   padding:18px 22px;

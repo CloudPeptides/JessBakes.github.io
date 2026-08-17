@@ -10,7 +10,7 @@ async function requireAuth() {
 
     if (!session) {
 
-        window.location.href = "admin.html";
+        window.location.href = "../admin.html";
 
         return null;
 
@@ -28,7 +28,7 @@ async function logout() {
 
     await supabaseClient.auth.signOut();
 
-    window.location.href = "admin.html";
+    window.location.href = "../admin.html";
 
 }
 

@@ -121,7 +121,9 @@
         const groupsHtml = NAV_GROUPS.map(group => `
             <div class="sidebar-nav-group">
                 <p class="sidebar-nav-group-label">${escapeHtml(group.label)}</p>
-                ${group.items.map(item => renderNavLink(item, current)).join("")}
+                <div class="sidebar-nav-group-links">
+                    ${group.items.map(item => renderNavLink(item, current)).join("")}
+                </div>
             </div>
         `).join("");
 
