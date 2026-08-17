@@ -61,23 +61,428 @@
 
         </header>
 
-        <section class="dashboard-section">
+        <section class="overview-grid" id="galleryStats" aria-label="Gallery totals">
 
-            <h2>
+            <article class="overview-card">
+                <span class="overview-label">Total Photos</span>
+                <h2 id="statTotalPhotos">0</h2>
+            </article>
 
-                Coming Soon
+            <article class="overview-card">
+                <span class="overview-label">Published</span>
+                <h2 id="statPublished">0</h2>
+            </article>
 
-            </h2>
+            <article class="overview-card">
+                <span class="overview-label">Drafts</span>
+                <h2 id="statDrafts">0</h2>
+            </article>
 
-            <p>
+            <article class="overview-card">
+                <span class="overview-label">Featured</span>
+                <h2 id="statFeatured">0</h2>
+            </article>
 
-                Upload product photos, choose featured images, organize albums, and manage website photography.
+        </section>
 
-            </p>
+        <div class="gallery-toolbar">
+
+            <div class="gallery-toolbar-actions">
+
+                <button
+                    type="button"
+                    class="primary-btn"
+                    onclick="openUploadModal()">
+
+                    + Upload Photos
+
+                </button>
+
+                <button
+                    type="button"
+                    class="secondary-btn"
+                    onclick="openAlbumManagerModal()">
+
+                    Manage Albums
+
+                </button>
+
+            </div>
+
+        </div>
+
+        <div class="gallery-filters-card">
+
+            <input
+                type="search"
+                id="gallerySearch"
+                class="gallery-search"
+                placeholder="Search photos by title, caption, or filename..."
+                aria-label="Search photos"
+                oninput="onGalleryFiltersChanged()">
+
+            <div class="gallery-status-tabs" role="tablist" aria-label="Filter by status">
+
+                <button type="button" class="gallery-status-tab active" data-status="all" onclick="setGalleryStatusFilter('all')">All</button>
+                <button type="button" class="gallery-status-tab" data-status="published" onclick="setGalleryStatusFilter('published')">Published</button>
+                <button type="button" class="gallery-status-tab" data-status="draft" onclick="setGalleryStatusFilter('draft')">Draft</button>
+
+            </div>
+
+            <label class="gallery-featured-toggle">
+
+                <input
+                    type="checkbox"
+                    id="galleryFeaturedFilter"
+                    onchange="onGalleryFiltersChanged()">
+
+                Featured only
+
+            </label>
+
+            <select
+                id="gallerySort"
+                aria-label="Sort photos"
+                onchange="onGalleryFiltersChanged()">
+
+                <option value="newest">Newest first</option>
+                <option value="oldest">Oldest first</option>
+                <option value="title">Title (A-Z)</option>
+                <option value="display_order">Display order</option>
+
+            </select>
+
+        </div>
+
+        <div class="gallery-album-chips" id="galleryAlbumChips" aria-label="Filter by album"></div>
+
+        <div class="gallery-bulk-bar" id="galleryBulkBar" style="display:none;" role="region" aria-label="Bulk actions">
+
+            <strong id="galleryBulkCount">0 selected</strong>
+
+            <div class="gallery-bulk-actions">
+
+                <button type="button" class="gallery-bulk-btn" onclick="bulkSetPublished(true)">Publish</button>
+                <button type="button" class="gallery-bulk-btn" onclick="bulkSetPublished(false)">Unpublish</button>
+
+                <select id="galleryBulkAlbumSelect" aria-label="Move selected photos to album"></select>
+                <button type="button" class="gallery-bulk-btn" onclick="bulkMoveToAlbum()">Move to Album</button>
+
+                <button type="button" class="gallery-bulk-btn danger" onclick="bulkDeletePhotos()">Delete</button>
+                <button type="button" class="gallery-bulk-btn" onclick="clearGallerySelection()">Clear</button>
+
+            </div>
+
+        </div>
+
+        <section
+            class="gallery-grid"
+            id="galleryGrid"
+            aria-live="polite">
+
+            <div class="gallery-loading">Loading photos...</div>
 
         </section>
 
     </main>
+
+</div>
+
+<!-- ==========================================
+     UPLOAD MODAL
+     ========================================== -->
+
+<div class="modal-overlay" id="uploadModal" style="display:none;">
+
+    <div class="modal-card">
+
+        <div class="modal-header">
+
+            <h2>Upload Photos</h2>
+
+            <button
+                type="button"
+                class="modal-close"
+                onclick="closeUploadModal()">
+
+                ✕
+
+            </button>
+
+        </div>
+
+        <div class="modal-body">
+
+            <div
+                class="gallery-dropzone"
+                id="galleryDropzone"
+                tabindex="0"
+                role="button"
+                aria-label="Choose photos to upload, or drag and drop them here"
+                onclick="document.getElementById('galleryFileInput').click()"
+                onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();document.getElementById('galleryFileInput').click();}">
+
+                <h3>Drag &amp; drop photos here</h3>
+                <p>or click to choose files &middot; JPG, PNG, or WebP &middot; up to 25 MB each</p>
+
+                <input
+                    type="file"
+                    id="galleryFileInput"
+                    accept="image/jpeg,image/png,image/webp"
+                    multiple>
+
+            </div>
+
+            <label for="uploadAlbumSelect">Add to album (optional)</label>
+            <select id="uploadAlbumSelect"></select>
+
+            <div id="galleryUploadList" class="gallery-upload-list"></div>
+
+        </div>
+
+        <div class="modal-footer">
+
+            <button
+                type="button"
+                class="secondary-btn"
+                onclick="closeUploadModal()">
+
+                Done
+
+            </button>
+
+        </div>
+
+    </div>
+
+</div>
+
+<!-- ==========================================
+     EDIT PHOTO MODAL
+     ========================================== -->
+
+<div class="modal-overlay" id="photoEditModal" style="display:none;">
+
+    <div class="modal-card">
+
+        <div class="modal-header">
+
+            <h2 id="photoEditModalTitle">Edit Photo</h2>
+
+            <button
+                type="button"
+                class="modal-close"
+                onclick="closePhotoEditModal()">
+
+                ✕
+
+            </button>
+
+        </div>
+
+        <div class="modal-body">
+
+            <input type="hidden" id="editPhotoId">
+
+            <img id="editPhotoPreview" class="gallery-edit-preview" alt="">
+
+            <label for="editPhotoTitle">Title</label>
+            <input type="text" id="editPhotoTitle" maxlength="120">
+
+            <label for="editPhotoAltText">Alt Text</label>
+            <input type="text" id="editPhotoAltText" maxlength="200" placeholder="Describe the photo for screen readers">
+            <p class="gallery-field-help">Required before this photo can be published.</p>
+
+            <label for="editPhotoCaption">Caption (optional)</label>
+            <textarea id="editPhotoCaption" rows="3"></textarea>
+
+            <label for="editPhotoAlbum">Album</label>
+            <select id="editPhotoAlbum"></select>
+
+            <div class="modal-checkboxes">
+
+                <label>
+                    <input type="checkbox" id="editPhotoPublished">
+                    Published
+                </label>
+
+                <label>
+                    <input type="checkbox" id="editPhotoFeatured">
+                    Featured
+                </label>
+
+            </div>
+
+            <p id="editPhotoMeta" class="gallery-field-help"></p>
+
+        </div>
+
+        <div class="modal-footer">
+
+            <button
+                type="button"
+                class="delete-btn"
+                onclick="deletePhotoFromEditModal()">
+
+                Delete Photo
+
+            </button>
+
+            <button
+                type="button"
+                class="secondary-btn"
+                onclick="closePhotoEditModal()">
+
+                Cancel
+
+            </button>
+
+            <button
+                type="button"
+                class="primary-btn"
+                onclick="savePhotoEdit()">
+
+                Save Changes
+
+            </button>
+
+        </div>
+
+    </div>
+
+</div>
+
+<!-- ==========================================
+     ALBUM MANAGER MODAL
+     ========================================== -->
+
+<div class="modal-overlay" id="albumManagerModal" style="display:none;">
+
+    <div class="modal-card">
+
+        <div class="modal-header">
+
+            <h2>Manage Albums</h2>
+
+            <button
+                type="button"
+                class="modal-close"
+                onclick="closeAlbumManagerModal()">
+
+                ✕
+
+            </button>
+
+        </div>
+
+        <div class="modal-body">
+
+            <div class="gallery-album-new-row">
+
+                <input
+                    type="text"
+                    id="newAlbumName"
+                    placeholder="New album name"
+                    aria-label="New album name">
+
+                <button
+                    type="button"
+                    class="add-option-btn"
+                    onclick="createAlbum()">
+
+                    + Add Album
+
+                </button>
+
+            </div>
+
+            <div id="albumManagerList"></div>
+
+        </div>
+
+        <div class="modal-footer">
+
+            <button
+                type="button"
+                class="secondary-btn"
+                onclick="closeAlbumManagerModal()">
+
+                Close
+
+            </button>
+
+        </div>
+
+    </div>
+
+</div>
+
+<!-- ==========================================
+     MOVE-PHOTOS-BEFORE-ALBUM-DELETE MODAL
+     ========================================== -->
+
+<div class="modal-overlay" id="albumDeleteModal" style="display:none;">
+
+    <div class="modal-card">
+
+        <div class="modal-header">
+
+            <h2>Delete Album</h2>
+
+            <button
+                type="button"
+                class="modal-close"
+                onclick="closeAlbumDeleteModal()">
+
+                ✕
+
+            </button>
+
+        </div>
+
+        <div class="modal-body">
+
+            <input type="hidden" id="albumDeleteId">
+
+            <p id="albumDeleteMessage"></p>
+
+            <label for="albumDeleteMoveTarget">Move its photos to</label>
+            <select id="albumDeleteMoveTarget"></select>
+
+        </div>
+
+        <div class="modal-footer">
+
+            <button
+                type="button"
+                class="delete-btn"
+                onclick="confirmAlbumDeletePhotosToo()">
+
+                Delete Photos Too
+
+            </button>
+
+            <button
+                type="button"
+                class="secondary-btn"
+                onclick="closeAlbumDeleteModal()">
+
+                Cancel
+
+            </button>
+
+            <button
+                type="button"
+                class="primary-btn"
+                onclick="confirmAlbumDeleteMovePhotos()">
+
+                Move Photos &amp; Delete Album
+
+            </button>
+
+        </div>
+
+    </div>
 
 </div>
 
@@ -90,8 +495,8 @@
 
 <script src="../js/layout.js"></script>
 
+<script src="../js/gallery-shared.js"></script>
 <script src="../js/admin-gallery.js"></script>
 
 </body>
-
 </html>

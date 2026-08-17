@@ -3002,3 +3002,548 @@ MENU CARD REDESIGN
     font-size: 14px;
 }
 }
+
+/* ==========================================
+   GALLERY
+   ==========================================
+   Reuses the shared .modal-*, .primary-btn/.secondary-btn/.delete-btn/
+   .edit-option-btn, .overview-grid/.overview-card, and .featured-pill/
+   .disabled-pill primitives already used across the other admin pages
+   instead of duplicating them -- only genuinely new structural pieces
+   (grid, dropzone, upload list, bulk bar, album chips) get new classes.
+   ========================================== */
+
+.gallery-toolbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 16px;
+    flex-wrap: wrap;
+    margin-bottom: 24px;
+}
+
+.gallery-toolbar-actions {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.gallery-filters-card {
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 20px;
+    padding: 20px 22px;
+    margin-bottom: 24px;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 14px;
+}
+
+.gallery-search {
+    flex: 1 1 220px;
+    min-width: 0;
+    border: 1px solid var(--line);
+    background: #faf7f3;
+    border-radius: 12px;
+    padding: 12px 16px;
+    font: inherit;
+}
+
+.gallery-filters-card select {
+    border: 1px solid var(--line);
+    background: #faf7f3;
+    border-radius: 12px;
+    padding: 11px 14px;
+    font: inherit;
+    color: var(--text);
+}
+
+.gallery-status-tabs {
+    display: flex;
+    gap: 6px;
+    background: #f1ebe5;
+    border-radius: 12px;
+    padding: 4px;
+}
+
+.gallery-status-tab {
+    border: none;
+    background: transparent;
+    border-radius: 9px;
+    padding: 8px 14px;
+    font: inherit;
+    font-size: .85rem;
+    font-weight: 600;
+    color: #7d6c62;
+    cursor: pointer;
+}
+
+.gallery-status-tab.active {
+    background: #fff;
+    color: var(--accent);
+    box-shadow: 0 2px 6px rgba(40,18,10,.1);
+}
+
+.gallery-featured-toggle {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: .9rem;
+    font-weight: 600;
+    color: var(--text);
+    cursor: pointer;
+    user-select: none;
+}
+
+.gallery-featured-toggle input {
+    width: 17px;
+    height: 17px;
+    accent-color: var(--accent);
+}
+
+/* ---------- Album chips ---------- */
+
+.gallery-album-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 24px;
+}
+
+.gallery-album-chip {
+    border: 1px solid var(--line);
+    background: #fff;
+    border-radius: 999px;
+    padding: 8px 16px;
+    font-size: .85rem;
+    font-weight: 600;
+    color: var(--text);
+    cursor: pointer;
+}
+
+.gallery-album-chip.active {
+    background: var(--accent);
+    color: #fff;
+    border-color: var(--accent);
+}
+
+.gallery-album-chip-manage {
+    border: 1px dashed #c8a999;
+    background: transparent;
+    color: var(--accent);
+}
+
+/* ---------- Bulk selection bar ---------- */
+
+.gallery-bulk-bar {
+    position: sticky;
+    top: 12px;
+    z-index: 20;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    flex-wrap: wrap;
+    background: #2d1712;
+    color: #fff;
+    border-radius: 16px;
+    padding: 14px 20px;
+    margin-bottom: 20px;
+    box-shadow: 0 14px 34px rgba(20,8,4,.28);
+}
+
+.gallery-bulk-bar strong {
+    font-weight: 700;
+}
+
+.gallery-bulk-actions {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    align-items: center;
+}
+
+.gallery-bulk-actions select {
+    border-radius: 10px;
+    border: none;
+    padding: 9px 12px;
+    font: inherit;
+}
+
+.gallery-bulk-btn {
+    border: none;
+    border-radius: 10px;
+    padding: 9px 16px;
+    font: inherit;
+    font-weight: 600;
+    cursor: pointer;
+    background: rgba(255,255,255,.14);
+    color: #fff;
+}
+
+.gallery-bulk-btn:hover {
+    background: rgba(255,255,255,.24);
+}
+
+.gallery-bulk-btn.danger {
+    background: #B83A3A;
+}
+
+.gallery-bulk-btn.danger:hover {
+    background: #9d2f2f;
+}
+
+/* ---------- Photo grid ---------- */
+
+.gallery-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 20px;
+}
+
+.gallery-card {
+    position: relative;
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 18px;
+    overflow: hidden;
+    box-shadow: 0 8px 22px rgba(40,18,10,.05);
+    display: flex;
+    flex-direction: column;
+}
+
+.gallery-card-select {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    z-index: 2;
+    width: 20px;
+    height: 20px;
+    accent-color: var(--accent);
+    cursor: pointer;
+}
+
+.gallery-card-thumb {
+    position: relative;
+    aspect-ratio: 4 / 3;
+    background: #f1ebe5;
+    overflow: hidden;
+}
+
+.gallery-card-thumb img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+
+.gallery-card-thumb-placeholder {
+    width: 100%;
+    height: 100%;
+    display: grid;
+    place-items: center;
+    color: #b3a196;
+    font-size: 2rem;
+}
+
+.gallery-card-badges {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    align-items: flex-end;
+}
+
+.gallery-pill {
+    padding: 4px 10px;
+    border-radius: 999px;
+    font-size: .68rem;
+    font-weight: 700;
+    letter-spacing: .04em;
+    text-transform: uppercase;
+}
+
+.gallery-pill-published {
+    background: #e8f5ea;
+    color: #22663b;
+}
+
+.gallery-pill-draft {
+    background: #ece6e2;
+    color: #6b5b52;
+}
+
+.gallery-card-body {
+    padding: 14px 16px 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    flex: 1;
+}
+
+.gallery-card-title {
+    margin: 0;
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--text);
+    overflow-wrap: break-word;
+}
+
+.gallery-card-meta {
+    margin: 0;
+    font-size: .78rem;
+    color: #8d786b;
+}
+
+.gallery-card-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: auto;
+    padding-top: 10px;
+}
+
+.gallery-move-btn {
+    border: 1px solid var(--line);
+    background: #fff;
+    border-radius: 8px;
+    width: 32px;
+    height: 32px;
+    cursor: pointer;
+    font-size: .9rem;
+    color: var(--text);
+}
+
+.gallery-move-btn:disabled {
+    opacity: .35;
+    cursor: not-allowed;
+}
+
+/* ---------- Empty / loading states ---------- */
+
+.gallery-empty, .gallery-loading {
+    grid-column: 1 / -1;
+    text-align: center;
+    padding: 60px 20px;
+    color: #8d786b;
+    background: var(--card);
+    border: 1px dashed var(--line);
+    border-radius: 18px;
+}
+
+.gallery-empty h3 {
+    color: var(--text);
+    margin-bottom: 8px;
+}
+
+/* ---------- Upload dropzone ---------- */
+
+.gallery-dropzone {
+    border: 2px dashed #c8a999;
+    border-radius: 20px;
+    padding: 40px 20px;
+    text-align: center;
+    background: #fbf6f1;
+    cursor: pointer;
+    transition: background .2s ease, border-color .2s ease;
+}
+
+.gallery-dropzone.drag-active {
+    background: #f3e3d8;
+    border-color: var(--accent);
+}
+
+.gallery-dropzone h3 {
+    margin: 0 0 6px;
+    color: var(--text);
+}
+
+.gallery-dropzone p {
+    margin: 0;
+    color: #8d786b;
+    font-size: .9rem;
+}
+
+.gallery-dropzone input[type="file"] {
+    display: none;
+}
+
+.gallery-upload-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin-top: 18px;
+    max-height: 320px;
+    overflow-y: auto;
+}
+
+.gallery-upload-item {
+    display: grid;
+    grid-template-columns: 56px 1fr auto;
+    align-items: center;
+    gap: 12px;
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    padding: 10px 14px;
+}
+
+.gallery-upload-thumb {
+    width: 56px;
+    height: 56px;
+    border-radius: 10px;
+    object-fit: cover;
+    background: #f1ebe5;
+}
+
+.gallery-upload-info {
+    min-width: 0;
+}
+
+.gallery-upload-name {
+    font-weight: 600;
+    font-size: .88rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.gallery-upload-status {
+    font-size: .78rem;
+    color: #8d786b;
+}
+
+.gallery-upload-status.error {
+    color: #b22626;
+}
+
+.gallery-upload-status.success {
+    color: #22663b;
+}
+
+.gallery-upload-steps {
+    display: flex;
+    gap: 4px;
+    margin-top: 6px;
+}
+
+.gallery-upload-steps span {
+    width: 22px;
+    height: 4px;
+    border-radius: 999px;
+    background: #ece6e2;
+}
+
+.gallery-upload-steps span.done {
+    background: #2F7A43;
+}
+
+.gallery-upload-steps span.active {
+    background: var(--accent);
+    animation: gallery-pulse 1s ease-in-out infinite;
+}
+
+.gallery-upload-steps span.failed {
+    background: #B83A3A;
+}
+
+@keyframes gallery-pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: .4; }
+}
+
+/* ---------- Edit panel extras ---------- */
+
+.gallery-edit-preview {
+    width: 100%;
+    max-height: 220px;
+    object-fit: contain;
+    border-radius: 14px;
+    background: #f1ebe5;
+    margin-bottom: 4px;
+}
+
+.gallery-field-help {
+    margin: -4px 0 0;
+    font-size: .78rem;
+    color: #8d786b;
+}
+
+.gallery-field-help.warn {
+    color: #b22626;
+}
+
+/* ---------- Album manager modal ---------- */
+
+.gallery-album-row {
+    display: grid;
+    grid-template-columns: 1fr auto auto;
+    gap: 8px;
+    align-items: center;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--line);
+}
+
+.gallery-album-row:last-child {
+    border-bottom: none;
+}
+
+.gallery-album-row input[type="text"] {
+    width: 100%;
+    padding: 9px 12px;
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    font: inherit;
+}
+
+.gallery-album-new-row {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 16px;
+}
+
+.gallery-album-new-row input {
+    flex: 1;
+    padding: 11px 14px;
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    font: inherit;
+}
+
+@media (max-width: 700px) {
+    .gallery-grid {
+        grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+        gap: 14px;
+    }
+
+    .gallery-toolbar {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .gallery-toolbar-actions {
+        justify-content: stretch;
+    }
+
+    .gallery-toolbar-actions .primary-btn,
+    .gallery-toolbar-actions .secondary-btn {
+        flex: 1;
+    }
+
+    .gallery-filters-card {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .gallery-bulk-bar {
+        flex-direction: column;
+        align-items: stretch;
+        top: 8px;
+    }
+
+    .gallery-album-row {
+        grid-template-columns: 1fr;
+    }
+}
