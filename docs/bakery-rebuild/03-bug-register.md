@@ -89,6 +89,20 @@ Confidence: **High** (directly traced in code, and DB-verified where applicable)
 
 ---
 
+### BUG-22 — Completed orders can still be edited, letting live `orders`/`order_items` diverge from the frozen `sales`/`sale_items` record
+- **Affected pages:** Orders (`admin-orders.js`'s manual order editor); downstream effect on Sales/Analytics for any sale whose order is later edited
+- **Files/functions:** `js/admin-orders.js` `saveManualOrder()` (edit path) — deletes and re-inserts `order_items` for `editingOrderId` with no check on the order's `status`
+- **Discovered:** 2026-08-17, during Phase 1A historical-data validation, while investigating two sales whose current `order_items` no longer matched their stored `sales.revenue`.
+- **Current behavior, confirmed with direct evidence (not inferred):** Two real orders (`status: "completed"` in both cases) now have `orders.subtotal` reduced to €30.00 and €15.00 respectively — matching their *current*, shorter `order_items` list. Their corresponding `sales`/`sale_items` rows, frozen at original completion, still correctly total €45.00 and €30.00, and each `sale_items` snapshot still contains the exact line (a "6 Pack" cookie item, €15.00) that is now missing from the live order. There is no `status` guard anywhere in the edit flow preventing this — an admin can open **Edit** on any order, regardless of status, and `saveManualOrder()` will delete and re-insert its `order_items` and overwrite `orders.subtotal` unconditionally.
+- **Expected behavior:** Editing an order that is already `completed` (i.e., has a linked `sales` row) should be blocked, or at minimum warned against, since the financial record for that sale has already been finalized and frozen elsewhere in the schema.
+- **Severity:** Medium — the frozen `sales`/`sale_items` record itself stays correct (this is not a financial-accuracy bug the way BUG-01 was), but it does mean the live `orders`/`order_items` view of a completed order can silently stop matching the sale that was actually recorded, which is confusing for anyone reviewing order history and would compound if it happens more than the two known instances.
+- **Confidence:** High for these two confirmed instances (direct evidence: `orders.subtotal` vs. frozen `sale_items` sum, both `status: "completed"`); the general "no status guard" mechanism is confirmed by reading `saveManualOrder()` directly.
+- **Dependencies:** None technical.
+- **Do not "fix" the two known instances by editing `sales`/`sale_items`** — those records are already correct and must be left exactly as they are (see `09-bug01-regression-report.md` §6c). Only the *edit-guard* itself needs fixing, for future orders.
+- **Recommended phase:** Phase 2.
+
+---
+
 ### BUG-01 — Builder ("Mix & Match") sales show correct revenue but understated profit/margin
 - **Affected pages:** Sales, Analytics (both read the `sales`/`sale_items` tables this bug corrupts)
 - **Files/functions:** `js/admin-orders.js:648-958` `createSaleFromOrder()`
@@ -98,7 +112,8 @@ Confidence: **High** (directly traced in code, and DB-verified where applicable)
 - **Severity:** Critical — directly misstates gross profit/margin on the two pages whose entire purpose is showing the owner accurate profit, and is already actively affecting the majority of recorded sales history.
 - **Confidence:** High — traced in code **and** empirically confirmed against every affected row in production.
 - **Dependencies:** None remaining — fix design is confirmed by the owner.
-- **Recommended phase:** Phase 1 (core money-correctness fixes) — highest priority within Phase 1.
+- **Status (Phase 1A, 2026-08-17): code fix shipped, historical data not yet backfilled.** `js/sale-calculations.js` (new, shared, tested) plus a fixed `createSaleFromOrder()` in `js/admin-orders.js` now prevent this from happening to any order completed from here forward — verified by an 11-test suite (`tests/sale-calculations.test.js`, `node --test`, all passing) covering standard orders, single and multiple builder boxes, mixed orders, differing per-selection costs, malformed selection data, zero-revenue edge cases, and confirming Sales/Analytics can never independently drift again. **This code change does not retroactively correct the 18 already-affected historical sales** — Sales/Analytics only read already-stored `sales`/`sale_items` values, never recompute them, so those 18 rows display exactly as before until a separate backfill is applied. The verified, precise historical correction is **€335.00 of profit**, computed entirely from each sale's own already-correct stored `revenue`/`total_cost` (not from today's ingredient costs) — full detail, per-sale numbers, and the exact backfill plan (not yet applied) in `08-security-repair-plan.md`-adjacent `09-bug01-regression-report.md`. See also BUG-22, a separate, unrelated defect discovered while validating this fix.
+- **Recommended phase:** Phase 1 code fix — **done**. Historical backfill — Phase 1B, only after the code fix above is deployed and verified live.
 
 ---
 
@@ -275,7 +290,8 @@ Confidence: **High** (directly traced in code, and DB-verified where applicable)
 | BUG-16 | RLS disabled on `orders`/`order_items` — customer data publicly exposed | **RESOLVED** (was Critical) | High (fixed & verified live) | Done |
 | BUG-17 | `complete_production`/`end_current_ballot` callable by anyone, unauthenticated | **RESOLVED** (was High) | High (fixed & verified live) | Done |
 | BUG-18 | Internal cost data (`recipe_costs`/`packaging_profile_costs`) publicly queryable | **RESOLVED** (was High) | High (fixed & verified live) | Done |
-| BUG-01 | Builder sales: revenue right, profit wrong — confirmed on 18/34 sales, €335 missing | Critical | High (empirically confirmed) | 1 |
+| BUG-01 | Builder sales: revenue right, profit wrong — confirmed on 18/34 sales, €335 correction verified | **Code fix DONE (Phase 1A)**; historical backfill pending | High (verified live + 11/11 tests) | 1A done / 1B pending |
+| BUG-22 | Completed orders can still be edited; live order data can drift from the frozen sale record | Medium | High (2 confirmed instances) | 2 |
 | BUG-02 | Editing an order with a builder box deletes it | High | High | 1–2 |
 | BUG-19 | No currency/exchange-rate columns exist | Medium | High | 1 |
 | BUG-06 | Currency needs 3 different treatments (customer EUR, inventory per-purchase, reporting USD) | Medium | High | 1 (schema) / 2 (UI) |
