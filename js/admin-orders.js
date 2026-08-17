@@ -756,143 +756,41 @@ async function createSaleFromOrder(orderId) {
 
     }
 
-    const menuMap =
-        new Map(
-            menuItems.map(item => [
-                item.id,
-                item
-            ])
-        );
+    // Shared, pure, tested calculation module (js/sale-calculations.js) —
+    // see tests/sale-calculations.test.js. This is the BUG-01 fix: a
+    // builder ("Mix & Match") order line now produces a parent line that
+    // owns its full revenue plus one child line per selection carrying
+    // cost/quantity only, so the box's price is counted exactly once
+    // instead of never. Standard order lines are unaffected.
+    const referenceData =
+        SaleCalculations.buildReferenceData(menuItems, recipeCosts, packagingCosts);
 
-    const recipeCostMap =
-        new Map(
-            recipeCosts.map(recipe => [
-                recipe.id,
-                recipe
-            ])
-        );
+    const lines =
+        SaleCalculations.buildSaleFromOrder(items, referenceData);
 
-    const packagingCostMap =
-        new Map(
-            packagingCosts.map(profile => [
-                profile.id,
-                profile
-            ])
-        );
+    const saleItems = lines.map(line => ({
 
-const saleItems = [];
+        sale_id: sale.id,
 
-for (const item of items) {
+        menu_item_id: line.menu_item_id,
 
-    // ---------- STANDARD PRODUCTS ----------
+        item_name: line.item_name,
 
-    if (!item.builder_details) {
+        quantity: line.quantity,
 
-        const menuItem =
-            menuMap.get(item.menu_item_id);
+        unit_price: line.unit_price,
 
-        const recipeCost =
-            recipeCostMap.get(menuItem?.recipe_id);
+        food_cost: line.food_cost,
 
-        const packagingCost =
-            packagingCostMap.get(menuItem?.packaging_profile_id);
+        packaging_cost: line.packaging_cost,
 
-        const foodCost =
-            Number(recipeCost?.cost_per_yield_item || 0) *
-            Number(menuItem?.recipe_units_used || 1);
+        total_cost: line.total_cost,
 
-        const packaging =
-            Number(packagingCost?.packaging_cost || 0);
+        line_revenue: line.line_revenue,
 
-        const totalCost =
-            foodCost + packaging;
+        line_profit: line.line_profit
 
-        saleItems.push({
-
-            sale_id: sale.id,
-
-            menu_item_id: item.menu_item_id,
-
-            item_name: item.item_name,
-
-            quantity: item.quantity,
-
-            unit_price: item.price_at_purchase,
-
-            food_cost: foodCost,
-
-            packaging_cost: packaging,
-
-            total_cost: totalCost,
-
-            line_revenue: Number(item.line_total),
-
-            line_profit:
-                Number(item.line_total) -
-                (totalCost * item.quantity)
-
-        });
-
-        continue;
-
-    }
-
-    // ---------- BUILDER PRODUCTS ----------
-
-    for (const selection of item.builder_details.selections) {
-
-        const selectedMenuItem =
-            menuItems.find(menu =>
-                String(menu.id) === String(selection.id)
-            );
-
-        if (!selectedMenuItem)
-            continue;
-
-        const recipeCost =
-            recipeCostMap.get(selectedMenuItem.recipe_id);
-
-        const packagingCost =
-            packagingCostMap.get(selectedMenuItem.packaging_profile_id);
-
-        const foodCost =
-            Number(recipeCost?.cost_per_yield_item || 0) *
-            Number(selectedMenuItem.recipe_units_used || 1);
-
-        const packaging =
-            Number(packagingCost?.packaging_cost || 0);
-
-        const totalCost =
-            foodCost + packaging;
-
-        saleItems.push({
-
-            sale_id: sale.id,
-
-            menu_item_id: selectedMenuItem.id,
-
-            item_name: selectedMenuItem.name,
-
-            quantity:
-                selection.quantity * item.quantity,
-
-            unit_price: 0,
-
-            food_cost: foodCost,
-
-            packaging_cost: packaging,
-
-            total_cost: totalCost,
-
-            line_revenue: 0,
-
-            line_profit: 0
-
-        });
-
-    }
-
-}
+    }));
 
     const { error: saleItemsError } =
         await supabaseClient
@@ -907,42 +805,22 @@ for (const item of items) {
 
     }
 
-    const foodCost =
-        saleItems.reduce(
-            (sum, item) =>
-                sum + (item.food_cost * item.quantity),
-            0
-        );
-
-    const packagingCost =
-        saleItems.reduce(
-            (sum, item) =>
-                sum + (item.packaging_cost * item.quantity),
-            0
-        );
-
-    const totalCost =
-        foodCost + packagingCost;
-
-const revenue = saleItems.reduce(
-    (sum, item) => sum + Number(item.line_revenue),
-    0
-);
-
-const profit = revenue - totalCost;
+    const totals = SaleCalculations.summarizeLines(lines);
 
     const { error: updateSaleError } =
         await supabaseClient
             .from("sales")
             .update({
 
-                food_cost: foodCost,
+                revenue: totals.revenue,
 
-                packaging_cost: packagingCost,
+                food_cost: totals.foodCost,
 
-                total_cost: totalCost,
+                packaging_cost: totals.packagingCost,
 
-                profit: profit
+                total_cost: totals.totalCost,
+
+                profit: totals.profit
 
             })
             .eq("id", sale.id);

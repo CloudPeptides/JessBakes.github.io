@@ -335,7 +335,7 @@ function renderProfitInsights(sales) {
     const foodCost = sales.reduce((sum, sale) => sum + sale.food_cost, 0);
     const packagingCost = sales.reduce((sum, sale) => sum + sale.packaging_cost, 0);
     const profit = sales.reduce((sum, sale) => sum + sale.profit, 0);
-    const margin = revenue > 0 ? profit / revenue * 100 : 0;
+    const margin = SaleCalculations.computeMargin(revenue, profit);
 
     container.innerHTML = `
         <div class="analytics-stat-list">

@@ -774,9 +774,7 @@ function calculateProfit(sales) {
         grossProfit,
 
         margin:
-            revenue
-            ? (grossProfit / revenue) * 100
-            : 0
+            SaleCalculations.computeMargin(revenue, grossProfit)
 
     };
 
