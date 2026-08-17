@@ -11,6 +11,8 @@ Confidence: **High** (directly traced in code, and DB-verified where applicable)
 
 **Update 2026-08-17 (Phase 2): BUG-02, BUG-03, BUG-04, BUG-05, BUG-12, BUG-13, BUG-14, BUG-20, and BUG-22 are now resolved and verified**, covering every remaining confirmed calculation and data-integrity defect that didn't depend on the still-undecided EUR/USD exchange-rate design (BUG-06/BUG-19, deliberately deferred). Two new shared, dependency-free-tested modules were added — `js/order-editor.js` (BUG-02/BUG-22) and `js/recipe-costing.js` (BUG-04/BUG-05) — plus one narrowly-scoped, idempotent Supabase migration (BUG-20, `supabase/migrations/20260817112120_...sql`, with a deterministic rollback). Full detail in each bug's own entry below. Currency conversion, CSS cleanup, and visual redesign (BUG-06, BUG-09, BUG-19, BUG-21, Phase 3 items) remain explicitly out of scope for this phase.
 
+**Update 2026-08-17 (Phase 3): BUG-06 and BUG-19 are now resolved and verified live** — the EUR customer-pricing vs. USD internal-reporting currency design is fully implemented: an `exchange_rates` cache table, new explicit `usd_*` columns on `sales`/`sale_items` (the original EUR columns are never repurposed), a snapshotted-per-sale exchange rate sourced from an ECB-derived, no-API-key rate service with a safe manual fallback, and a verified historical backfill of all 34 existing sales. Sales and Analytics now read and display these USD figures exclusively. Full detail in each bug's own entry and in `02-calculation-audit.md` §13. CSS cleanup and visual redesign remain explicitly out of scope.
+
 ---
 
 ### BUG-16 — Row Level Security is disabled on `orders` and `order_items`; all customer data and order data is publicly readable and writable — **RESOLVED (2026-08-17)**
@@ -58,14 +60,14 @@ Confidence: **High** (directly traced in code, and DB-verified where applicable)
 
 ---
 
-### BUG-19 — No currency or exchange-rate columns exist in the schema
-- **Affected pages:** Sales, Analytics (once the owner's confirmed EUR→USD reporting design is implemented — see `02-calculation-audit.md` §11)
-- **Where:** `sales`, `sale_items`, `orders`, `ingredients` — none have a currency or exchange-rate column today.
-- **Current behavior:** All money columns are plain `numeric` with no currency tag. Confirmed by searching every column name in the schema for currency-related terms — no matches.
-- **Expected behavior:** Per the owner's confirmed design: `sales` needs a frozen `exchange_rate` captured at completion time, plus USD-equivalent columns computed from it (see `02-calculation-audit.md` §11 for the recommended shape). Separately, `ingredients`/`purchases` need a currency field, since purchases are genuinely made in both USD (American suppliers) and EUR (German suppliers) today with no way to distinguish them.
-- **Severity:** Medium — not corrupting anything today (no USD reporting exists yet to be wrong), but it's the blocking prerequisite for the owner's confirmed Sales/Analytics currency design.
-- **Confidence:** High (schema search is exhaustive and conclusive).
-- **Recommended phase:** Phase 1, as new schema, before any USD-reporting UI work.
+### BUG-19 — No currency or exchange-rate columns exist in the schema — **RESOLVED (Phase 3, 2026-08-17)**
+- **Status: Fixed and verified live.** `sales` gained `exchange_rate`, `exchange_rate_date`, `exchange_rate_source`, `usd_revenue`, `usd_profit`; `sale_items` gained `usd_line_revenue`, `usd_line_profit` — all new, explicit, unambiguous columns (the original EUR `revenue`/`line_revenue` are never repurposed or converted in place). A new `exchange_rates` cache table stores EUR→USD daily reference rates. See BUG-06 below for the full design and live verification.
+- **Superseded:** the original recommendation that `ingredients`/`purchases` need a per-row currency field (since purchases are genuinely made in both USD and EUR) is no longer the owner's direction — the owner's Phase 3 confirmed rule is simpler: Inventory, recipe costs, and packaging costs report in USD, full stop (this was already true — Inventory has always displayed `$`). No ingredient/purchase schema change was made or is currently wanted.
+- **Affected pages:** Sales, Analytics.
+- **Where:** `sales`, `sale_items` (new columns), `exchange_rates` (new table).
+- **Severity:** Resolved (was Medium).
+- **Confidence:** High (verified live).
+- **Recommended phase:** Phase 3 — **done**.
 
 ---
 
@@ -103,6 +105,19 @@ Confidence: **High** (directly traced in code, and DB-verified where applicable)
 - **Confidence:** High.
 - **Dependencies:** None remaining.
 - **Recommended phase:** Phase 2 — **done**.
+
+---
+
+### BUG-23 — Production's "Estimated Profit"/cost figures mix EUR revenue with USD cost, all labeled `€` (discovered during Phase 3, not fixed — out of scope)
+- **Discovered:** 2026-08-17, while implementing Phase 3's confirmed currency rule ("Inventory, recipe costs, packaging costs, Sales, profit, margin, and Analytics report in USD").
+- **Affected pages:** Production (`admin/production.html`'s "Expected Revenue"/"Ingredient Cost"/"Packaging Cost"/"Total Estimated Cost"/"Estimated Profit"/"Estimated Margin" cards).
+- **Files/functions:** `js/admin-production.js` — the plan-building code sums `revenue` from `order.subtotal` (EUR) and `foodCost`/`packagingCost` from `recipe_costs`/`packaging_profile_costs` (USD, per the now-confirmed rule), then computes `profit = revenue - totalCost` and `margin = profit/revenue` from that mixed-currency subtraction — all six figures are then formatted with `euro()` and displayed with `€`.
+- **Current behavior:** Identical in shape to the original BUG-01/pre-Phase-3 problem: two different currencies are combined without conversion. Unlike Sales/Analytics (fixed in Phase 3), Production was not in this phase's scope and has **not** been changed — its revenue/cost/profit/margin figures are still computed and labeled exactly as before.
+- **Expected behavior:** Once addressed, Production's cost/profit figures should either convert `order.subtotal` to USD using the same snapshotted-rate machinery (`js/currency-conversion.js`) the way a completed sale does, or the page should clearly split "Expected Revenue (EUR)" from "Estimated Cost (USD)" rather than subtracting them directly. This needs an explicit decision — Production plans *unconfirmed, in-progress* orders that haven't been completed yet (no sale exists, so no exchange rate has been snapshotted for them), which is different from Sales/Analytics reading already-completed, already-rate-snapshotted sales.
+- **Severity:** Medium — display-only (no stored data is wrong; `orders`/`order_items` are untouched), but the same class of silent-currency-mixing that made BUG-01 confusing.
+- **Confidence:** High — traced directly in code.
+- **Dependencies:** None technical. Needs a product decision on how to handle the "no completed sale yet, so no snapshotted rate yet" case for in-progress production planning.
+- **Recommended phase:** Phase 4 (or a future currency-follow-up), explicitly not this phase.
 
 ---
 
@@ -175,18 +190,15 @@ Confidence: **High** (directly traced in code, and DB-verified where applicable)
 
 ---
 
-### BUG-06 — Currency handling needs three different treatments, not one fix (owner confirmed 2026-08-17)
+### BUG-06 — Currency handling needs three different treatments, not one fix — **RESOLVED (Phase 3, 2026-08-17)**
 - **Affected pages:** Inventory, Packaging (USD), Menu (mixes `$` and `€` on the same card), vs. Dashboard, Orders, Production, Sales, Analytics, and the entire public site (EUR)
-- **Files/functions:** `usd()` in `admin-inventory.js` and `packaging.js`; hard-coded `$`/`€` literals in `admin-menu.js:288-352`; `euro()` duplicated in `admin-production.js`, `admin-sales.js`, `admin-analytics.js`
-- **Current behavior:** Same underlying numbers, displayed with different currency symbols/formats depending on which page you're on.
-- **Owner-confirmed correct behavior (this is more nuanced than "pick one currency"):**
-  1. Customers always see/pay EUR — already correct, no change.
-  2. Inventory/Packaging showing USD is not simply wrong — ingredients are genuinely purchased in both USD (American suppliers) and EUR (German suppliers). The fix is a **per-ingredient currency field** (doesn't exist yet — see BUG-19), not a blanket relabel to EUR.
-  3. Sales/Analytics should report in **USD** (the owner's own internal reporting currency) — the **opposite** of what the original pass of this audit assumed. This requires converting the underlying EUR sale amounts using a frozen, sale-time exchange rate (see `02-calculation-audit.md` §11), not just changing the formatter.
-- **Severity:** Medium — doesn't corrupt underlying numbers yet, but Inventory currently mislabels genuinely-USD and genuinely-EUR purchase prices identically, and Sales/Analytics can't correctly show USD at all until BUG-19's schema exists.
-- **Confidence:** High.
-- **Dependencies:** BUG-19 (currency/exchange-rate schema) must land first for Sales/Analytics; the Inventory currency field is independent and can be done in parallel.
-- **Recommended phase:** Phase 1 (schema), Phase 2 (UI/formatting rollout).
+- **Owner-confirmed final design (2026-08-17), simpler than the original nuance below:**
+  1. Customers always see/pay EUR — unchanged. Public Menu, Cart, Checkout, and Orders stay EUR and were not touched.
+  2. Inventory, recipe costs, packaging costs, Sales, profit, margin, and Analytics all report in **USD**. Inventory/Packaging were already USD-formatted (no ingredient/purchase currency field needed — see BUG-19's "Superseded" note).
+  3. Sales and Analytics revenue/profit/margin are now genuinely converted from the underlying EUR sale amount using a **snapshotted, frozen exchange rate** captured once at sale-completion time — not just a relabeled formatter.
+- **Status: Fixed and verified live.** `js/currency-conversion.js` (new, shared, pure, 23 tests) provides the conversion arithmetic, rate-resolution orchestration (cache → live ECB-derived fetch via `api.frankfurter.dev`, no API key → safe administrator-entered manual fallback), and the rounding-reconciliation logic that guarantees a sale's `usd_revenue` always equals the exact sum of its own `sale_items.usd_line_revenue` (including correctly handling the real rounding edge case found in 10 of the 34 historical sales — see the migration for detail — without ever letting a rounding residual land on a Mix & Match child line). `js/admin-orders.js`'s `createSaleFromOrder()` resolves and snapshots one rate per sale, applied identically to every one of that sale's lines. `js/admin-sales.js` and `js/admin-analytics.js` now read the explicit `usd_revenue`/`usd_profit`/`usd_line_revenue`/`usd_line_profit` columns exclusively for all money display, formatted with an unambiguous `$` (`euro()` renamed to `usd()` in both files, matching the site's existing Inventory convention). The 34 historical sales were backfilled using the exchange rate applicable to each one's actual completion date. Full detail in `02-calculation-audit.md` §13 and the migration itself.
+- **Confidence:** High (verified live + 23/23 currency-conversion tests + full existing suite still passing).
+- **Recommended phase:** Phase 3 — **done**.
 
 ---
 
@@ -293,7 +305,7 @@ Confidence: **High** (directly traced in code, and DB-verified where applicable)
 
 ---
 
-## Summary table (updated 2026-08-17; BUG-16/17/18 resolved same day, BUG-01 resolved as Phase 1A/1B, BUG-02/03/04/05/12/13/14/20/22 resolved as Phase 2)
+## Summary table (updated 2026-08-17; BUG-16/17/18 resolved same day, BUG-01 resolved as Phase 1A/1B, BUG-02/03/04/05/12/13/14/20/22 resolved as Phase 2, BUG-06/19 resolved as Phase 3)
 
 | ID | Summary | Severity | Confidence | Phase |
 |---|---|---|---|---|
@@ -310,9 +322,10 @@ Confidence: **High** (directly traced in code, and DB-verified where applicable)
 | BUG-05 | Inventory unit conversion missing volume/count — confirmed zero live impact today | **RESOLVED** (was Low) | High (verified) | 2 — done |
 | BUG-12 | Dead, unsafe cost function in Sales | **RESOLVED** (was Low, latent) | High | 2 — done |
 | BUG-13 | Debug console.log left in Sales | **RESOLVED** (was Low) | High | 2 — done |
-| BUG-19 | No currency/exchange-rate columns exist | Medium | High | 1 — deferred (currency out of scope this phase) |
-| BUG-06 | Currency needs 3 different treatments (customer EUR, inventory per-purchase, reporting USD) | Medium | High | 1 (schema) / 2 (UI) — deferred (currency out of scope this phase) |
+| BUG-19 | No currency/exchange-rate columns exist | **RESOLVED** (was Medium) | High (verified live) | 3 — done |
+| BUG-06 | Currency needs 3 different treatments (customer EUR, inventory/costs/Sales/Analytics USD) | **RESOLVED** (was Medium) | High (verified live + 23/23 tests) | 3 — done |
 | BUG-21 | Minor Supabase hardening/performance items (advisors) | Low | High | 3/4 |
+| BUG-23 | Production mixes EUR revenue with USD cost in its profit/margin figures, all labeled € | Medium | High | 4 — deferred (discovered in Phase 3, out of scope) |
 | BUG-07 | `admin.js` dead and broken | Low (latent) | High | 0/1 |
 | BUG-08 | Dead markup in `admin.html` | Low | High | 0/1 |
 | BUG-09 | Missing `production.css` | Low | High | 1 (CSS — out of scope this phase) |
