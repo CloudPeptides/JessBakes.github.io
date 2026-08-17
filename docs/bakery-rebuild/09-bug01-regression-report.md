@@ -143,10 +143,19 @@ Root cause fully confirmed with direct evidence (not inferred) and is now filed 
 
 The earlier whole-book comparison in this section mixed the (now corrected) BUG-01 effect with §6b's cost-drift artifact and §6c's unrelated anomaly. It is removed here in favor of the isolated, verified figures in 6a/6b/6c above, which do not need to be summed into one blended "book total" to be useful or accurate.
 
-## 7. What was *not* done in this phase, and what remains
+## 7. Phase 1B — historical backfill applied (2026-08-17)
 
-- The 34 existing `sales`/`sale_items` rows in Supabase were **not** modified — this report is read-only analysis, not a data migration.
-- **The 18 historical Mix & Match sales require a separate backfill migration, to be applied only after the future-sale code fix (this phase) is deployed and verified in production.** That backfill must correct exactly the fields identified in §6a-1 (insert the missing parent `sale_items` rows, correct the existing children's `line_profit`, and set `sales.profit = revenue - total_cost`) using **only already-stored historical values** — never `recipe_costs`/`packaging_profile_costs` as they stand today. It is scoped to precisely the 18 sale IDs enumerated in §6a and must not touch the two sales in §6c. The backfill must be validated as a transaction-wrapped dry run (`BEGIN … ROLLBACK`) before being applied for real, with its rollback SQL derived from values captured at that time — **not** by creating a permanent backup table in the public schema. Not applied in this phase.
-- The two anomalous sales in §6c are tracked as BUG-22 and were not corrected — and must not be, since their `sales`/`sale_items` records are already accurate.
-- The cost-drift noise in §6b requires no action — it's expected behavior of historical cost-freezing working correctly, and must not be backfilled.
+The 18 historical Mix & Match sales identified in §6a have been backfilled directly in the live database, after the future-sale code fix (Phase 1A) was deployed and verified in production. Applied via `supabase/migrations/20260817105550_backfill_bug01_mix_and_match_18_historical_sales.sql`, exactly as planned in the superseded version of this section: inserted the missing revenue-bearing parent `sale_items` row for each of the 19 builder order lines (one sale has two boxes), corrected the 28 existing child rows' `line_profit` from their own already-stored `total_cost` (never recomputed), and set `sales.profit = revenue - total_cost` for all 18 — using **only** already-stored historical values, never `recipe_costs`/`packaging_profile_costs` as they stand today.
+
+**Verified after applying:**
+- All 18 sales reconcile at both the sale level (`profit = revenue - total_cost`) and the sale-item level (`revenue = sum(sale_items.line_revenue)`).
+- Total profit across the 18 rose from **-€16.17 to €318.83** — a swing of exactly **€335.00**, matching every independent measurement of this bug's impact throughout this report.
+- The two anomalous sales (§6c, BUG-22) and the 8 cost-drift sales (§6b) are confirmed byte-identical to their pre-migration values — untouched, as required.
+- `orders`, `order_items`, `ingredients`, and `recipes` row counts are unchanged; zero duplicate revenue-bearing rows exist for any of the 18 sales.
+- A safety assertion inside the migration's own transaction independently re-derived the expected profit sum and aborted automatically on first attempt (a transposition mistake in the hardcoded expected value, `145.28` instead of `318.83`) with zero side effects, before being corrected and re-applied successfully — confirming the transaction-safety design worked as intended.
+
+A deterministic, backup-table-free rollback (derived from the exact pre-migration values captured before this ran) is recorded at `supabase/rollbacks/20260817105550_backfill_bug01_mix_and_match_18_historical_sales_rollback.sql`, scoped to precisely these 18 sale IDs.
+
+- The two anomalous sales in §6c remain tracked as BUG-22 and were not corrected — and must not be, since their `sales`/`sale_items` records are already accurate.
+- The cost-drift noise in §6b required no action — it's expected behavior of historical cost-freezing working correctly, and was not backfilled.
 - No currency, CSS, navigation, or public storefront changes were made anywhere in this phase.
