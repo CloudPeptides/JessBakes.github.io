@@ -958,9 +958,13 @@ if (order_type === "weekly") {
             ? "Weekly Sunday Pickup"
             : custom_details;
 
-    const { data: order, error } = await supabaseClient
+    const orderId = crypto.randomUUID();
+
+    const { error } = await supabaseClient
         .from("orders")
         .insert({
+    id: orderId,
+
     customer_name,
     customer_email,
     customer_phone,
@@ -976,9 +980,7 @@ if (order_type === "weekly") {
     subtotal: getSubtotal(),
 
     status: "pending"
-})
-        .select()
-        .single();
+});
 
     if (error) {
         console.error(error);
@@ -992,7 +994,7 @@ if (order_type === "weekly") {
 
     const items = cart.map(item => ({
 
-    order_id: order.id,
+    order_id: orderId,
 
     menu_item_id:
         item.type === "builder"
