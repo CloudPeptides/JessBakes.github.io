@@ -449,11 +449,7 @@ function buildNotifications(orders) {
 async function loadDashboardReviews() {
 
     const { data, error } =
-        await supabaseClient
-            .from("reviews")
-            .select("*")
-            .eq("approved", false)
-            .order("created_at", { ascending: true });
+        await AdminReviewsShared.fetchPendingReviews(supabaseClient);
 
     if (error) {
 

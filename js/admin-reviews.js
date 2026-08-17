@@ -11,11 +11,7 @@ async function loadPendingReviews() {
 
     container.innerHTML = "<p>Loading reviews...</p>";
 
-    const { data, error } = await supabaseClient
-        .from("reviews")
-        .select("*")
-        .eq("approved", false)
-        .order("created_at", { ascending: true });
+    const { data, error } = await AdminReviewsShared.fetchPendingReviews(supabaseClient);
 
     if (error) {
         console.error(error);
