@@ -13,6 +13,13 @@ let categories = [];
 let suppliers = [];
 let recipes = [];
 
+// Recipe costs, keyed by recipe id, sourced from the `recipe_costs`
+// Postgres view — the same canonical, recursive (sub-recipe-aware),
+// unit-aware source Menu and sale creation already use (BUG-04/BUG-05).
+// Replaces this page's own former client-side recipe-costing logic, which
+// ignored sub-recipe components and only converted mass units.
+let recipeCosts = new Map();
+
 
 /*==================================================
     PAGE INITIALIZATION
@@ -38,7 +45,8 @@ async function loadInventory() {
         loadCategories(),
         loadSuppliers(),
         loadIngredients(),
-        loadRecipes()
+        loadRecipes(),
+        loadRecipeCosts()
     ]);
 
     updateInventoryOverview();
@@ -136,6 +144,26 @@ async function loadRecipes() {
     }
 
     recipes = data || [];
+
+}
+
+async function loadRecipeCosts() {
+
+    const { data, error } = await supabaseClient
+        .from("recipe_costs")
+        .select("*");
+
+    if (error) {
+
+        console.error("Unable to load recipe costs:", error);
+
+        recipeCosts = new Map();
+
+        return;
+
+    }
+
+    recipeCosts = RecipeCosting.buildRecipeCostsById(data);
 
 }
 
@@ -659,6 +687,38 @@ async function saveIngredient() {
 }
 
 async function deleteIngredient(id, name) {
+    // BUG-14: check real usage first and give a friendly, specific warning
+    // instead of only surfacing the database's raw foreign-key error after
+    // the fact. The database itself still safely blocks the delete either
+    // way (RESTRICT/NO ACTION foreign keys) — this is a friendlier
+    // pre-check, not a replacement for that safety.
+    const [{ count: recipeUsage, error: recipeUsageError }, { count: packagingUsage, error: packagingUsageError }] =
+        await Promise.all([
+            supabaseClient
+                .from("recipe_ingredients")
+                .select("id", { count: "exact", head: true })
+                .eq("ingredient_id", id),
+            supabaseClient
+                .from("packaging_profile_items")
+                .select("id", { count: "exact", head: true })
+                .eq("ingredient_id", id)
+        ]);
+
+    if (recipeUsageError || packagingUsageError) {
+        console.error(recipeUsageError || packagingUsageError);
+        alert((recipeUsageError || packagingUsageError).message);
+        return;
+    }
+
+    const usageCount = (recipeUsage || 0) + (packagingUsage || 0);
+
+    if (usageCount > 0) {
+        alert(
+            `"${name}" is used in ${usageCount} recipe(s) or packaging profile(s) and can't be deleted while it's in use. Remove it from those first.`
+        );
+        return;
+    }
+
     if (!confirm(`Delete "${name}" from inventory?`)) return;
 
     const { error } = await supabaseClient
@@ -1306,6 +1366,45 @@ if (recipeComponents.length) {
 }
 
 async function deleteRecipe(id, name) {
+    // BUG-14/BUG-20: friendly pre-checks for both usage cases before
+    // attempting the delete. The menu-item case was already safely blocked
+    // by the database; the component-recipe case previously cascaded
+    // silently (ON DELETE CASCADE) and is now also blocked at the database
+    // level by a narrowly-scoped migration converting it to RESTRICT — this
+    // pre-check just gives a specific, friendly message instead of a raw
+    // Postgres error for either case.
+    const [{ count: menuUsage, error: menuUsageError }, { count: componentUsage, error: componentUsageError }] =
+        await Promise.all([
+            supabaseClient
+                .from("menu_items")
+                .select("id", { count: "exact", head: true })
+                .eq("recipe_id", id),
+            supabaseClient
+                .from("recipe_components")
+                .select("id", { count: "exact", head: true })
+                .eq("component_recipe_id", id)
+        ]);
+
+    if (menuUsageError || componentUsageError) {
+        console.error(menuUsageError || componentUsageError);
+        alert((menuUsageError || componentUsageError).message);
+        return;
+    }
+
+    if ((menuUsage || 0) > 0) {
+        alert(
+            `"${name}" is linked to ${menuUsage} menu item(s) and can't be deleted while it's in use. Update or remove those menu items first.`
+        );
+        return;
+    }
+
+    if ((componentUsage || 0) > 0) {
+        alert(
+            `"${name}" is used as a component in ${componentUsage} other recipe(s) and can't be deleted while it's in use. Remove it from those recipes first.`
+        );
+        return;
+    }
+
     if (!confirm(`Delete "${name}"?`)) return;
 
     const { error } = await supabaseClient
@@ -1444,54 +1543,13 @@ function renderSuppliers() {
 ==================================================*/
 
 function getRecipeCost(recipe) {
-    if (!recipe.recipe_ingredients?.length) return 0;
-
-    return recipe.recipe_ingredients.reduce((sum, item) => {
-        return sum + getIngredientCost(item.ingredients, item.quantity);
-    }, 0);
-}
-
-function getIngredientCost(ingredient, recipeQuantity) {
-    if (!ingredient) return 0;
-
-    const purchaseSizeInRecipeUnits =
-        convertUnit(
-            ingredient.purchase_size,
-            ingredient.purchase_unit,
-            ingredient.recipe_unit
-        );
-
-    if (!purchaseSizeInRecipeUnits) return 0;
-
-    const costPerRecipeUnit =
-        Number(ingredient.purchase_price || 0) /
-        purchaseSizeInRecipeUnits;
-
-    return costPerRecipeUnit * Number(recipeQuantity || 0);
-}
-
-function convertUnit(quantity, fromUnit, toUnit) {
-    const from = String(fromUnit || "").toLowerCase();
-    const to = String(toUnit || "").toLowerCase();
-    const amount = Number(quantity || 0);
-
-    if (from === to) return amount;
-
-    const grams = {
-        g: 1,
-        gram: 1,
-        grams: 1,
-        kg: 1000,
-        lb: 453.592,
-        lbs: 453.592,
-        oz: 28.3495
-    };
-
-    if (grams[from] && grams[to]) {
-        return amount * grams[from] / grams[to];
-    }
-
-    return null;
+    // Sourced from the `recipe_costs` Postgres view via the shared
+    // js/recipe-costing.js module (BUG-04/BUG-05) — the same recursive,
+    // sub-recipe-aware, mass/volume/count-unit-aware calculation Menu and
+    // sale creation already rely on, instead of this page's own former
+    // duplicate that ignored sub-recipe components and only understood
+    // mass units.
+    return RecipeCosting.resolveRecipeCost(recipeCosts, recipe);
 }
 
 
