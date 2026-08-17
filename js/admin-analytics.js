@@ -67,13 +67,19 @@ async function loadAnalytics() {
         return;
     }
 
+    // Phase 3: Analytics reports in USD (confirmed rule — see
+    // docs/bakery-rebuild/03-bug-register.md BUG-06/BUG-19). revenue/profit
+    // and line_revenue/line_profit are read from the explicit usd_* columns,
+    // never the original EUR revenue/line_revenue columns (which stay
+    // untouched, frozen, in the database). *_cost columns are already
+    // USD-denominated, so they're unchanged.
     analyticsSales = (data || []).map(sale => ({
         ...sale,
-        revenue: Number(sale.revenue) || 0,
+        revenue: Number(sale.usd_revenue) || 0,
         food_cost: Number(sale.food_cost) || 0,
         packaging_cost: Number(sale.packaging_cost) || 0,
         total_cost: Number(sale.total_cost) || 0,
-        profit: Number(sale.profit) || 0,
+        profit: Number(sale.usd_profit) || 0,
         sale_items: Array.isArray(sale.sale_items)
             ? sale.sale_items.map(item => ({
                 ...item,
@@ -82,8 +88,8 @@ async function loadAnalytics() {
                 food_cost: Number(item.food_cost) || 0,
                 packaging_cost: Number(item.packaging_cost) || 0,
                 total_cost: Number(item.total_cost) || 0,
-                line_revenue: Number(item.line_revenue) || 0,
-                line_profit: Number(item.line_profit) || 0
+                line_revenue: Number(item.usd_line_revenue) || 0,
+                line_profit: Number(item.usd_line_profit) || 0
             }))
             : []
     }));
@@ -322,7 +328,7 @@ function renderCustomerInsights(sales) {
             <p>Total Customers <strong>${customers.size}</strong></p>
             <p>Returning Customers <strong>${returning}</strong></p>
             <p>Repeat Rate <strong>${repeatRate}%</strong></p>
-            <p>Average Order <strong>${euro(averageOrder)}</strong></p>
+            <p>Average Order <strong>${usd(averageOrder)}</strong></p>
         </div>
     `;
 }
@@ -339,9 +345,9 @@ function renderProfitInsights(sales) {
 
     container.innerHTML = `
         <div class="analytics-stat-list">
-            <p>Food Cost <strong>${euro(foodCost)}</strong></p>
-            <p>Packaging Cost <strong>${euro(packagingCost)}</strong></p>
-            <p>Gross Profit <strong>${euro(profit)}</strong></p>
+            <p>Food Cost <strong>${usd(foodCost)}</strong></p>
+            <p>Packaging Cost <strong>${usd(packagingCost)}</strong></p>
+            <p>Gross Profit <strong>${usd(profit)}</strong></p>
             <p>Gross Margin <strong>${margin.toFixed(1)}%</strong></p>
         </div>
     `;
@@ -364,10 +370,10 @@ function renderBakeryInsights(sales) {
 
     container.innerHTML = `
         <div class="analytics-stat-list">
-            <p>Largest Sale <strong>${euro(largestSale.revenue)}</strong></p>
-            <p>Average Order <strong>${euro(averageOrder)}</strong></p>
-            <p>Revenue <strong>${euro(revenue)}</strong></p>
-            <p>Gross Profit <strong>${euro(profit)}</strong></p>
+            <p>Largest Sale <strong>${usd(largestSale.revenue)}</strong></p>
+            <p>Average Order <strong>${usd(averageOrder)}</strong></p>
+            <p>Revenue <strong>${usd(revenue)}</strong></p>
+            <p>Gross Profit <strong>${usd(profit)}</strong></p>
             ${topProduct ? `
                 <p>Top Product <strong>${escapeHtml(topProduct.name)} (${topProduct.quantity})</strong></p>
             ` : ""}
@@ -423,12 +429,12 @@ function renderTopCustomers(sales) {
             <div class="customer-card">
                 <div class="customer-header">
                     <strong>${medal} ${escapeHtml(customer.name)}</strong>
-                    <span>${euro(customer.total)}</span>
+                    <span>${usd(customer.total)}</span>
                 </div>
                 <div class="customer-details">
                     <span>${customer.orders} order${customer.orders === 1 ? "" : "s"}</span>
-                    <span>Avg ${euro(average)}</span>
-                    <span>Profit ${euro(customer.profit)}</span>
+                    <span>Avg ${usd(average)}</span>
+                    <span>Profit ${usd(customer.profit)}</span>
                     <span>Last: ${formatDate(customer.lastOrder)}</span>
                 </div>
             </div>
@@ -460,8 +466,8 @@ function renderProductBreakdown(sales) {
                 <div class="sales-table-row">
                     <span>${index + 1}. ${escapeHtml(product.name)}</span>
                     <span>${product.quantity}</span>
-                    <span>${euro(product.revenue)}</span>
-                    <strong>${euro(product.profit)}</strong>
+                    <span>${usd(product.revenue)}</span>
+                    <strong>${usd(product.profit)}</strong>
                 </div>
             `).join("")}
         </div>
@@ -610,10 +616,13 @@ function setText(id, value) {
     if (element) element.textContent = value;
 }
 
-function euro(value) {
-    return new Intl.NumberFormat("de-DE", {
+// Phase 3: Analytics reports in USD (confirmed rule), formatted
+// unambiguously with the $ symbol so it's never mistaken for the EUR
+// amounts customers actually pay.
+function usd(value) {
+    return new Intl.NumberFormat("en-US", {
         style: "currency",
-        currency: "EUR"
+        currency: "USD"
     }).format(Number(value) || 0);
 }
 

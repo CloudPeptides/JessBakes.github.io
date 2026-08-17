@@ -99,17 +99,27 @@ async function loadSalesDashboard() {
         console.warn("Unable to load menu categories:", menuResult.error);
     }
 
+// Phase 3: Sales reports in USD (confirmed rule — see
+// docs/bakery-rebuild/03-bug-register.md BUG-06/BUG-19). Every money field
+// below is read from the explicit usd_* columns, never the original EUR
+// revenue/line_revenue columns (which stay untouched, frozen, in the
+// database as the historical source of truth). total_cost is already
+// USD-denominated (ingredient/recipe/packaging costs), so it's unchanged.
 salesOrders = (ordersResult.data || []).map((sale) => ({
     ...sale,
 
-    subtotal: Number(sale.revenue) || 0,
+    subtotal: Number(sale.usd_revenue) || 0,
 
-    revenue: Number(sale.revenue || 0),
-    total_cost: Number(sale.total_cost || 0),
-    profit: Number(sale.profit || 0),
+    revenue: Number(sale.usd_revenue) || 0,
+    total_cost: Number(sale.total_cost) || 0,
+    profit: Number(sale.usd_profit) || 0,
 
     order_items: Array.isArray(sale.sale_items)
-        ? sale.sale_items
+        ? sale.sale_items.map((item) => ({
+            ...item,
+            line_revenue: Number(item.usd_line_revenue) || 0,
+            line_profit: Number(item.usd_line_profit) || 0
+        }))
         : []
 
 }));
@@ -175,16 +185,16 @@ function updateSalesCards(completedOrders, activeOrders) {
     const totalRevenue = sumRevenue(completedOrders);
     const pendingRevenue = sumRevenue(activeOrders);
 
-    setText("salesToday", euro(todayRevenue));
-    setText("salesWeek", euro(weekRevenue));
-    setText("salesMonth", euro(monthRevenue));
-    setText("salesYear", euro(yearRevenue));
-    setText("averageOrder", euro(completedOrders.length ? totalRevenue / completedOrders.length : 0));
+    setText("salesToday", usd(todayRevenue));
+    setText("salesWeek", usd(weekRevenue));
+    setText("salesMonth", usd(monthRevenue));
+    setText("salesYear", usd(yearRevenue));
+    setText("averageOrder", usd(completedOrders.length ? totalRevenue / completedOrders.length : 0));
     setText("completedOrders", completedOrders.length);
-    setText("pendingRevenue", euro(pendingRevenue));
+    setText("pendingRevenue", usd(pendingRevenue));
 
     const profit = calculateProfit(completedOrders);
-    setText("grossProfit", euro(profit.grossProfit));
+    setText("grossProfit", usd(profit.grossProfit));
 }
 
 function updateLifetimeCards(completedOrders) {
@@ -197,10 +207,10 @@ function updateLifetimeCards(completedOrders) {
         0
     );
 
-    setText("lifetimeRevenue", euro(revenue));
+    setText("lifetimeRevenue", usd(revenue));
     setText("lifetimeOrders", completedOrders.length);
     setText("lifetimeItems", itemsSold);
-    setText("lifetimeAverage", euro(completedOrders.length ? revenue / completedOrders.length : 0));
+    setText("lifetimeAverage", usd(completedOrders.length ? revenue / completedOrders.length : 0));
 }
 
 function renderRevenueTrend(orders, range) {
@@ -230,7 +240,7 @@ function renderRevenueTrend(orders, range) {
                 y: {
                     beginAtZero: true,
                     ticks: {
-                        callback: (value) => `€${value}`
+                        callback: (value) => `$${value}`
                     }
                 }
             },
@@ -238,7 +248,7 @@ function renderRevenueTrend(orders, range) {
                 legend: { display: false },
                 tooltip: {
                     callbacks: {
-                        label: (context) => euro(context.parsed.y)
+                        label: (context) => usd(context.parsed.y)
                     }
                 }
             }
@@ -292,8 +302,10 @@ function renderCategoryRevenue(orders) {
     orders.forEach((order) => {
         order.order_items.forEach((item) => {
             const category = getItemCategory(item);
-            const lineTotal = Number(item.line_total) ||
-                Number(item.price_at_purchase || 0) * Number(item.quantity || 0);
+            // sale_items rows carry line_revenue (already remapped to the
+            // USD figure above), not order_items' line_total/price_at_purchase
+            // — those fields don't exist here. This was silently always 0.
+            const lineTotal = Number(item.line_revenue) || 0;
             totals[category] = (totals[category] || 0) + lineTotal;
         });
     });
@@ -322,7 +334,7 @@ function renderCategoryRevenue(orders) {
             plugins: {
                 tooltip: {
                     callbacks: {
-                        label: (context) => `${context.label}: ${euro(context.parsed)}`
+                        label: (context) => `${context.label}: ${usd(context.parsed)}`
                     }
                 }
             }
@@ -447,7 +459,7 @@ function renderSaleCard(order) {
 
         <strong>
 
-            ${euro(order.subtotal)}
+            ${usd(order.subtotal)}
 
         </strong>
 
@@ -474,7 +486,7 @@ function renderSaleCard(order) {
 
             <strong>
 
-                ${euro(order.subtotal)}
+                ${usd(order.subtotal)}
 
             </strong>
 
@@ -486,7 +498,7 @@ function renderSaleCard(order) {
 
             <strong>
 
-                ${euro(
+                ${usd(
     calculateProfit([order]).grossProfit
 )}
 
@@ -535,8 +547,8 @@ function renderSalesForecast(completedOrders) {
 
     container.innerHTML = `
         <div class="sales-metric-list">
-            <div><span>Average weekly revenue</span><strong>${euro(weeklyAverage)}</strong></div>
-            <div><span>Projected next 30 days</span><strong>${euro(monthlyForecast)}</strong></div>
+            <div><span>Average weekly revenue</span><strong>${usd(weeklyAverage)}</strong></div>
+            <div><span>Projected next 30 days</span><strong>${usd(monthlyForecast)}</strong></div>
         </div>
         <small>Forecast is based on the most recent 28 days of completed sales.</small>
     `;
@@ -553,7 +565,7 @@ function renderBusinessInsights(completedOrders, activeOrders) {
     } else {
         const totalRevenue = sumRevenue(completedOrders);
         const average = totalRevenue / completedOrders.length;
-        insights.push(`Your completed-order average is ${euro(average)}.`);
+        insights.push(`Your completed-order average is ${usd(average)}.`);
 
         const bestSeller = getTopSeller(completedOrders);
         if (bestSeller) {
@@ -567,7 +579,7 @@ function renderBusinessInsights(completedOrders, activeOrders) {
     }
 
     if (activeOrders.length) {
-        insights.push(`${activeOrders.length} active order${activeOrders.length === 1 ? "" : "s"} represent ${euro(sumRevenue(activeOrders))} in pending revenue.`);
+        insights.push(`${activeOrders.length} active order${activeOrders.length === 1 ? "" : "s"} represent ${usd(sumRevenue(activeOrders))} in pending revenue.`);
     }
 
     container.innerHTML = `<ul class="sales-insights-list">${insights.map((insight) => `<li>${escapeHtml(insight)}</li>`).join("")}</ul>`;
@@ -607,7 +619,7 @@ function renderMonthlyRevenue(completedOrders) {
                 <div class="sales-table-row">
                     <span>${escapeHtml(item.label)}</span>
                     <span>${item.orders}</span>
-                    <strong>${euro(item.revenue)}</strong>
+                    <strong>${usd(item.revenue)}</strong>
                 </div>
             `).join("")}
         </div>
@@ -622,9 +634,9 @@ function renderProfitBreakdown(orders) {
 
     container.innerHTML = `
         <div class="sales-metric-list">
-            <div><span>Revenue</span><strong>${euro(profit.revenue)}</strong></div>
-            <div><span>Estimated cost</span><strong>${euro(profit.cost)}</strong></div>
-            <div><span>Gross profit</span><strong>${euro(profit.grossProfit)}</strong></div>
+            <div><span>Revenue</span><strong>${usd(profit.revenue)}</strong></div>
+            <div><span>Estimated cost</span><strong>${usd(profit.cost)}</strong></div>
+            <div><span>Gross profit</span><strong>${usd(profit.grossProfit)}</strong></div>
             <div><span>Gross margin</span><strong>${profit.margin.toFixed(1)}%</strong></div>
         </div>
     `;
@@ -665,7 +677,7 @@ function calculateProfit(sales) {
 
 function exportSalesCsv() {
     const completedOrders = salesOrders;
-    const rows = [["Order ID", "Customer", "Date", "Status", "Items", "Subtotal"]];
+    const rows = [["Order ID", "Customer", "Date", "Status", "Items", "Subtotal (USD)"]];
 
     completedOrders.forEach((order) => {
         const itemSummary = order.order_items
@@ -802,10 +814,13 @@ function setText(id, value) {
     if (element) element.textContent = value;
 }
 
-function euro(value) {
-    return new Intl.NumberFormat("de-DE", {
+// Phase 3: Sales reports in USD (confirmed rule), formatted unambiguously
+// with the $ symbol so it's never mistaken for the EUR amounts customers
+// actually pay (Menu/Cart/Checkout/Orders — unaffected by this change).
+function usd(value) {
+    return new Intl.NumberFormat("en-US", {
         style: "currency",
-        currency: "EUR"
+        currency: "USD"
     }).format(Number(value) || 0);
 }
 
