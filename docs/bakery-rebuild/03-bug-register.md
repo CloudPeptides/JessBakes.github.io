@@ -17,6 +17,8 @@ Confidence: **High** (directly traced in code, and DB-verified where applicable)
 
 **Update 2026-08-17 (Phase 4): admin dashboard reorganization and CSS refactor complete.** All 13 admin pages now share one nav-rendering module (`js/admin-shell.js`) instead of 13 hand-copied `<nav>` blocks, grouped into Overview/Orders/Production/Catalog/Inventory/Sales/Community with a working mobile off-canvas toggle. The CSS refactor consolidated 108 duplicate top-level selector groups in `css/admin.css` into single, cascade-correct definitions; removed a confirmed set of dead selectors (an old pre-multi-page admin.js-era layout, plus a few superseded component variants); and fixed a real structural bug — an unclosed `@media (max-width: 1000px)` had been silently trapping ~1,100 lines of Dashboard CSS so it only ever applied at narrow viewports. The stranded, minified `.production-*` block was moved into a real `css/production.css` (BUG-09). Two more undefined `var()` references (`--border-color`, `--burgundy`) were found and fixed. BUG-07/BUG-08/BUG-09/BUG-11 resolved; BUG-10 remains open (out of this phase's scope, see its own entry). No calculation, currency, or database logic was touched. Full detail in `04-admin-ux-audit.md` and `05-css-audit.md`'s Phase 4 updates.
 
+**Update 2026-08-17 (Phase 5): public-site polish and CSS cleanup complete.** `css/style.css` (1,724 → 1,578 lines): consolidated its 7 duplicate top-level selector groups; removed confirmed-dead selectors from an earlier design iteration (`.jess-note*`, a removed "note" section; `.builder-order-*`, superseded cart markup; `.secondary-btn`, never used anywhere); and fixed three previously-undiscovered bugs — a duplicated `background:` property name that made `body`'s entire gradient background declaration invalid CSS (silently dropped by the browser), a typo'd `olor:` property (should be `color:`, on `.footer-bottom`), and three undefined `var(--text-light)`/`var(--deep-burgundy)` references (mapped to the real `--muted`/`--burgundy` tokens, matching what a later, correct duplicate definition already used). Added a global `:focus-visible` ring, `prefers-reduced-motion` support, and a skip-to-content link on all 4 public pages (index/menu/reviews/contact) — none existed before. Resolved **BUG-10** (see its own entry): extracted the one genuinely-duplicated piece of `js/admin-dashboard.js`/`js/admin-reviews.js` (the pending-reviews query) into a small shared, tested module, `js/admin-reviews-shared.js`, while deliberately leaving their different render/action logic alone. No ordering, calculation, currency, admin, or Supabase logic was touched; confirmed via the full existing test suite passing unchanged. Full detail in `05-css-audit.md`'s Phase 5 update.
+
 ---
 
 ### BUG-16 — Row Level Security is disabled on `orders` and `order_items`; all customer data and order data is publicly readable and writable — **RESOLVED (2026-08-17)**
@@ -235,13 +237,15 @@ Confidence: **High** (directly traced in code, and DB-verified where applicable)
 
 ---
 
-### BUG-10 — Duplicated pending-reviews logic (Dashboard vs. Reviews page) — not addressed this phase
-- **Affected pages:** Dashboard, Reviews
-- **Files/functions:** `js/admin-dashboard.js` vs. `js/admin-reviews.js` (near-identical `loadPendingReviews`/`renderPendingReviews`/`approveReview`/`deleteReview`)
-- **Current behavior:** Unchanged — two independent copies of the same feature still exist. Phase 4 focused on the shared admin shell/navigation and the CSS refactor (docs/bakery-rebuild/05-css-audit.md); this JS-level de-duplication was not in that scope and was not touched.
-- **Severity:** Low (works today), Medium risk (future drift).
+### BUG-10 — Duplicated pending-reviews logic (Dashboard vs. Reviews page) — **RESOLVED (Phase 5, 2026-08-17)**
+- **Affected pages:** Dashboard, Reviews.
+- **Files/functions:** `js/admin-dashboard.js` vs. `js/admin-reviews.js`.
+- **Re-verified before fixing:** the two implementations had already drifted apart since this bug was first written — `admin-dashboard.js`'s reviews section is now a distinct, simpler read-only preview widget (pending count + top 3 cards, no actions), not the near-identical `renderPendingReviews`/`approveReview`/`deleteReview` CRUD the original finding described. The **only** piece still genuinely, exactly duplicated was the fetch query itself: `supabaseClient.from("reviews").select("*").eq("approved", false).order("created_at", {ascending: true})`, byte-for-byte identical in both files.
+- **Status: Fixed and verified.** Extracted that one query into a new shared, UMD-exported module, `js/admin-reviews-shared.js` (`fetchPendingReviews(supabaseClient)`), used by both files. Deliberately did **not** try to unify the render/action logic downstream of it — the Dashboard's read-only preview and the Reviews page's full Approve/Delete list are genuinely different behavior, and forcing them into one shared render function would violate "don't force unlike functionality into one abstraction."
+- **Test coverage:** `tests/admin-reviews-shared.test.js`, 5 tests — the exact query shape (verified against a fake chainable Supabase client, not a real network call), pass-through of both success and error results, a source-level check that neither file inlines the query anymore, and that both pages load the shared script before their own.
+- **Severity:** Resolved (was Low/Medium risk).
 - **Confidence:** High.
-- **Recommended phase:** A future shared-utilities pass, still open.
+- **Recommended phase:** Phase 5 — **done**.
 
 ---
 
@@ -301,7 +305,7 @@ Confidence: **High** (directly traced in code, and DB-verified where applicable)
 
 ---
 
-## Summary table (updated 2026-08-17; BUG-16/17/18 resolved same day, BUG-01 resolved as Phase 1A/1B, BUG-02/03/04/05/12/13/14/20/22 resolved as Phase 2, BUG-06/19/23 resolved as Phase 3, BUG-07/08/09/11 resolved as Phase 4)
+## Summary table (updated 2026-08-17; BUG-16/17/18 resolved same day, BUG-01 resolved as Phase 1A/1B, BUG-02/03/04/05/12/13/14/20/22 resolved as Phase 2, BUG-06/19/23 resolved as Phase 3, BUG-07/08/09/11 resolved as Phase 4, BUG-10 resolved as Phase 5)
 
 | ID | Summary | Severity | Confidence | Phase |
 |---|---|---|---|---|
@@ -325,6 +329,6 @@ Confidence: **High** (directly traced in code, and DB-verified where applicable)
 | BUG-07 | `admin.js` dead and broken | **RESOLVED** (was Low) | High (verified, file deleted) | 4 — done |
 | BUG-08 | Dead markup in `admin.html` | **RESOLVED** (was Low) | High (verified) | 4 — done |
 | BUG-09 | Missing `production.css` | **RESOLVED** (was Low) | High (verified) | 4 — done |
-| BUG-10 | Duplicated pending-reviews logic | Low/Medium | High | still open — not this phase's scope |
+| BUG-10 | Duplicated pending-reviews logic | **RESOLVED** (was Low/Medium) | High (verified + 5/5 tests) | 5 — done |
 | BUG-11 | Duplicated ballot-manager logic | **RESOLVED** (was Low) | High | resolved w/ BUG-07 |
 | BUG-15 | No discount/tax/refund/waste support | **Closed — confirmed out of scope by owner** | High | none |
