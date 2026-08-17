@@ -28,11 +28,18 @@ let data = {
     packagingItems: [],
     recipeCosts: [],
     packagingCosts: [],
-    run: null
+    run: null,
+    // BUG-23: the current EUR->USD rate used for revenue/profit/margin
+    // PROJECTIONS on this page. Resolved once per page load (not per
+    // sale) via the same Phase 3 module/mechanism used at sale
+    // completion -- but never snapshotted onto any order or sale, since
+    // these are unconfirmed, in-progress orders with no completed sale
+    // yet. null means no rate could be resolved (see resolveCurrentRate).
+    currentRate: null
 };
 let plan=emptyPlan();
 
-document.addEventListener("DOMContentLoaded",async()=>{await requireAuth();if(typeof setupLogout==="function")setupLogout();setDefaultDate();await loadReferenceData();await loadSelectedDate();});
+document.addEventListener("DOMContentLoaded",async()=>{await requireAuth();if(typeof setupLogout==="function")setupLogout();setDefaultDate();await loadReferenceData();await resolveCurrentRate();await loadSelectedDate();});
 
 async function loadReferenceData() {
 
@@ -72,6 +79,107 @@ async function loadReferenceData() {
     ] = results.slice(0, 8).map(result => result.data || []);
 
     populateDates(results[8].data || []);
+
+}
+
+/* ==========================================
+   BUG-23: EUR->USD rate for revenue/profit/margin PROJECTIONS
+   ==========================================
+
+   Reuses the exact Phase 3 currency-conversion module and resolution
+   order (cache -> live ECB-derived fetch -> safe administrator-entered
+   manual fallback) that createSaleFromOrder() uses when a sale actually
+   completes -- see js/currency-conversion.js and js/admin-orders.js.
+   The key difference here: this rate is used only for this page's live
+   projections and is never written onto any order or sale. Resolved
+   once per page load/refresh, not once per pickup date, since it
+   represents "today's rate," not a per-sale snapshot.
+========================================== */
+
+async function resolveCurrentRate() {
+
+    const todayStr = new Date().toISOString().split("T")[0];
+
+    try {
+
+        data.currentRate = await CurrencyConversion.resolveExchangeRate(todayStr, {
+            getCachedRate: getCachedExchangeRate,
+            fetchLiveRate: CurrencyConversion.createFrankfurterFetcher(),
+            promptManualRate: async (dateStr) => promptManualExchangeRate(dateStr),
+            saveRate: saveExchangeRate
+        });
+
+    } catch (err) {
+
+        console.error(err);
+        data.currentRate = null;
+
+    }
+
+}
+
+async function getCachedExchangeRate(dateStr) {
+
+    const { data: row, error } =
+        await supabaseClient
+            .from("exchange_rates")
+            .select("*")
+            .eq("rate_date", dateStr)
+            .maybeSingle();
+
+    if (error) {
+
+        console.error(error);
+        return null;
+
+    }
+
+    return row;
+
+}
+
+async function saveExchangeRate(entry) {
+
+    const { error } =
+        await supabaseClient
+            .from("exchange_rates")
+            .upsert({
+
+                rate_date: entry.rate_date,
+
+                reference_date: entry.reference_date,
+
+                rate: entry.rate,
+
+                source: entry.source
+
+            });
+
+    if (error) throw error;
+
+}
+
+function promptManualExchangeRate(dateStr) {
+
+    const input = prompt(
+        `Couldn't retrieve today's EUR→USD exchange rate for ${dateStr}, needed to show Production's revenue/cost/profit figures in USD.\n\nEnter it manually (e.g. 1.0921), or press Cancel to leave those figures unavailable until a rate can be resolved.`
+    );
+
+    if (input === null) return null;
+
+    const parsed = Number(input);
+
+    return Number.isFinite(parsed) && parsed > 0 ? parsed : null;
+
+}
+
+async function retryCurrentRate() {
+
+    await resolveCurrentRate();
+
+    plan = buildPlan();
+
+    renderAll();
 
 }
 
@@ -370,6 +478,38 @@ data.orders.forEach(order => {
         foodCost -
         packagingCost;
 
+    // BUG-23: revenue is EUR (order.subtotal, what the customer actually
+    // pays -- unchanged above); foodCost/packagingCost are already USD
+    // (recipe_costs/packaging_profile_costs). `profit`/`margin` above mix
+    // the two currencies directly, which is exactly the bug. usdRevenue/
+    // usdProfit/usdMargin below are the corrected, all-USD figures the
+    // page actually displays, using the CURRENT rate resolved once per
+    // page load (never a per-sale snapshot, since these are unconfirmed,
+    // in-progress orders with no completed sale yet). If no rate could be
+    // resolved, these stay null rather than silently showing a wrong
+    // number -- see renderCosts()/renderAll() for how that's surfaced.
+    const usdRate = data.currentRate?.rate || null;
+
+    // Reuses the exact same function createSaleFromOrder() uses to convert
+    // a completed sale's figures -- revenue (EUR) is converted, cost
+    // (already USD) is not, per the confirmed Phase 3 rule.
+    const usdFigures =
+        usdRate !== null
+            ? CurrencyConversion.computeUsdSaleFigures({
+                revenue,
+                totalCost: foodCost + packagingCost,
+                rate: usdRate
+            })
+            : null;
+
+    const usdRevenue = usdFigures ? usdFigures.usdRevenue : null;
+    const usdProfit = usdFigures ? usdFigures.usdProfit : null;
+
+    const usdMargin =
+        usdRevenue !== null
+            ? SaleCalculations.computeMargin(usdRevenue, usdProfit)
+            : 0;
+
     return {
         date:
             selectedDate(),
@@ -377,6 +517,13 @@ data.orders.forEach(order => {
             data.orders,
         products:
             [...products.values()]
+                .map(product => ({
+                    ...product,
+                    usdRevenue:
+                        usdRate !== null
+                            ? CurrencyConversion.convertEurToUsd(product.revenue, usdRate)
+                            : null
+                }))
                 .sort(
                     (a, b) =>
                         b.quantity - a.quantity
@@ -408,7 +555,16 @@ data.orders.forEach(order => {
         margin:
             revenue
                 ? profit / revenue * 100
-                : 0
+                : 0,
+        // BUG-23: all-USD figures, the ones actually displayed. null
+        // means no exchange rate could be resolved this page load.
+        usdRevenue,
+        usdProfit,
+        usdMargin,
+        rateAvailable:
+            usdRate !== null,
+        rateInfo:
+            data.currentRate
     };
 
 }
@@ -661,7 +817,7 @@ function addReq(map,ing,qty,source){const k=String(ing.id),x=map.get(k)||{ingred
 function combine(items){const m=new Map();items.forEach(x=>{const k=String(x.ingredientId),v=m.get(k)||{...x,required:0,sources:[]};v.required+=x.required;if(!v.sources.includes(x.source))v.sources.push(x.source);m.set(k,v);});return[...m.values()].map(finalize).sort(sortName);}
 function finalize(x){const have=convert(x.onHandPurchase,x.purchaseUnit,x.recipeUnit),min=convert(x.minimumPurchase,x.purchaseUnit,x.recipeUnit),ok=have!==null,safe=ok?have:0,shortage=Math.max(x.required-safe,0),remaining=safe-x.required;let status="good";if(!ok)status="unknown";else if(shortage>0)status="short";else if(min!==null&&remaining<=min)status="low";return{...x,have:safe,minimum:min||0,shortage,remaining,convertible:ok,status};}
 
-function renderAll(){renderSubtitle();renderRun();renderWarnings();setText("productionOrderCount",plan.orderCount);setText("productionItemCount",fmt(plan.itemCount));setText("productionRevenue",euro(plan.revenue));setText("productionProfit",euro(plan.profit));setText("productionShortageCount",plan.shortages.length);renderProducts();renderBatches();renderCosts();renderIngredients();renderShopping();renderPackaging();renderChecklist();renderTimeline();renderOrders();}
+function renderAll(){renderSubtitle();renderRun();renderWarnings();setText("productionOrderCount",plan.orderCount);setText("productionItemCount",fmt(plan.itemCount));setText("productionRevenue",plan.rateAvailable?usd(plan.usdRevenue):"—");setText("productionProfit",plan.rateAvailable?usd(plan.usdProfit):"—");setText("productionShortageCount",plan.shortages.length);renderProducts();renderBatches();renderCosts();renderIngredients();renderShopping();renderPackaging();renderChecklist();renderTimeline();renderOrders();}
 function renderSubtitle(){const d=parseDate(plan.date),el=document.getElementById("productionSubtitle");if(el)el.textContent=d?`Production plan for ${d.toLocaleDateString("en-US",{weekday:"long",month:"long",day:"numeric",year:"numeric"})}.`:"Select a date.";}
 function renderRun(){document.getElementById("productionCompletedBanner")?.remove();const done=!!data.run?.inventory_deducted,btn=document.getElementById("finishProductionBtn");if(btn){btn.disabled=done;btn.textContent=done?"Production Completed":"Finish Production";}if(done){const b=document.createElement("div");b.id="productionCompletedBanner";b.className="production-completed-banner";b.textContent="Production is complete and inventory has already been deducted for this date.";document.querySelector(".production-kpi-grid")?.before(b);}}
 function renderWarnings(){const el=document.getElementById("productionWarnings"),messages=[];if(!plan.orders.length)messages.push(["info","No pending, confirmed, or ready orders are scheduled for this date."]);plan.warnings.forEach(x=>messages.push(["warning",x]));plan.combined.filter(x=>!x.convertible).forEach(x=>messages.push(["warning",`${x.name}: ${x.purchaseUnit} cannot be converted to ${x.recipeUnit}. Correct its inventory units before finishing production.`]));if(plan.orders.length&&!plan.shortages.length&&!plan.warnings.length)messages.push(["success","All links are complete and inventory covers every calculated requirement."]);el.innerHTML=messages.map(([t,x])=>`<div class="production-warning production-warning-${t}">${esc(x)}</div>`).join("");}
@@ -734,7 +890,7 @@ const html = [...grouped.entries()]
 
                             <div>
                                 <h3>${esc(item.name)}</h3>
-                                <small>${euro(item.revenue)}</small>
+                                <small>${plan.rateAvailable?usd(item.usdRevenue):"—"}</small>
                             </div>
 
                             <strong>${fmt(item.quantity)}</strong>
@@ -755,7 +911,16 @@ const html = [...grouped.entries()]
 
     
 function renderBatches(){const el=document.getElementById("recipeBatches");el.innerHTML=plan.batches.length?plan.batches.map(x=>`<article class="production-batch-card"><div class="production-batch-top"><div><h3>${esc(x.name)}</h3><p>Produces ${fmt(x.recipeUnits)} ${esc(x.yieldUnit)} from a ${fmt(x.yieldQuantity)} ${esc(x.yieldUnit)} base yield.</p></div><span class="production-batch-amount">${fmt(x.batches)}×</span></div>${x.notes?`<p>${esc(x.notes)}</p>`:""}</article>`).join(""):empty("No linked recipes for this date.");}
-function renderCosts(){document.getElementById("productionCosts").innerHTML=`<div class="production-metric-list">${metric("Expected Revenue",euro(plan.revenue))}${metric("Ingredient Cost",euro(plan.foodCost))}${metric("Packaging Cost",euro(plan.packagingCost))}${metric("Total Estimated Cost",euro(plan.totalCost))}${metric("Estimated Profit",euro(plan.profit))}${metric("Estimated Margin",`${plan.margin.toFixed(1)}%`)}</div>`;}
+function renderCosts(){
+    // BUG-23: revenue/cost/profit/margin report in USD (Ingredient/
+    // Packaging/Total cost were already USD, just mislabeled before; only
+    // Expected Revenue/Estimated Profit/Estimated Margin are genuinely
+    // converted, using the current rate resolved once per page load).
+    const rateNotice = plan.rateAvailable
+        ? ""
+        : `<div class="production-warning production-warning-warning">Today's EUR→USD exchange rate is unavailable, so Expected Revenue, Estimated Profit, and Estimated Margin can't be shown right now. Ingredient/Packaging/Total cost below are unaffected (already USD). <button type="button" class="secondary-btn" onclick="retryCurrentRate()">Retry</button></div>`;
+    document.getElementById("productionCosts").innerHTML=`${rateNotice}<div class="production-metric-list">${metric("Expected Revenue (USD)",plan.rateAvailable?usd(plan.usdRevenue):"—")}${metric("Ingredient Cost (USD)",usd(plan.foodCost))}${metric("Packaging Cost (USD)",usd(plan.packagingCost))}${metric("Total Estimated Cost (USD)",usd(plan.totalCost))}${metric("Estimated Profit (USD)",plan.rateAvailable?usd(plan.usdProfit):"—")}${metric("Estimated Margin",plan.rateAvailable?`${plan.usdMargin.toFixed(1)}%`:"—")}</div>`;
+}
 function renderIngredients(){const el=document.getElementById("ingredientRequirements"),badge=document.getElementById("ingredientStatusBadge"),rows=plan.combined.filter(x=>x.sources.includes("ingredient"));if(!rows.length){el.innerHTML=empty("No ingredient requirements calculated.");badge.textContent="No data";return;}badge.textContent=rows.some(x=>x.status==="short")?"Shopping required":"Inventory covered";el.innerHTML=`<div class="production-list">${rows.map(reqRow).join("")}</div>`;}
 function reqRow(x){const label={good:"Enough",low:"Low after bake",short:"Short",unknown:"Check units"}[x.status],cls=x.status==="short"?"production-stock-short":x.status==="low"||x.status==="unknown"?"production-stock-low":"production-stock-good";return`<div class="production-row"><div><strong>${esc(x.name)}</strong><small>Stock unit: ${esc(x.purchaseUnit)}</small></div><div class="production-row-value"><small>Need</small><strong>${displayQty(x.required,x.recipeUnit)}</strong></div><div class="production-row-value"><small>Have</small><strong>${x.convertible?displayQty(x.have,x.recipeUnit):"Unknown"}</strong></div><span class="production-stock-status ${cls}">${label}</span></div>`;}
 function renderShopping(){const el=document.getElementById("shoppingList");el.innerHTML=plan.shortages.length?plan.shortages.map(x=>`<div class="production-shopping-row"><label><input type="checkbox"><span>${esc(x.name)}</span></label><strong>Buy ${displayQty(x.shortage,x.recipeUnit)}</strong></div>`).join(""):empty("Nothing needs to be purchased for this date.");}
@@ -846,12 +1011,15 @@ function displayQty(quantity, unit) {
 
 
 function unit(x){return String(x||"").trim().toLowerCase().replace(/\./g,"").replace(/\s+/g," ");}
-function emptyPlan(){return{date:"",orders:[],products:[],batches:[],ingredientReq:[],packagingReq:[],combined:[],shortages:[],warnings:[],orderCount:0,itemCount:0,revenue:0,foodCost:0,packagingCost:0,totalCost:0,profit:0,margin:0};}
+function emptyPlan(){return{date:"",orders:[],products:[],batches:[],ingredientReq:[],packagingReq:[],combined:[],shortages:[],warnings:[],orderCount:0,itemCount:0,revenue:0,foodCost:0,packagingCost:0,totalCost:0,profit:0,margin:0,usdRevenue:null,usdProfit:null,usdMargin:0,rateAvailable:false,rateInfo:null};}
 function loading(){["productionTotals","recipeBatches","productionCosts","ingredientRequirements","shoppingList","packagingRequirements","productionChecklist","productionTimeline","includedOrders"].forEach(id=>{const e=document.getElementById(id);if(e)e.innerHTML=empty("Loading...");});}
 function fatal(x){document.getElementById("productionWarnings").innerHTML=`<div class="production-warning production-warning-error">Unable to load production: ${esc(x)}</div>`;}
 function metric(a,b){return`<div class="production-metric"><span>${esc(a)}</span><strong>${esc(b)}</strong></div>`;}
 function empty(x){return`<p class="production-empty">${esc(x)}</p>`;}
 function euro(x){return new Intl.NumberFormat("de-DE",{style:"currency",currency:"EUR"}).format(Number(x||0));}
+// BUG-23: revenue/cost/profit/margin projections report in USD; customer-
+// facing order totals (renderOrders) stay EUR via euro() above.
+function usd(x){return new Intl.NumberFormat("en-US",{style:"currency",currency:"USD"}).format(Number(x||0));}
 function fmt(x){return Number(x||0).toFixed(2).replace(/\.00$/,"").replace(/(\.\d)0$/,"$1");}
 function selectedDate(){return document.getElementById("productionDate")?.value||"";}
 function nextSunday(d){const x=new Date(d);x.setDate(x.getDate()+(7-x.getDay())%7);return x;}
@@ -862,4 +1030,4 @@ function sortName(a,b){return a.name.localeCompare(b.name);}
 function cap(x){x=String(x||"");return x?x[0].toUpperCase()+x.slice(1):"";}
 function setText(id,x){const e=document.getElementById(id);if(e)e.textContent=x;}
 function esc(x){return String(x??"").replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;").replaceAll('"',"&quot;").replaceAll("'","&#039;");}
-window.changeProductionDate=changeProductionDate;window.moveProductionDate=moveProductionDate;window.selectToday=selectToday;window.selectActiveDate=selectActiveDate;window.refreshProduction=refreshProduction;window.updateChecklistItem=updateChecklistItem;window.finishProduction=finishProduction;
+window.changeProductionDate=changeProductionDate;window.moveProductionDate=moveProductionDate;window.selectToday=selectToday;window.selectActiveDate=selectActiveDate;window.refreshProduction=refreshProduction;window.updateChecklistItem=updateChecklistItem;window.finishProduction=finishProduction;window.retryCurrentRate=retryCurrentRate;
