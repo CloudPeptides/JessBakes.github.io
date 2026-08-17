@@ -1,6 +1,10 @@
 # 08 — Security Repair Plan (BUG-16, BUG-17, BUG-18)
 
-**Status: PROPOSED — NOT APPLIED.** No database changes and no application source code have been modified to produce this document. Everything below is a plan for review. Investigation was performed read-only against the live Supabase project; a handful of aggregate/PII-free queries were run (row counts, schema, grants, policies) — no customer records were queried or displayed.
+**Status: APPLIED AND VERIFIED.** Both migrations below were applied to the live Supabase project on 2026-08-17 and are recorded in `supabase/migrations/`:
+- `20260817092629_security_repair_bug16_17_18_orders_rls_admin_functions_cost_views.sql` — the original plan, applied verbatim.
+- `20260817094213_restore_admin_insert_orders_order_items.sql` — a narrow follow-up fixing a gap the first migration exposed (see Part I below).
+
+Both migration files were verified byte-for-byte identical to what's actually stored in the live project's `supabase_migrations.schema_migrations` table via MD5 checksum comparison — they are the exact applied SQL, not a reconstruction. The original investigation and plan below (Parts A–H) are preserved as written and reflect the state of the project *before* either migration was applied; Part I records what actually happened when they were applied, including one issue found and fixed along the way.
 
 ---
 
@@ -487,3 +491,64 @@ The corresponding `js/cart.js` revert (restoring `.select().single()` and readin
 - **The "authenticated == admin" assumption still exists on every other RLS-protected table** (`ingredients`, `recipes`, `recipe_ingredients`, `recipe_components`, `menu_items`, `packaging_profiles`, `packaging_profile_items`, `sales`, `sale_items`, `production_runs`, `purchases`, `suppliers`, `inventory_categories`). This migration does not touch them, per the requested scope (BUG-16/17/18 only). The exact same `is_admin()` helper introduced here can be applied to all of them in a straightforward follow-up — recommended as the next security pass, using this migration's pattern as the template.
 - **Price/quantity integrity on public order submission is not addressed here.** The "Public can create orders"/"Public can create order items" policies still accept any `with_check: true` payload — nothing stops a technically sophisticated visitor from submitting a forged `price_at_purchase`/`subtotal` that doesn't match real menu prices. This is a data-integrity concern, not an access-control one, and is unrelated to BUG-16/17/18 as scoped — flagged here for awareness, not solved in this pass.
 - **The exchange-rate/currency schema (BUG-19)** and the **recipe-component cascade-delete gap (BUG-20)** remain open from the prior audit pass and are unaffected by this security work.
+
+---
+
+## Part I — What actually happened when this was applied (2026-08-17)
+
+### The two migrations, in order
+
+1. **`20260817092629_security_repair_bug16_17_18_orders_rls_admin_functions_cost_views.sql`** — Part B's migration, applied verbatim via `apply_migration`. Every pre-flight precondition (live schema/policies/grants/function definitions/view definitions, `auth.users` row count, `js/cart.js`'s deployed content) was re-verified immediately beforehand and matched the plan exactly — no drift, no improvisation. Applied as a single transaction; succeeded.
+
+2. **`20260817094213_restore_admin_insert_orders_order_items.sql`** — a narrow, unplanned follow-up, made necessary by an issue the first migration's own post-deployment testing surfaced (see below).
+
+### The issue: the admin dashboard's own order path had no INSERT policy
+
+The first migration deliberately mirrored the pre-existing policy shape when enabling RLS: it preserved the `SELECT`/`UPDATE`/`DELETE` "Admins can…" policies that already existed for `authenticated`, and left the `anon`-only "Public can create…" `INSERT` policies untouched. What neither the original policy set nor the migration ever included was an `INSERT` policy for `authenticated` on `orders`/`order_items` — because before RLS was enabled, none was needed (RLS being off meant every role could write regardless of policy).
+
+That gap became active the moment RLS was turned on. It surfaced as a real, live failure: a checkout submission was rejected with `new row violates row-level security policy for table "orders"`. Investigation (read-only — Postgres logs, no tokens or personal information displayed) determined:
+
+- The failing request's logged SQL matched the exact column set the deployed `js/cart.js` sends (including a client-generated `id`) — so this was a genuine checkout submission, not the separate admin "New Order" feature.
+- The only `INSERT` policy on `orders` at the time was `"Public can create orders"`, scoped to `anon`, with an unconditional `with_check (true)` — which can never fail. Since the request *did* fail with a row-level-security violation, it logically could not have been running as `anon`; the only other role able to reach the table was `authenticated`. This was established entirely by reasoning about the policy definitions themselves (an unconditional `true` check cannot reject a row), not by inspecting any token, session, or identity field.
+- Most likely cause: the browser making the request already had an authenticated admin session (from being logged into the dashboard), which `supabase-js` attaches automatically to *every* request from that browser — including one made from the public checkout page. The request went out as `authenticated`, not `anon`, and was rejected because no `INSERT` policy existed for that role on `orders`.
+
+This was not a case of the admin lacking "full access" by design — it was a real gap the RLS migration introduced by faithfully preserving a policy set that had only ever been exercised with RLS disabled.
+
+### The fix
+
+The second migration added exactly two policies — nothing else:
+```sql
+create policy "Admins can insert orders" on public.orders
+    for insert to authenticated
+    with check (public.is_admin());
+
+create policy "Admins can insert order items" on public.order_items
+    for insert to authenticated
+    with check (public.is_admin());
+```
+
+### Verification performed after each migration
+
+All tests below were run as isolated, transaction-wrapped SQL that always ended in `rollback` — nothing was persisted by any of them. No customer names, emails, phone numbers, test-order UUIDs, tokens, or keys are recorded here or were displayed at the time beyond what was strictly needed to run the check.
+
+**After the first migration:**
+- `anon` reading `orders`/`order_items`, updating/deleting `orders`, reading `recipe_costs`/`packaging_profile_costs`, and executing `complete_production`/`end_current_ballot` — all correctly **blocked** (`42501 permission denied`, several blocked at the grant layer before RLS was even evaluated, confirming the defense-in-depth grant revocations were doing real work).
+- `anon` performing the exact plain-`INSERT`-with-no-`RETURNING` checkout flow the deployed code actually uses — **succeeded**, both for `orders` and `order_items`, chained together exactly as `js/cart.js` does it.
+- The real, approved administrator (simulated via their own `auth.uid()`, not just a role switch, since `is_admin()` depends on identity) — confirmed full read access matching every real row in `orders`, `order_items`, `recipe_costs`, and `packaging_profile_costs`.
+- Security/performance advisors re-run: the RLS-disabled, anon-executable-function, and `SECURITY DEFINER`-view findings for BUG-16/17/18 were confirmed gone. No new problems introduced.
+- Row counts confirmed unchanged before and after.
+
+**After the second (follow-up) migration:**
+- The approved administrator inserting an order and its order item — **succeeded**.
+- A simulated *authenticated non-admin* identity (a fabricated identity not present in `public.admins`) attempting the same insert — **correctly rejected**, proving the new policies' `is_admin()` check is doing real authorization work, not just nominally present.
+- The anonymous plain-`INSERT` checkout flow — **still succeeds**, completely unaffected by the new admin-only policies.
+- Anonymous `SELECT`/`UPDATE`/`DELETE` on `orders` — **still blocked**, unchanged from the first migration.
+- Row counts confirmed unchanged (35 orders / 60 order items) both before and after every round of testing; no test data was ever left behind.
+
+### Post-verification housekeeping
+
+Two test orders were created during live, real (non-rolled-back) checkout testing at different points in this process — both were subsequently confirmed removed, and the database was confirmed back to its exact pre-testing row counts (35 orders, 60 order items) with zero orphaned `order_items`, before either migration file was committed to this repository.
+
+### Current status of BUG-16 / BUG-17 / BUG-18
+
+**All three resolved and verified live**, plus the one follow-up gap found during verification. See `03-bug-register.md` for the updated bug-register entries.

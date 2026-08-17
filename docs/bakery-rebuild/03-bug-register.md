@@ -3,11 +3,15 @@
 Severity: **Critical** (wrong money shown to the owner, or a live security exposure), **High** (wrong data reaches a report or breaks a workflow), **Medium** (real defect, contained impact), **Low** (cosmetic/cleanup).
 Confidence: **High** (directly traced in code, and DB-verified where applicable), **Medium** (strongly implied, one unverifiable link), **Needs verification** (depends on live schema/data).
 
-**Updated 2026-08-17** after directly inspecting the live Supabase project (read-only — schema, views, functions, triggers, RLS policies, grants, and the security/performance advisors; see `01-architecture-and-data-flow.md` §8 for method). Several findings below were corrected or quantified as a result; four new findings (BUG-16 through BUG-21) came directly from the database and were not visible from the application source code alone. **BUG-16 is now the single most urgent item in this entire audit** — it is a live, currently-exploitable data exposure, unrelated to the calculation bugs.
+**Updated 2026-08-17** after directly inspecting the live Supabase project (read-only — schema, views, functions, triggers, RLS policies, grants, and the security/performance advisors; see `01-architecture-and-data-flow.md` §8 for method). Several findings below were corrected or quantified as a result; four new findings (BUG-16 through BUG-21) came directly from the database and were not visible from the application source code alone.
+
+**Update 2026-08-17 (later the same day): BUG-16, BUG-17, and BUG-18 have been fixed, applied, and verified live.** Two migrations were applied — see `supabase/migrations/` and `08-security-repair-plan.md` Part I for the full applied SQL, verification tests, and one follow-up gap (a missing admin `INSERT` policy) found and fixed during verification.
 
 ---
 
-### BUG-16 — Row Level Security is disabled on `orders` and `order_items`; all customer data and order data is publicly readable and writable
+### BUG-16 — Row Level Security is disabled on `orders` and `order_items`; all customer data and order data is publicly readable and writable — **RESOLVED (2026-08-17)**
+- **Status: Fixed and verified live.** RLS enabled on both tables via `supabase/migrations/20260817092629_security_repair_bug16_17_18_orders_rls_admin_functions_cost_views.sql`. Verified: `anon` blocked from `SELECT`/`UPDATE`/`DELETE` on both tables (`42501 permission denied`, at the grant layer); the legitimate anon `INSERT`-only checkout flow still works; the real approved administrator retains full read access. Row counts unchanged before/after (35 orders, 60 order items).
+- **Follow-up found during verification, also fixed:** the migration correctly preserved the pre-existing `SELECT`/`UPDATE`/`DELETE` admin policies but — matching the pre-RLS policy set exactly — never added an `INSERT` policy for `authenticated`, since none had ever been needed while RLS was disabled. This surfaced as a real failed checkout (`new row violates row-level security policy for table "orders"`), traced via Postgres logs to a request running as `authenticated` rather than `anon` (most likely an admin session already active in the same browser while testing checkout — determined by reasoning about the policy definitions themselves, without displaying any token or personal information). Fixed by a second migration, `supabase/migrations/20260817094213_restore_admin_insert_orders_order_items.sql`, adding `is_admin()`-gated `INSERT` policies for `authenticated` on both tables. Verified: the real admin can insert; a simulated authenticated non-admin is correctly rejected; anonymous checkout and the anon read/write blocks are unaffected. Full incident writeup in `08-security-repair-plan.md` Part I.
 - **Affected pages:** Every page that touches orders (Orders, Production, Sales at one remove via `sales.order_id`) — but really, this affects the database directly, independent of any page.
 - **Where:** `public.orders`, `public.order_items` (confirmed via Supabase security advisor + `pg_policies`)
 - **Current behavior:** Both tables have admin-only RLS policies already defined and named correctly ("Admins can view/update/delete orders", "Public can create orders", and the equivalent for `order_items`) — but **Row Level Security itself was never enabled on either table**, so none of those policies are enforced. The site's public anon key is embedded in every visitor's browser (`js/supabase.js`). Right now, any internet visitor — logged in or not — can read every customer's name, email, phone number, and full order history directly from the Supabase REST API, and can insert, modify, or delete any order or order line, with no authentication at all.
@@ -25,7 +29,8 @@ Confidence: **High** (directly traced in code, and DB-verified where applicable)
 
 ---
 
-### BUG-17 — Two `SECURITY DEFINER` functions are callable by unauthenticated users
+### BUG-17 — Two `SECURITY DEFINER` functions are callable by unauthenticated users — **RESOLVED (2026-08-17)**
+- **Status: Fixed and verified live**, via the same migration as BUG-16. Both functions now check `public.is_admin()` internally (raising an exception if the caller isn't the approved admin), have a fixed `search_path`, and had `EXECUTE` revoked from `anon`/`PUBLIC`. Verified: `anon` calling either function is rejected with `42501 permission denied` before the function body even runs; the real admin's `is_admin()` check (confirmed via their actual identity, not just a role switch) returns `true`, so their calls are unaffected. `prepare_new_ballot` and `rls_auto_enable` also received the fixed-`search_path`/grant hygiene fixes described in the plan.
 - **Affected pages:** Production (`complete_production`), the ballot feature (`end_current_ballot`) — but exploitable directly via the API, bypassing any page.
 - **Where:** `public.complete_production(p_production_date, p_snapshot, p_deductions)`, `public.end_current_ballot(ballot_uuid)`
 - **Current behavior:** Both functions run with elevated database privileges (`SECURITY DEFINER`) and are exposed at `/rest/v1/rpc/...` to the `anon` role (confirmed via the security advisor). `complete_production` really does deduct `ingredients.quantity_on_hand` and mark a `production_runs` row completed (its own logic is correct and safe — row-locked, floors at zero, refuses to double-run — see `01-architecture-and-data-flow.md` §8) — but nothing stops anyone from calling it directly with fabricated deduction amounts for any date, with no login. `end_current_ballot` lets anyone archive the currently active ballot at will (its ID is publicly readable via `ballot_settings`' own public SELECT policy).
@@ -37,7 +42,8 @@ Confidence: **High** (directly traced in code, and DB-verified where applicable)
 
 ---
 
-### BUG-18 — Internal cost data is publicly queryable
+### BUG-18 — Internal cost data is publicly queryable — **RESOLVED (2026-08-17)**
+- **Status: Fixed and verified live**, via the same migration as BUG-16/17. Both views converted to `security_invoker = true`, so they now run with the querying role's own privileges instead of the view owner's — they inherit the same `authenticated`-only restriction already correctly in place on the underlying `ingredients`/`recipes`/`packaging_profiles` tables. `anon`'s grant on both views was also revoked directly. Verified: `anon` querying either view is rejected with `42501 permission denied for view`; the real admin retains full access, confirmed reading a row count matching every real recipe/packaging profile in the database.
 - **Affected pages:** None directly — exploitable via the API regardless of page.
 - **Where:** `public.recipe_costs`, `public.packaging_profile_costs` (both views)
 - **Current behavior:** Both views are flagged `SECURITY DEFINER` by the advisor and confirmed (via `information_schema.role_table_grants`) to grant `SELECT` to `anon`. The underlying `ingredients`/`recipes`/`recipe_ingredients` tables are correctly restricted to `authenticated` only — but because these views run with the view-owner's elevated privileges, that restriction doesn't apply to them. In practice, anyone can query the bakery's internal ingredient cost, recipe cost, and packaging cost — commercially sensitive numbers the owner would reasonably not want a competitor or the general public to see — without logging in.
@@ -262,13 +268,13 @@ Confidence: **High** (directly traced in code, and DB-verified where applicable)
 
 ---
 
-## Summary table (updated 2026-08-17 after live database verification)
+## Summary table (updated 2026-08-17 after live database verification; BUG-16/17/18 later resolved same day)
 
 | ID | Summary | Severity | Confidence | Phase |
 |---|---|---|---|---|
-| BUG-16 | RLS disabled on `orders`/`order_items` — customer data publicly exposed | **Critical** | High | **Before Phase 1** |
-| BUG-17 | `complete_production`/`end_current_ballot` callable by anyone, unauthenticated | High | High | Before Phase 1 |
-| BUG-18 | Internal cost data (`recipe_costs`/`packaging_profile_costs`) publicly queryable | High | High | Before Phase 1 |
+| BUG-16 | RLS disabled on `orders`/`order_items` — customer data publicly exposed | **RESOLVED** (was Critical) | High (fixed & verified live) | Done |
+| BUG-17 | `complete_production`/`end_current_ballot` callable by anyone, unauthenticated | **RESOLVED** (was High) | High (fixed & verified live) | Done |
+| BUG-18 | Internal cost data (`recipe_costs`/`packaging_profile_costs`) publicly queryable | **RESOLVED** (was High) | High (fixed & verified live) | Done |
 | BUG-01 | Builder sales: revenue right, profit wrong — confirmed on 18/34 sales, €335 missing | Critical | High (empirically confirmed) | 1 |
 | BUG-02 | Editing an order with a builder box deletes it | High | High | 1–2 |
 | BUG-19 | No currency/exchange-rate columns exist | Medium | High | 1 |
