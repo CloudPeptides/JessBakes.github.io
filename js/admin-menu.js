@@ -98,16 +98,21 @@ const error = menuResult.error;
 recipes = recipeResult.data || [];
 packagingProfiles = packagingResult.data || [];
 
+    // BUG-03: keys are consistently String()-coerced here and at both
+    // lookup sites below, matching the convention already used in
+    // admin-production.js and js/sale-calculations.js's own key() helper.
+    // Confirmed against live data that both IDs are `bigint`, not UUID, so
+    // this was never a live bug — purely a consistency/robustness fix.
     recipeCosts = new Map(
     (recipeCostResult.data || []).map(recipe => [
-        recipe.id,
+        String(recipe.id),
         recipe
     ])
 );
 
 packagingCosts = new Map(
     (packagingCostResult.data || []).map(profile => [
-        profile.id,
+        String(profile.id),
         profile
     ])
 );
@@ -1686,7 +1691,7 @@ function getPackaging(profileId) {
 function getRecipeCost(recipeId) {
 
     return Number(
-        recipeCosts.get(recipeId)?.cost_per_yield_item || 0
+        recipeCosts.get(String(recipeId))?.cost_per_yield_item || 0
     );
 
 }
@@ -1694,7 +1699,7 @@ function getRecipeCost(recipeId) {
 function getPackagingCost(profileId) {
 
     const profile =
-        packagingCosts.get(Number(profileId));
+        packagingCosts.get(String(profileId));
 
     return Number(profile?.packaging_cost || 0);
 
