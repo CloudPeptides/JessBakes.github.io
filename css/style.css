@@ -1581,3 +1581,238 @@ COMMUNITY FAVORITES
     font-weight:bold;
 }
 
+/* ==========================================
+   PUBLIC GALLERY
+   ==========================================
+   Reuses the site's existing tokens (--burgundy, --surface, --line,
+   --shadow, --radius) and card/pill language instead of introducing a
+   new visual style. Admin-only concerns (upload, edit, RLS-gated writes)
+   live entirely in js/admin-gallery.js / css/admin.css and never load on
+   this page.
+   ========================================== */
+
+.gallery-filters {
+  display:flex;
+  flex-wrap:wrap;
+  justify-content:center;
+  gap:10px;
+  margin-bottom:32px;
+}
+
+.gallery-filter-chip {
+  border:1px solid var(--line);
+  background:rgba(251,244,236,.82);
+  color:var(--text);
+  border-radius:999px;
+  padding:9px 18px;
+  font-size:.82rem;
+  font-weight:600;
+  letter-spacing:.02em;
+  cursor:pointer;
+  transition:background .2s ease, color .2s ease, border-color .2s ease;
+}
+
+.gallery-filter-chip:hover {
+  border-color:var(--burgundy);
+}
+
+.gallery-filter-chip.active {
+  background:var(--burgundy);
+  border-color:var(--burgundy);
+  color:#fff8ef;
+}
+
+.gallery-public-state {
+  text-align:center;
+  padding:60px 20px;
+  color:var(--muted);
+  font-size:1.05rem;
+}
+
+.gallery-public-state-error {
+  color:#a62323;
+}
+
+.gallery-public-grid {
+  display:grid;
+  grid-template-columns:repeat(auto-fill, minmax(240px, 1fr));
+  gap:22px;
+}
+
+.gallery-public-card {
+  position:relative;
+  display:flex;
+  flex-direction:column;
+  background:rgba(251,244,236,.82);
+  border:1px solid var(--line);
+  border-radius:var(--radius);
+  box-shadow:var(--shadow);
+  padding:0;
+  overflow:hidden;
+  cursor:pointer;
+  text-align:left;
+  font:inherit;
+  color:inherit;
+  transition:transform .25s ease, box-shadow .25s ease;
+}
+
+.gallery-public-card:hover,
+.gallery-public-card:focus-visible {
+  transform:translateY(-4px);
+  box-shadow:0 24px 55px rgba(46,32,27,.13);
+}
+
+.gallery-public-card img {
+  width:100%;
+  aspect-ratio:4 / 3;
+  object-fit:cover;
+  display:block;
+  background:var(--surface);
+}
+
+.gallery-public-card-placeholder {
+  width:100%;
+  aspect-ratio:4 / 3;
+  display:grid;
+  place-items:center;
+  font-size:2.4rem;
+  background:var(--surface);
+  color:var(--muted);
+}
+
+.gallery-public-card-title {
+  padding:14px 16px;
+  font-weight:600;
+  color:var(--text);
+}
+
+.gallery-featured-badge {
+  position:absolute;
+  top:12px;
+  left:12px;
+  z-index:1;
+  background:var(--burgundy);
+  color:#fff8ef;
+  padding:5px 12px;
+  border-radius:999px;
+  font-size:.7rem;
+  font-weight:700;
+  letter-spacing:.06em;
+  text-transform:uppercase;
+}
+
+/* ---------- Lightbox ---------- */
+
+.gallery-lightbox {
+  position:fixed;
+  inset:0;
+  z-index:10000;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  background:rgba(20,10,8,.94);
+  opacity:0;
+  pointer-events:none;
+  transition:opacity .25s ease;
+  padding:60px 24px;
+}
+
+.gallery-lightbox.open {
+  opacity:1;
+  pointer-events:auto;
+}
+
+body.gallery-lightbox-open {
+  overflow:hidden;
+}
+
+.gallery-lightbox-figure {
+  max-width:min(1100px, 92vw);
+  max-height:86vh;
+  margin:0;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  gap:16px;
+}
+
+.gallery-lightbox-figure img {
+  max-width:100%;
+  max-height:72vh;
+  object-fit:contain;
+  border-radius:16px;
+  box-shadow:0 30px 70px rgba(0,0,0,.4);
+}
+
+.gallery-lightbox-figure figcaption {
+  color:#f5e8dc;
+  text-align:center;
+  font-size:.95rem;
+  max-width:640px;
+}
+
+.gallery-lightbox-close {
+  position:absolute;
+  top:22px;
+  right:22px;
+  width:44px;
+  height:44px;
+  border-radius:50%;
+  border:1px solid rgba(245,232,220,.4);
+  background:rgba(0,0,0,.25);
+  color:#f5e8dc;
+  font-size:1.1rem;
+  cursor:pointer;
+}
+
+.gallery-lightbox-nav {
+  position:absolute;
+  top:50%;
+  transform:translateY(-50%);
+  width:52px;
+  height:52px;
+  border-radius:50%;
+  border:1px solid rgba(245,232,220,.4);
+  background:rgba(0,0,0,.25);
+  color:#f5e8dc;
+  font-size:1.8rem;
+  line-height:1;
+  cursor:pointer;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+}
+
+.gallery-lightbox-prev { left:18px; }
+.gallery-lightbox-next { right:18px; }
+
+.gallery-lightbox-close:hover,
+.gallery-lightbox-nav:hover {
+  background:rgba(0,0,0,.45);
+}
+
+@media (max-width:700px) {
+  .gallery-public-grid {
+    grid-template-columns:repeat(auto-fill, minmax(150px, 1fr));
+    gap:14px;
+  }
+
+  .gallery-lightbox {
+    padding:70px 12px;
+  }
+
+  .gallery-lightbox-nav {
+    width:44px;
+    height:44px;
+    font-size:1.5rem;
+  }
+
+  .gallery-lightbox-prev { left:8px; }
+  .gallery-lightbox-next { right:8px; }
+
+  .gallery-lightbox-close {
+    top:14px;
+    right:14px;
+  }
+}
+

@@ -251,6 +251,59 @@ test("37. computeMoveSwap returns null for an id that isn't in the list", () => 
 });
 
 /* ==========================================
+   PUBLIC GALLERY SORT + FILTER CHIPS
+========================================== */
+
+test("39. sortForPublicGallery puts every featured photo before every non-featured photo", () => {
+    const sorted = GalleryShared.sortForPublicGallery(PHOTOS);
+    assert.deepEqual(sorted.map(p => p.id), ["b", "c", "a"]); // b,c featured; a not
+});
+
+test("40. sortForPublicGallery orders within each featured group by display_order ascending", () => {
+    const featuredGroup = [
+        { id: "f1", featured: true, display_order: 5 },
+        { id: "f2", featured: true, display_order: 2 },
+        { id: "f3", featured: false, display_order: 1 }
+    ];
+    const sorted = GalleryShared.sortForPublicGallery(featuredGroup);
+    assert.deepEqual(sorted.map(p => p.id), ["f2", "f1", "f3"]);
+});
+
+test("41. sortForPublicGallery does not mutate the input array", () => {
+    const copy = PHOTOS.slice();
+    GalleryShared.sortForPublicGallery(PHOTOS);
+    assert.deepEqual(PHOTOS, copy);
+});
+
+test("42. buildPublicAlbumFilters always leads with an 'All' chip counting every visible photo", () => {
+    const chips = GalleryShared.buildPublicAlbumFilters(PHOTOS, []);
+    assert.equal(chips[0].id, null);
+    assert.equal(chips[0].label, "All");
+    assert.equal(chips[0].count, 3);
+});
+
+test("43. buildPublicAlbumFilters includes an album chip only when it has at least one visible photo", () => {
+    const albums = [{ id: 1, name: "Breads" }, { id: 99, name: "Empty Album" }];
+    const chips = GalleryShared.buildPublicAlbumFilters(PHOTOS, albums);
+    const labels = chips.map(c => c.label);
+    assert.ok(labels.includes("Breads"));
+    assert.ok(!labels.includes("Empty Album"));
+});
+
+test("44. buildPublicAlbumFilters includes 'Uncategorized' only when a visible photo has no album", () => {
+    const chips = GalleryShared.buildPublicAlbumFilters(PHOTOS, [{ id: 1, name: "Breads" }, { id: 2, name: "Rolls" }]);
+    const uncategorized = chips.find(c => c.id === "none");
+    assert.ok(uncategorized);
+    assert.equal(uncategorized.count, 1); // only "c" has album_id: null
+});
+
+test("45. buildPublicAlbumFilters omits 'Uncategorized' when every visible photo has an album", () => {
+    const withAlbums = PHOTOS.map(p => ({ ...p, album_id: 1 }));
+    const chips = GalleryShared.buildPublicAlbumFilters(withAlbums, [{ id: 1, name: "Breads" }]);
+    assert.ok(!chips.some(c => c.id === "none"));
+});
+
+/* ==========================================
    ALBUM DELETE SAFETY
 ========================================== */
 

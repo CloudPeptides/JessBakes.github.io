@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>Gallery | Jess Bakes Sourdough</title>
+  <meta name="description" content="A look at Jess Bakes Sourdough's breads, cookies, and desserts.">
+
+  <link rel="stylesheet" href="css/style.css">
+</head>
+
+<body>
+
+    <a href="#main-content" class="skip-link">Skip to content</a>
+
+<header class="site-header">
+  <nav class="navbar">
+    <a class="logo-link" href="index.html" aria-label="Jess Bakes Sourdough Home">
+      <img src="images/jess-bakes-logo.png" alt="Jess Bakes Sourdough" class="logo-mark">
+    </a>
+
+    <button class="mobile-toggle" aria-label="Open navigation">☰</button>
+
+    <div class="nav-links">
+      <a href="index.html">Home</a>
+      <a href="menu.html">Menu</a>
+      <a href="reviews.html">Reviews</a>
+      <a class="active" href="gallery.html">Gallery</a>
+      <a href="contact.html">Contact</a>
+      <a class="order-btn" href="menu.html">
+          Order
+      </a>
+    </div>
+  </nav>
+</header>
+
+<main id="main-content">
+
+  <section class="page-hero">
+    <p class="eyebrow">A Look Inside</p>
+    <h1>Gallery</h1>
+    <p>Fresh bakes, straight from the kitchen.</p>
+  </section>
+
+  <section class="section">
+
+    <div class="gallery-filters" id="galleryPublicFilters" aria-label="Filter by album"></div>
+
+    <div id="galleryPublicState" class="gallery-public-state" role="status" aria-live="polite">
+      Loading photos...
+    </div>
+
+    <div class="gallery-public-grid" id="galleryPublicGrid"></div>
+
+  </section>
+
+</main>
+
+<div
+    class="gallery-lightbox"
+    id="galleryLightbox"
+    role="dialog"
+    aria-modal="true"
+    aria-label="Photo viewer"
+    aria-hidden="true">
+
+    <button
+        type="button"
+        class="gallery-lightbox-close"
+        id="galleryLightboxClose"
+        aria-label="Close photo viewer">
+
+        ✕
+
+    </button>
+
+    <button
+        type="button"
+        class="gallery-lightbox-nav gallery-lightbox-prev"
+        id="galleryLightboxPrev"
+        aria-label="Previous photo">
+
+        ‹
+
+    </button>
+
+    <figure class="gallery-lightbox-figure">
+        <img id="galleryLightboxImage" src="" alt="">
+        <figcaption id="galleryLightboxCaption"></figcaption>
+    </figure>
+
+    <button
+        type="button"
+        class="gallery-lightbox-nav gallery-lightbox-next"
+        id="galleryLightboxNext"
+        aria-label="Next photo">
+
+        ›
+
+    </button>
+
+</div>
+
+<footer class="footer">
+
+    <div class="footer-inner">
+
+        <div>
+
+            <img
+                class="footer-logo"
+                src="images/jess-bakes-logo.png"
+                alt="Jess Bakes Sourdough">
+
+        </div>
+
+        <div>
+
+            <h3>Menu</h3>
+
+            <p>
+                <a href="menu.html">
+                    Bread
+                </a>
+            </p>
+
+            <p>
+                <a href="menu.html">
+                    Cookies
+                </a>
+            </p>
+
+            <p>
+                <a href="menu.html">
+                    Desserts
+                </a>
+            </p>
+
+        </div>
+
+        <div>
+
+            <h3>Contact</h3>
+
+            <p>
+
+                <a
+                    href="https://www.facebook.com/share/1UYBMv8Kds/?mibextid=wwXIfr"
+                    target="_blank"
+                    rel="noopener noreferrer">
+
+                    Facebook
+
+                </a>
+
+            </p>
+
+            <p>
+                jessica.holsopple3@gmail.com
+            </p>
+
+            <p>
+                +1 (443) 470-0714
+            </p>
+
+        </div>
+
+    </div>
+
+    <div class="footer-bottom">
+
+        © 2026 Jess Bakes Sourdough.
+
+    </div>
+
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<script src="js/supabase.js"></script>
+
+<script src="js/gallery-shared.js"></script>
+
+<script src="js/gallery-public.js"></script>
+
+<script src="js/script.js"></script>
+
+</body>
+</html>

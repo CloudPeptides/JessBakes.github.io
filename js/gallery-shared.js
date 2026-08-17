@@ -205,6 +205,44 @@
         return { valid: true, error: null };
     }
 
+    // ---- Public gallery ----
+
+    /** Featured photos first (newest-featured first among them), then
+     * everything else in the admin-configured display_order. Used by the
+     * public gallery page only -- the admin grid has its own explicit sort
+     * modes (see sortPhotos) and this is never applied there. Pure. */
+    function sortForPublicGallery(photos) {
+        return (photos || []).slice().sort((a, b) => {
+            const featuredDiff = (b.featured ? 1 : 0) - (a.featured ? 1 : 0);
+            if (featuredDiff !== 0) return featuredDiff;
+
+            return Number(a.display_order || 0) - Number(b.display_order || 0);
+        });
+    }
+
+    /** Builds the public gallery's album filter chips from whatever photos
+     * are actually visible (already filtered to published-only by the
+     * caller) -- an album with zero published photos never appears, so
+     * visitors never hit an empty filter. Always includes "All" first;
+     * includes "Uncategorized" only if at least one visible photo has no
+     * album. Pure -- {id, label, count}[], id is null for "All", "none"
+     * for "Uncategorized". */
+    function buildPublicAlbumFilters(photos, albums) {
+        const list = photos || [];
+
+        const chips = [{ id: null, label: "All", count: list.length }];
+
+        (albums || []).forEach(album => {
+            const count = list.filter(p => p.album_id === album.id).length;
+            if (count > 0) chips.push({ id: album.id, label: album.name, count });
+        });
+
+        const uncategorizedCount = list.filter(p => p.album_id === null || p.album_id === undefined).length;
+        if (uncategorizedCount > 0) chips.push({ id: "none", label: "Uncategorized", count: uncategorizedCount });
+
+        return chips;
+    }
+
     // ---- Reordering ----
 
     /** Given a list already sorted by display_order (ascending) and the id
@@ -253,6 +291,8 @@
         formatBytes,
         sortPhotos,
         filterPhotos,
+        sortForPublicGallery,
+        buildPublicAlbumFilters,
         validateForPublish,
         computeMoveSwap,
         canDeleteAlbum
