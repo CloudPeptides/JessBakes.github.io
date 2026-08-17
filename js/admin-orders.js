@@ -574,6 +574,15 @@ function renderStatusButtons(order) {
 
 async function updateOrderStatus(orderId, status) {
 
+    const { data: currentOrder } =
+        await supabaseClient
+            .from("orders")
+            .select("status")
+            .eq("id", orderId)
+            .maybeSingle();
+
+    const previousStatus = currentOrder?.status;
+
     const { error } = await supabaseClient
         .from("orders")
         .update({ status })
@@ -589,7 +598,20 @@ async function updateOrderStatus(orderId, status) {
 
     if (status === "completed") {
 
-    await createSaleFromOrder(orderId);
+    const saleCreated = await createSaleFromOrder(orderId);
+
+    // If the sale couldn't be created (e.g. no EUR->USD exchange rate
+    // could be resolved and the admin didn't enter one manually), don't
+    // leave the order stuck as "completed" with no sale record -- revert
+    // it to whatever it was before this action.
+    if (!saleCreated && previousStatus) {
+
+        await supabaseClient
+            .from("orders")
+            .update({ status: previousStatus })
+            .eq("id", orderId);
+
+    }
 
 }
 
@@ -663,7 +685,7 @@ async function createSaleFromOrder(orderId) {
 
     if (existingSale) {
 
-        return;
+        return true;
 
     }
 
@@ -678,7 +700,7 @@ async function createSaleFromOrder(orderId) {
 
         console.error(orderError);
         alert("Unable to load order.");
-        return;
+        return false;
 
     }
 
@@ -692,7 +714,29 @@ async function createSaleFromOrder(orderId) {
 
         console.error(itemsError);
         alert("Unable to load order items.");
-        return;
+        return false;
+
+    }
+
+    // Phase 3: resolve today's EUR->USD rate BEFORE writing anything, so a
+    // rate that can't be resolved never leaves a half-completed sale.
+    // Snapshotted once here and reused for the sale AND every one of its
+    // sale_items rows — never a per-line lookup (see js/currency-conversion.js).
+    const todayStr = new Date().toISOString().split("T")[0];
+
+    const rateEntry = await CurrencyConversion.resolveExchangeRate(todayStr, {
+        getCachedRate: getCachedExchangeRate,
+        fetchLiveRate: CurrencyConversion.createFrankfurterFetcher(),
+        promptManualRate: async (dateStr) => promptManualExchangeRate(dateStr),
+        saveRate: saveExchangeRate
+    });
+
+    if (!rateEntry) {
+
+        alert(
+            "Could not determine today's EUR→USD exchange rate, and no manual rate was entered. This order was NOT marked completed — try again once a rate is available."
+        );
+        return false;
 
     }
 
@@ -713,7 +757,17 @@ async function createSaleFromOrder(orderId) {
 
                 total_cost: 0,
 
-                profit: 0
+                profit: 0,
+
+                exchange_rate: rateEntry.rate,
+
+                exchange_rate_date: rateEntry.rate_date,
+
+                exchange_rate_source: rateEntry.source,
+
+                usd_revenue: 0,
+
+                usd_profit: 0
 
             })
             .select()
@@ -723,7 +777,7 @@ async function createSaleFromOrder(orderId) {
 
         console.error(saleError);
         alert("Unable to create sale.");
-        return;
+        return false;
 
     }
 
@@ -735,7 +789,7 @@ async function createSaleFromOrder(orderId) {
     if (menuError) {
 
         console.error(menuError);
-        return;
+        return false;
 
     }
 
@@ -747,7 +801,7 @@ async function createSaleFromOrder(orderId) {
     if (recipeCostError) {
 
         console.error(recipeCostError);
-        return;
+        return false;
 
     }
 
@@ -759,7 +813,7 @@ async function createSaleFromOrder(orderId) {
     if (packagingCostError) {
 
         console.error(packagingCostError);
-        return;
+        return false;
 
     }
 
@@ -775,7 +829,15 @@ async function createSaleFromOrder(orderId) {
     const lines =
         SaleCalculations.buildSaleFromOrder(items, referenceData);
 
-    const saleItems = lines.map(line => ({
+    // Phase 3: every line gets its USD figures from this SAME snapshotted
+    // rate (js/currency-conversion.js), including guaranteeing the sum of
+    // the lines' usd_line_revenue always reconciles exactly with the
+    // sale's own usd_revenue — see applyRateToSaleLines for the rounding-
+    // residual handling this requires.
+    const linesWithUsd =
+        CurrencyConversion.applyRateToSaleLines(lines, rateEntry.rate);
+
+    const saleItems = linesWithUsd.map(line => ({
 
         sale_id: sale.id,
 
@@ -795,7 +857,11 @@ async function createSaleFromOrder(orderId) {
 
         line_revenue: line.line_revenue,
 
-        line_profit: line.line_profit
+        line_profit: line.line_profit,
+
+        usd_line_revenue: line.usd_line_revenue,
+
+        usd_line_profit: line.usd_line_profit
 
     }));
 
@@ -808,11 +874,17 @@ async function createSaleFromOrder(orderId) {
 
         console.error(saleItemsError);
         alert("Unable to save sale items.");
-        return;
+        return false;
 
     }
 
     const totals = SaleCalculations.summarizeLines(lines);
+
+    const usdTotals = CurrencyConversion.computeUsdSaleFigures({
+        revenue: totals.revenue,
+        totalCost: totals.totalCost,
+        rate: rateEntry.rate
+    });
 
     const { error: updateSaleError } =
         await supabaseClient
@@ -827,7 +899,11 @@ async function createSaleFromOrder(orderId) {
 
                 total_cost: totals.totalCost,
 
-                profit: totals.profit
+                profit: totals.profit,
+
+                usd_revenue: usdTotals ? usdTotals.usdRevenue : null,
+
+                usd_profit: usdTotals ? usdTotals.usdProfit : null
 
             })
             .eq("id", sale.id);
@@ -836,9 +912,71 @@ async function createSaleFromOrder(orderId) {
 
         console.error(updateSaleError);
         alert("Unable to finalize sale.");
-        return;
+        return false;
 
     }
+
+    return true;
+
+}
+
+
+/* ==========================================
+   EXCHANGE RATE HELPERS (Phase 3)
+========================================== */
+
+async function getCachedExchangeRate(dateStr) {
+
+    const { data, error } =
+        await supabaseClient
+            .from("exchange_rates")
+            .select("*")
+            .eq("rate_date", dateStr)
+            .maybeSingle();
+
+    if (error) {
+
+        console.error(error);
+        return null;
+
+    }
+
+    return data;
+
+}
+
+async function saveExchangeRate(entry) {
+
+    const { error } =
+        await supabaseClient
+            .from("exchange_rates")
+            .upsert({
+
+                rate_date: entry.rate_date,
+
+                reference_date: entry.reference_date,
+
+                rate: entry.rate,
+
+                source: entry.source
+
+            });
+
+    if (error) throw error;
+
+}
+
+function promptManualExchangeRate(dateStr) {
+
+    const input = prompt(
+        `Couldn't retrieve the EUR→USD exchange rate for ${dateStr} from the live rate service.\n\nEnter it manually (e.g. 1.0921) to complete this sale, or press Cancel to leave the order as it was.`
+    );
+
+    if (input === null) return null;
+
+    const parsed = Number(input);
+
+    return Number.isFinite(parsed) && parsed > 0 ? parsed : null;
 
 }
 
