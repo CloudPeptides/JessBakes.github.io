@@ -5,12 +5,6 @@
 let salesOrders = [];
 let salesMenuItems = [];
 
-let salesRecipes = [];
-let salesRecipeIngredients = [];
-let salesIngredients = [];
-let salesPackagingItems = [];
-let salesPackagingProfiles = [];
-
 let revenueChart = null;
 let categoryChart = null;
 let currentSalesRange = "today";
@@ -72,12 +66,7 @@ function bindSalesControls() {
 async function loadSalesDashboard() {
     const [
     ordersResult,
-    menuResult,
-    recipesResult,
-    recipeIngredientsResult,
-    ingredientsResult,
-    packagingItemsResult,
-    packagingProfilesResult
+    menuResult
 ] = await Promise.all([
 
     supabaseClient
@@ -97,27 +86,7 @@ async function loadSalesDashboard() {
             recipe_id,
             recipe_units_used,
             packaging_profile_id
-        `),
-
-    supabaseClient
-        .from("recipes")
-        .select("*"),
-
-    supabaseClient
-        .from("recipe_ingredients")
-        .select("*"),
-
-    supabaseClient
-        .from("ingredients")
-        .select("*"),
-
-    supabaseClient
-        .from("packaging_profile_items")
-        .select("*"),
-
-    supabaseClient
-        .from("packaging_profiles")
-        .select("*")
+        `)
 ]);
 
     if (ordersResult.error) {
@@ -145,106 +114,21 @@ salesOrders = (ordersResult.data || []).map((sale) => ({
 
 }));
 
-console.log(
-    salesOrders.map(s => ({
-        customer: s.customer_name,
-        revenue: s.revenue,
-        completed_at: s.completed_at
-    }))
-);
-
 salesMenuItems = menuResult.data || [];
-
-    salesRecipes = recipesResult.data || [];
-salesRecipeIngredients = recipeIngredientsResult.data || [];
-salesIngredients = ingredientsResult.data || [];
-salesPackagingItems = packagingItemsResult.data || [];
-salesPackagingProfiles = packagingProfilesResult.data || [];
 
 renderSalesDashboard();
 }
 
-function calculateSaleCost(item) {
-
-    const menuItem = salesMenuItems.find(
-        m => String(m.id) === String(item.menu_item_id)
-    );
-
-    if (!menuItem) return 0;
-
-    let totalCost = 0;
-
-
-    // Recipe cost
-    const recipeIngredients =
-        salesRecipeIngredients.filter(
-            ri =>
-                String(ri.recipe_id) ===
-                String(menuItem.recipe_id)
-        );
-
-
-    recipeIngredients.forEach(ri => {
-
-        const ingredient =
-            salesIngredients.find(
-                i =>
-                String(i.id) ===
-                String(ri.ingredient_id)
-            );
-
-        if (!ingredient) return;
-
-
-        const costPerGram =
-            Number(ingredient.purchase_price) /
-            Number(ingredient.purchase_size);
-
-
-        totalCost +=
-            Number(ri.quantity || 0) *
-            costPerGram;
-
-    });
-
-
-    // Packaging cost
-    const packaging =
-        salesPackagingItems.filter(
-            p =>
-            String(p.profile_id) ===
-            String(menuItem.packaging_profile_id)
-        );
-
-
-    packaging.forEach(p => {
-
-        const ingredient =
-            salesIngredients.find(
-                i =>
-                String(i.id) ===
-                String(p.ingredient_id)
-            );
-
-        if (!ingredient) return;
-
-
-        const cost =
-            (Number(ingredient.purchase_price) /
-            Number(ingredient.purchase_size))
-            *
-            Number(p.quantity || 0);
-
-
-        totalCost += cost;
-
-    });
-
-
-    return totalCost *
-        Number(item.quantity || 1);
-
-}
+// BUG-12: the former calculateSaleCost() here was fully unused (every
+// profit figure the page shows comes from the already-correct, frozen
+// `sales`/`sale_items` columns via createSaleFromOrder() and
+// js/sale-calculations.js — see BUG-01) and, being dead code, had drifted
+// unsafe: it computed ingredient cost as purchase_price / purchase_size
+// with no unit conversion at all, which would have silently mispriced any
+// ingredient whose purchase unit differs from its recipe unit. Removed
+// rather than fixed in place, since a correct, shared, tested
+// implementation already exists in js/sale-calculations.js if a live
+// recalculation feature is ever wanted here.
 
 function renderSalesDashboard() {
 
@@ -733,8 +617,6 @@ function renderMonthlyRevenue(completedOrders) {
 function renderProfitBreakdown(orders) {
     const container = document.getElementById("profitBreakdown");
     if (!container) return;
-
-    console.log("PROFIT INPUT:", orders);
 
     const profit = calculateProfit(orders);
 
