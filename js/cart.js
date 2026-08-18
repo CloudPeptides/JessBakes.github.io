@@ -706,6 +706,9 @@ function updatePickupInfo() {
                 <br>
 
                 Use the notes below for anything else you'd like me to know.
+                <br><br>
+
+                The exact pickup location will be sent to you once your order is confirmed.
 
             </p>
 
@@ -762,6 +765,12 @@ function updatePickupInfo() {
                 <br>
 
                 12:30 PM
+
+            </p>
+
+            <p>
+
+                The exact pickup location will be sent to you once your order is confirmed.
 
             </p>
 

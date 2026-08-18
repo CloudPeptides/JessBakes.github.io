@@ -1504,6 +1504,15 @@ COMMUNITY FAVORITES
     user-select:none;
 }
 
+.newsletter-note {
+
+    font-size: 0.85rem;
+    color: var(--muted);
+    max-width: 480px;
+    margin: 10px auto 0;
+
+}
+
 .newsletter button {
 
     background: #7a2d1d;
