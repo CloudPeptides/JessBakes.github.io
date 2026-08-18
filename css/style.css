@@ -273,6 +273,28 @@ h3 {
   grid-template-columns:repeat(2,1fr);
 }
 
+/* Equal-height cards + a lone odd-one-out last card centered at its
+   siblings' width/height -- shared by every .contact-grid (Contact
+   and Privacy both use it). .contact-grid--info raises the min-height
+   for Privacy's longer card copy; Contact's shorter cards use the
+   base value. Reset to natural single-column stacking happens in the
+   560px mobile breakpoint below. */
+.contact-card {
+  display:flex;
+  flex-direction:column;
+  min-height:360px;
+}
+
+.contact-grid--info .contact-card {
+  min-height:410px;
+}
+
+.contact-grid > .contact-card:last-child:nth-child(odd) {
+  grid-column:1 / -1;
+  justify-self:center;
+  width:calc(50% - 9px);
+}
+
 .card,
 .menu-item,
 .contact-card,
@@ -377,8 +399,6 @@ h3 {
   margin-left:auto;
   margin-right:auto;
 }
-
-.contact-grid { align-items:start; }
 
 .contact-card h2 {
   font-size:clamp(2.2rem,4vw,3rem);
@@ -950,9 +970,19 @@ h3 {
   .cards,
   .menu-grid,
   .menu-grid.two,
-  .contact-grid,
   .footer-inner {
     grid-template-columns:1fr;
+  }
+
+  /* Tablet: .contact-grid stays two columns (not collapsed above),
+     but narrower cards wrap the same copy onto more lines, so the
+     shared min-height needs to grow to keep every card still equal. */
+  .contact-card {
+    min-height:415px;
+  }
+
+  .contact-grid--info .contact-card {
+    min-height:535px;
   }
 
   .review-form-card{
@@ -993,6 +1023,25 @@ h3 {
   .contact-card,
   .story-card {
     padding:24px;
+  }
+
+  /* Mobile: one full-width column, natural card heights (no forced
+     min-height so short cards don't leave empty space), and the
+     last-odd-card centering from the desktop/tablet rule above is
+     turned back off since every card already spans full width. */
+  .contact-grid {
+    grid-template-columns:1fr;
+  }
+
+  .contact-card,
+  .contact-grid--info .contact-card {
+    min-height:0;
+  }
+
+  .contact-grid > .contact-card:last-child:nth-child(odd) {
+    grid-column:auto;
+    justify-self:stretch;
+    width:auto;
   }
 }
 
