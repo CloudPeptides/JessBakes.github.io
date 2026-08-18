@@ -87,7 +87,7 @@ Confidence: **High** (directly traced in code, and DB-verified where applicable)
 
 ---
 
-### BUG-21 — Minor Supabase hardening and performance items — **safe portion RESOLVED (2026-08-18)**
+### BUG-21 — Minor Supabase hardening and performance items — **RESOLVED (all SQL/code-fixable items), 1 item Accepted plan limitation (2026-08-18)**
 - **Affected pages:** None directly.
 - **Update 2026-08-18:** The old `gallery_items` table (zero rows, RLS-enabled-no-policy) no longer exists — it was dropped by the Gallery feature migration (`20260817163139_gallery_photos_albums_storage.sql`), which replaced it with `gallery_albums`/`gallery_photos`, both fully RLS-policied from the start (public can view published/available rows; admins have full CRUD). That sub-item is resolved as a side effect of shipping Gallery, not by this pass.
 - **Status: The three DB-safe items are fixed and verified live**, via `supabase/migrations/20260818090000_bug21_fk_indexes_redundant_rls_search_path.sql` (deterministic rollback in `supabase/rollbacks/`):
@@ -98,10 +98,10 @@ Confidence: **High** (directly traced in code, and DB-verified where applicable)
 - **Deliberately left alone, not part of this fix:**
   - `admins` RLS-enabled-no-policy — intentional; the table is only ever read through the `SECURITY DEFINER` `is_admin()` function, not directly.
   - The three `authenticated`-executable `SECURITY DEFINER` function warnings (`complete_production`/`end_current_ballot`/`is_admin`) — legitimate: the real admin calls these as an authenticated user, and each already gates on `is_admin()` internally (see BUG-17). Revoking `authenticated` `EXECUTE` would break the admin dashboard.
-  - **Leaked-password protection remains disabled** — this is a Supabase Auth *dashboard* toggle, not a SQL-reachable setting, so it's outside what a migration can change. To enable it: Supabase Dashboard → Authentication → Policies (or Auth → Providers, depending on dashboard version) → **Password Security** → turn on **"Leaked password protection"** (checks new passwords against HaveIBeenPwned) → Save.
-- **Severity:** Low across the board (unchanged).
-- **Confidence:** High (verified live via advisors, policy inspection, and grant inspection both before and after).
-- **Recommended phase:** Opportunistic — **done (safe/DB portion), 2026-08-18**; leaked-password protection remains an owner action in the dashboard.
+  - **Leaked-password protection — Accepted plan limitation, not open/broken/unresolved.** This is a Supabase Auth setting, not SQL-reachable, so no migration in this repo can touch it — but it is *also* not just a dashboard toggle away: confirmed 2026-08-18 via the project's own Supabase dashboard that this project is on the **Free** plan, and leaked-password protection (checking new passwords against HaveIBeenPwned) is a **Pro-plan-and-above** feature. It cannot be enabled at the current plan tier, full stop. **It remains disabled today** — nothing in this repository has enabled it, and nothing here claims otherwise. Upgrading the project to Supabase **Pro** (or higher) would make the setting available at Dashboard → Authentication → Policies → Password Security → "Leaked password protection." Until/unless the owner upgrades, this item is accepted as-is rather than treated as an outstanding defect.
+- **Severity:** Low across the board (unchanged). The one remaining item is a plan-tier limitation, not a severity/risk judgment call.
+- **Confidence:** High (verified live via advisors, policy inspection, and grant inspection both before and after; plan tier confirmed directly in the Supabase dashboard).
+- **Recommended phase:** Opportunistic — **done: every SQL/code-fixable item resolved 2026-08-18.** Leaked-password protection: **Accepted plan limitation** — revisit only if the project is upgraded to Supabase Pro or higher.
 
 ---
 
@@ -329,7 +329,7 @@ Confidence: **High** (directly traced in code, and DB-verified where applicable)
 | BUG-13 | Debug console.log left in Sales | **RESOLVED** (was Low) | High | 2 — done |
 | BUG-19 | No currency/exchange-rate columns exist | **RESOLVED** (was Medium) | High (verified live) | 3 — done |
 | BUG-06 | Currency needs 3 different treatments (customer EUR, inventory/costs/Sales/Analytics USD) | **RESOLVED** (was Medium) | High (verified live + 23/23 tests) | 3 — done |
-| BUG-21 | Minor Supabase hardening/performance items (advisors) | **RESOLVED** (safe/DB portion; leaked-password protection needs a manual dashboard toggle) | High (verified live) | Done (2026-08-18) |
+| BUG-21 | Minor Supabase hardening/performance items (advisors) | **RESOLVED** (all SQL/code-fixable items); leaked-password protection = **Accepted plan limitation** (Free plan; needs Supabase Pro+) | High (verified live) | Done (2026-08-18) |
 | BUG-23 | Production mixed EUR revenue with USD cost in its profit/margin figures, all labeled € | **RESOLVED** (was Medium) | High (verified + 7/7 tests) | 3 — done |
 | BUG-07 | `admin.js` dead and broken | **RESOLVED** (was Low) | High (verified, file deleted) | 4 — done |
 | BUG-08 | Dead markup in `admin.html` | **RESOLVED** (was Low) | High (verified) | 4 — done |
