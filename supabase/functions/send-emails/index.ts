@@ -48,7 +48,13 @@ async function processPending(adminClient: any) {
         const isOrderType = row.email_type.startsWith("order_");
         const isNewsletterType = row.email_type === "newsletter_welcome" || row.email_type === "weekly_menu";
 
-        if ((isOrderType && !settings.order_emails_enabled) || (isNewsletterType && !settings.newsletter_enabled)) {
+        // Test rows (is_test:true) are exempt from the enabled-flag
+        // gate -- that's the entire point of a test send: verifying
+        // the pipeline works BEFORE flipping production sending on.
+        // resolveSendRecipient() inside processOutboxRow() is what
+        // actually keeps a test row from ever reaching a real
+        // recipient, regardless of this gate.
+        if (!row.is_test && ((isOrderType && !settings.order_emails_enabled) || (isNewsletterType && !settings.newsletter_enabled))) {
             continue; // left pending, tried again next run once enabled
         }
 

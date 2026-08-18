@@ -332,7 +332,7 @@ async function loadCampaigns() {
 
     tbody.innerHTML = data.map(c => `
         <tr>
-            <td>${escapeHtml(c.campaign_key)}</td>
+            <td>${escapeHtml(c.campaign_key)}${c.is_test ? " (test)" : ""}</td>
             <td>${escapeHtml(c.status)}</td>
             <td>${c.recipient_count}</td>
             <td>${c.sent_count}</td>
