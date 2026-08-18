@@ -1,6 +1,6 @@
 # 10 — Production Email System (Supabase Edge Functions + Resend)
 
-**Status as of 2026-08-18 (updated): code, migrations, templates, tests, and admin UI are complete and committed. `jessbakessourdough.com` is verified in Resend; `RESEND_API_KEY` and `RESEND_WEBHOOK_SECRET` are set as Supabase Edge Function secrets; the `pg_cron` schedule (§10) is applied and running (harmlessly no-op until the functions below are deployed). Production sending is still OFF (`email_settings.order_emails_enabled`/`newsletter_enabled` both `false`). The one remaining step is deploying the Edge Functions themselves, which requires a credential this assistant does not have and should not be given directly — see §10.**
+**Status as of 2026-08-18: LIVE.** All 5 Edge Functions deployed and verified with real Resend sends (all 5 email types sent and confirmed `email.delivered` via webhook, correctly linked back to their outbox rows). The `current_jwt_role()`-based service-role check (see the `20260818135245_...` migration) replaced an earlier unreliable env-var string comparison, found and fixed during this verification. `order_emails_enabled` and `newsletter_enabled` are both **`true`** — real order-lifecycle emails and the weekly Sunday 18:00 Europe/Berlin newsletter are active. `bakery_settings.pickup_location` is still unset as of this writing; `order_confirmed` emails show a graceful fallback ("sent separately") until it's filled in on `/admin/settings.html`.
 
 ## 1. What this system does
 
