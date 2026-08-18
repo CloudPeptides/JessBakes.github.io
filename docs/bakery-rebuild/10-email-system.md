@@ -1,6 +1,6 @@
 # 10 — Production Email System (Supabase Edge Functions + Resend)
 
-**Status as of 2026-08-18: code, migrations (schema), templates, tests, and admin UI are complete and committed. Production sending is OFF by default. Edge Function deployment and the cron schedule are deliberately held until the manual Resend/DNS/secrets setup below is done — see "Activation" at the end of this document.**
+**Status as of 2026-08-18 (updated): code, migrations, templates, tests, and admin UI are complete and committed. `jessbakessourdough.com` is verified in Resend; `RESEND_API_KEY` and `RESEND_WEBHOOK_SECRET` are set as Supabase Edge Function secrets; the `pg_cron` schedule (§10) is applied and running (harmlessly no-op until the functions below are deployed). Production sending is still OFF (`email_settings.order_emails_enabled`/`newsletter_enabled` both `false`). The one remaining step is deploying the Edge Functions themselves, which requires a credential this assistant does not have and should not be given directly — see §10.**
 
 ## 1. What this system does
 
@@ -94,17 +94,17 @@ Not (and can't be) covered by `node --test`: the Deno-only plumbing in `supabase
 
 ## 9. What's intentionally NOT done yet
 
-- Edge Functions are **written but not deployed** (`supabase functions deploy` requires the Supabase CLI to be linked to the project, and deploying now would just mean broken calls with no `RESEND_API_KEY`).
-- The `pg_cron` schedule migration is **written but not applied** (no point scheduling calls to undeployed functions).
-- `order_emails_enabled` and `newsletter_enabled` default to `false` in `email_settings` — even once deployed, nothing sends until an admin (or the activation pass below) explicitly turns them on.
+- Edge Functions are **written but not deployed**. Deploying requires the Supabase CLI to be authenticated against this project (`supabase link` + `supabase functions deploy`), which needs a Supabase **Personal Access Token** — a project-management credential, meaningfully more sensitive than the Resend API key, that this assistant does not have and should not be handed directly (unlike an Edge Function secret, a Personal Access Token isn't scoped to "send email" — it can manage the whole Supabase project). See §10 for how this gets deployed without ever sharing that token with the assistant.
+- `order_emails_enabled` and `newsletter_enabled` remain `false` in `email_settings` — even once deployed, nothing sends until an admin explicitly turns them on (§10 step 5).
 
-## 10. Activation (after the manual setup steps)
+## 10. Activation
 
-Once Resend is set up (see the assistant's final report for the exact manual steps) and the secrets are entered directly into Supabase:
+Already done (2026-08-18): domain verified in Resend; `RESEND_API_KEY`/`RESEND_WEBHOOK_SECRET` set as Supabase Edge Function secrets; `20260818130000_email_cron_schedules.sql` applied (the two `pg_cron` jobs exist and run every 5/15 minutes, but currently fail harmlessly inside `pg_net` — no deployed function to reach yet, and no data is touched by a failed HTTP call).
 
-1. `supabase functions deploy send-emails newsletter-subscribe newsletter-unsubscribe weekly-scheduler` (JWT-verified) and `supabase functions deploy resend-webhook --no-verify-jwt` (Resend can't send a Supabase JWT; security is the Svix signature check instead).
-2. Run `select vault.create_secret('<service_role_key>', 'project_service_role_key');` once (owner-entered, never seen by the assistant).
-3. Apply `20260818130000_email_cron_schedules.sql`.
-4. Send test emails (all 5 types) to the configured admin test recipient only; verify formatting, links, unsubscribe behavior, and idempotency (re-trigger the same order status change and confirm no duplicate).
-5. Verify a real Resend webhook event round-trips into `email_webhook_events` with a valid signature (and that an invalid signature is rejected).
-6. Only after all of the above pass: enable `order_emails_enabled`, and either enable `newsletter_enabled` or leave it off until the admin is ready — the Sunday 6 PM schedule only ever fires a real campaign once `newsletter_enabled` is on.
+Remaining steps:
+
+1. **Deploy the Edge Functions** via `.github/workflows/deploy-email-functions.yml` (added in this repo) — a manually-triggered GitHub Actions workflow, so deployment is a deliberate action, not an automatic side effect of a push. One-time setup: add a repository secret `SUPABASE_ACCESS_TOKEN` (GitHub repo → Settings → Secrets and variables → Actions → New repository secret), generated at https://supabase.com/dashboard/account/tokens — that token lives only inside GitHub's own encrypted secrets store and is used only by this workflow; it is never seen by, or passed through, any AI assistant. Then run the workflow from the repo's Actions tab (or `gh workflow run deploy-email-functions.yml`). It deploys `newsletter-subscribe`, `newsletter-unsubscribe`, `send-emails`, and `weekly-scheduler` JWT-verified, and `resend-webhook` with `--no-verify-jwt` (Resend can't send a Supabase JWT; security there is entirely the Svix signature check).
+2. **Create the cron Vault secret** (if not already done) — in the Supabase SQL editor, run once: `select vault.create_secret('<Project API "service_role" key from Project Settings -> API>', 'project_service_role_key');`. Owner-entered only; never seen by the assistant. Once this exists AND the functions are deployed, the two cron jobs already scheduled in step 9 start working on their own — no further action needed.
+3. Send test emails (all 5 types) to the configured admin test recipient only, via `/admin/email.html`'s Preview/Send Test; verify formatting, links, unsubscribe behavior, and idempotency (re-trigger the same order status change and confirm no duplicate row/send).
+4. Verify a real Resend webhook event round-trips into `email_webhook_events` with a valid signature (and that a deliberately-wrong signature is rejected with 401).
+5. Only after all of the above pass: enable `order_emails_enabled` and/or `newsletter_enabled` on `/admin/email.html` — the Sunday 6 PM Europe/Berlin schedule only ever fires a real campaign once `newsletter_enabled` is on.

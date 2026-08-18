@@ -1,10 +1,14 @@
 -- ============================================================
 -- pg_cron schedules that drive the email system's two periodic
--- Edge Function invocations. NOT applied as part of the initial
--- email-system migration -- this is deliberately held until the
--- Edge Functions are actually deployed (a real function URL to call)
--- and the one-time Vault secret below has been created, both part
--- of the post-Resend-setup activation phase.
+-- Edge Function invocations.
+--
+-- Applied 2026-08-18. Safe to apply before the Edge Functions are
+-- deployed and before the Vault secret below exists: each run
+-- simply fails inside pg_net (logged, harmless, touches no data)
+-- until both are in place -- and order_emails_enabled/
+-- newsletter_enabled are false regardless, so no email could go out
+-- even if a run somehow succeeded early. See
+-- docs/bakery-rebuild/10-email-system.md §10 for current status.
 --
 -- One-time manual prerequisite (run once, in the Supabase SQL
 -- editor, by the project owner -- the value is never seen by or

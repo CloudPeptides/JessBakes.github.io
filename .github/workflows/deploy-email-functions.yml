@@ -1,0 +1,54 @@
+name: Deploy Email System Edge Functions
+
+# Manual trigger only, deliberately -- deploying a function is a
+# real, user-facing change (even with sending disabled at the
+# application level) and should be a conscious action, not an
+# automatic side effect of every push.
+#
+# One-time setup required before this can run (see
+# docs/bakery-rebuild/10-email-system.md §10): add a repository
+# secret named SUPABASE_ACCESS_TOKEN (Settings -> Secrets and
+# variables -> Actions -> New repository secret), generated at
+# https://supabase.com/dashboard/account/tokens. That token is used
+# only by this workflow, inside GitHub's own infrastructure -- it is
+# never seen by, or passed through, any AI assistant or committed to
+# this repository.
+on:
+  workflow_dispatch: {}
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: supabase/setup-cli@v1
+        with:
+          version: latest
+
+      - name: Link project
+        run: supabase link --project-ref fbfvqiuhwqfhhxufgmla
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+
+      # JWT-verified: callable by an authenticated admin session or
+      # the service-role JWT (pg_cron). Each function independently
+      # checks is_admin()/service-role -- see _shared/supabaseAdmin.ts.
+      - name: Deploy JWT-verified functions
+        run: |
+          supabase functions deploy newsletter-subscribe
+          supabase functions deploy newsletter-unsubscribe
+          supabase functions deploy send-emails
+          supabase functions deploy weekly-scheduler
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+
+      # Resend cannot send a Supabase-signed JWT, so this one is
+      # deployed without gateway JWT verification -- its security is
+      # entirely the Svix signature check inside the function itself
+      # (supabase/functions/_shared/webhook.mjs), verified against
+      # the RESEND_WEBHOOK_SECRET Edge Function secret.
+      - name: Deploy the public webhook receiver (no JWT verification)
+        run: supabase functions deploy resend-webhook --no-verify-jwt
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
