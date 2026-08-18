@@ -1504,12 +1504,41 @@ COMMUNITY FAVORITES
     user-select:none;
 }
 
-.newsletter-note {
+.newsletter-honeypot {
 
-    font-size: 0.85rem;
+    position: absolute;
+    left: -9999px;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    opacity: 0;
+
+}
+
+.newsletter-consent {
+
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    max-width: 420px;
+    margin: 14px auto 0;
+    font-size: 0.9rem;
     color: var(--muted);
-    max-width: 480px;
-    margin: 10px auto 0;
+    text-align: left;
+    line-height: 1.5;
+
+}
+
+.newsletter-consent input[type="checkbox"] {
+
+    margin-top: 3px;
+    flex-shrink: 0;
+
+}
+
+.newsletter-consent a {
+
+    color: var(--burgundy);
 
 }
 

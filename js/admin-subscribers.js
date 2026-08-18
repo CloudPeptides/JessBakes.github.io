@@ -1,43 +1,14 @@
-let quill;
 let subscribers = [];
 
-document.addEventListener("DOMContentLoaded", () => {
+document.addEventListener("DOMContentLoaded", async () => {
+
+    await requireAuth();
 
     loadSubscribers();
 
     document
         .getElementById("subscriberSearch")
         .addEventListener("input", filterSubscribers);
-
-    const editor =
-        document.getElementById("newsletterEditor");
-
-    if (editor) {
-
-        quill = new Quill(editor, {
-
-            theme: "snow",
-
-            placeholder:
-                "Write this week's newsletter..."
-
-        });
-
-    }
-
-    document
-        .getElementById("testNewsletterBtn")
-        .addEventListener(
-            "click",
-            sendTestNewsletter
-        );
-
-    document
-        .getElementById("sendNewsletterBtn")
-        .addEventListener(
-            "click",
-            sendNewsletter
-        );
 
 });
 
@@ -83,9 +54,11 @@ function renderSubscribers(list) {
 
         tr.innerHTML = `
 
-            <td>${subscriber.name}</td>
+            <td>${escapeHtml(subscriber.name)}</td>
 
-            <td>${subscriber.email}</td>
+            <td>${escapeHtml(subscriber.email)}</td>
+
+            <td>${escapeHtml(subscriber.status || "active")}</td>
 
             <td>${formatDate(subscriber.created_at)}</td>
 
@@ -95,7 +68,7 @@ function renderSubscribers(list) {
                     class="danger-btn"
                     onclick="deleteSubscriber('${subscriber.id}')">
 
-                    Delete
+                    Unsubscribe
 
                 </button>
 
@@ -131,9 +104,12 @@ function filterSubscribers() {
 
 }
 
+// Admin-side "delete" means unsubscribe -- the same status flip the
+// public one-click unsubscribe link performs, so the record and its
+// history stay intact rather than being destroyed.
 async function deleteSubscriber(id) {
 
-    if (!confirm("Delete this subscriber?")) {
+    if (!confirm("Unsubscribe this person from the weekly menu email?")) {
 
         return;
 
@@ -144,7 +120,7 @@ async function deleteSubscriber(id) {
             .from("subscribers")
             .update({
 
-                is_active: false
+                status: "unsubscribed"
 
             })
             .eq("id", id);
@@ -168,168 +144,11 @@ function formatDate(date) {
 
 }
 
-async function sendTestNewsletter() {
-
-    const button =
-        document.getElementById("testNewsletterBtn");
-
-    button.disabled = true;
-
-    try {
-
-        const subject =
-            document
-                .getElementById("newsletterSubject")
-                .value
-                .trim();
-
-        const html =
-            quill.root.innerHTML;
-
-        if (!subject) {
-
-            alert("Please enter a subject.");
-
-            return;
-
-        }
-
-        if (
-            !html ||
-            html === "<p><br></p>"
-        ) {
-
-            alert("Please write your newsletter.");
-
-            return;
-
-        }
-
-        const { error } =
-            await supabaseClient
-                .functions
-                .invoke(
-                    "rapid-worker",
-                    {
-                        body: {
-
-                            mode: "test",
-
-                            subject,
-
-                            html
-
-                        }
-                    }
-                );
-
-        if (error) {
-
-            alert(error.message);
-
-            return;
-
-        }
-
-        alert(
-            "Test email sent to jessica.holsopple3@gmail.com."
-        );
-
-    } finally {
-
-        button.disabled = false;
-
-    }
-
-}
-
-async function sendNewsletter() {
-
-    if (
-
-        !confirm(
-
-            `Send this newsletter to ${subscribers.length} subscribers?`
-
-        )
-
-    ) {
-
-        return;
-
-    }
-
-    const button =
-        document.getElementById("sendNewsletterBtn");
-
-    button.disabled = true;
-
-    try {
-
-        const subject =
-            document
-                .getElementById("newsletterSubject")
-                .value
-                .trim();
-
-        const html =
-            quill.root.innerHTML;
-
-        if (!subject) {
-
-            alert("Please enter a subject.");
-
-            return;
-
-        }
-
-        if (
-            !html ||
-            html === "<p><br></p>"
-        ) {
-
-            alert("Please write your newsletter.");
-
-            return;
-
-        }
-
-        const { data, error } =
-            await supabaseClient
-                .functions
-                .invoke(
-                    "rapid-worker",
-                    {
-                        body: {
-
-                            mode: "newsletter",
-
-                            subject,
-
-                            html
-
-                        }
-                    }
-                );
-
-        if (error) {
-
-            alert(error.message);
-
-            return;
-
-        }
-
-        alert(
-
-            `Newsletter sent to ${data?.sent ?? 0} subscribers!`
-
-        );
-
-    } finally {
-
-        button.disabled = false;
-
-    }
-
+function escapeHtml(text) {
+    return String(text ?? "")
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#039;");
 }

@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Email | Jess Bakes Sourdough</title>
+  <link rel="stylesheet" href="../css/admin.css">
+  <link rel="icon" type="image/png" href="../images/jess-bakes-logo.png">
+</head>
+<body>
+
+<div class="admin-shell">
+
+    <aside class="sidebar">
+        <div class="sidebar-brand">
+            <h2>Jess Bakes</h2>
+            <span>SOURDOUGH</span>
+        </div>
+        <nav class="sidebar-nav" aria-label="Admin navigation"></nav>
+        <button id="logoutBtn" class="logout-btn">Sign Out</button>
+    </aside>
+
+    <main class="admin-content">
+
+        <header class="admin-header">
+            <h1>Email</h1>
+            <p>Order emails, the weekly newsletter, and delivery status.</p>
+        </header>
+
+        <div id="emailMessage" class="admin-inline-message" style="display:none;"></div>
+
+        <!-- ============ STATUS ============ -->
+        <section class="dashboard-section">
+            <h2>Status</h2>
+            <div class="email-status-grid">
+                <div class="email-status-card">
+                    <h3>Order Emails</h3>
+                    <div class="value" id="statOrderEmails">—</div>
+                </div>
+                <div class="email-status-card">
+                    <h3>Newsletter Automation</h3>
+                    <div class="value" id="statNewsletter">—</div>
+                </div>
+                <div class="email-status-card">
+                    <h3>Resend API Key</h3>
+                    <div class="value" id="statResendKey">—</div>
+                </div>
+                <div class="email-status-card">
+                    <h3>Webhook Secret</h3>
+                    <div class="value" id="statWebhookSecret">—</div>
+                </div>
+                <div class="email-status-card">
+                    <h3>Active Subscribers</h3>
+                    <div class="value" id="statActiveSubs">—</div>
+                </div>
+                <div class="email-status-card">
+                    <h3>Unsubscribed</h3>
+                    <div class="value" id="statUnsubscribed">—</div>
+                </div>
+                <div class="email-status-card">
+                    <h3>Bounced / Complained</h3>
+                    <div class="value" id="statBouncedComplained">—</div>
+                </div>
+                <div class="email-status-card">
+                    <h3>Failed Sends (7d)</h3>
+                    <div class="value" id="statFailed">—</div>
+                </div>
+            </div>
+            <div id="quotaWarning" class="admin-inline-message is-warning" style="display:none;"></div>
+        </section>
+
+        <!-- ============ ORDER EMAILS ============ -->
+        <section class="dashboard-section">
+            <h2>Order Emails</h2>
+            <div class="email-toggle-row">
+                <div>
+                    <strong>Send order-received, order-confirmed, and order-cancelled emails</strong>
+                    <p style="margin:4px 0 0 0;color:var(--accent);">Off by default until Resend is verified and tested.</p>
+                </div>
+                <label>
+                    <input type="checkbox" id="orderEmailsEnabled">
+                    Enabled
+                </label>
+            </div>
+        </section>
+
+        <!-- ============ NEWSLETTER SETTINGS ============ -->
+        <section class="dashboard-section">
+            <h2>Weekly Newsletter Settings</h2>
+
+            <div class="email-toggle-row">
+                <div><strong>Automatic weekly sending</strong></div>
+                <label>
+                    <input type="checkbox" id="newsletterEnabled">
+                    Enabled
+                </label>
+            </div>
+
+            <div class="form-group">
+                <label for="weeklyWeekday">Send day</label>
+                <select id="weeklyWeekday">
+                    <option value="0">Sunday</option>
+                    <option value="1">Monday</option>
+                    <option value="2">Tuesday</option>
+                    <option value="3">Wednesday</option>
+                    <option value="4">Thursday</option>
+                    <option value="5">Friday</option>
+                    <option value="6">Saturday</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="weeklyLocalTime">Send time (local)</label>
+                <input type="time" id="weeklyLocalTime">
+            </div>
+
+            <div class="form-group">
+                <label for="weeklyTimezone">Timezone</label>
+                <input type="text" id="weeklyTimezone" placeholder="Europe/Berlin">
+            </div>
+
+            <div class="form-group">
+                <label for="senderName">Sender name</label>
+                <input type="text" id="senderName" placeholder="Jess Bakes Sourdough">
+            </div>
+
+            <div class="form-group">
+                <label for="replyToEmail">Reply-to address (required to enable sending)</label>
+                <input type="email" id="replyToEmail" placeholder="jessica.holsopple3@gmail.com">
+            </div>
+
+            <div class="form-group">
+                <label for="weeklySubject">Subject line</label>
+                <input type="text" id="weeklySubject">
+            </div>
+
+            <div class="form-group">
+                <label for="weeklyIntro">Intro message</label>
+                <textarea id="weeklyIntro" rows="3"></textarea>
+            </div>
+
+            <div class="form-group">
+                <label for="testRecipientEmail">Admin test recipient</label>
+                <input type="email" id="testRecipientEmail" placeholder="jessica.holsopple3@gmail.com">
+            </div>
+
+            <div class="form-group">
+                <label for="dailySendLimit">Daily send limit (optional, matches your Resend plan)</label>
+                <input type="number" id="dailySendLimit" min="0">
+            </div>
+
+            <div class="form-group">
+                <label for="monthlySendLimit">Monthly send limit (optional)</label>
+                <input type="number" id="monthlySendLimit" min="0">
+            </div>
+
+            <div class="email-actions-row">
+                <button id="saveEmailSettingsBtn" class="primary-btn">Save Settings</button>
+            </div>
+        </section>
+
+        <!-- ============ PREVIEW / TEST / SEND NOW ============ -->
+        <section class="dashboard-section">
+            <h2>Preview &amp; Test</h2>
+            <p>Test sends go <strong>only</strong> to the admin test recipient above — never to a real customer or subscriber.</p>
+
+            <div class="form-group">
+                <label for="previewEmailType">Email type</label>
+                <select id="previewEmailType">
+                    <option value="order_received">Order request received</option>
+                    <option value="order_confirmed">Order confirmed</option>
+                    <option value="order_cancelled">Order cancelled</option>
+                    <option value="newsletter_welcome">Newsletter welcome</option>
+                    <option value="weekly_menu">Weekly menu</option>
+                </select>
+            </div>
+
+            <div class="email-actions-row">
+                <button id="previewBtn" class="secondary-btn">Preview</button>
+                <button id="sendTestBtn" class="secondary-btn">Send Test</button>
+                <button id="sendWeeklyNowBtn" class="primary-btn">Send Weekly Menu Now</button>
+                <button id="processOutboxBtn" class="secondary-btn">Process Outbox Now</button>
+            </div>
+
+            <iframe id="previewFrame" class="email-preview-frame" style="display:none;" title="Email preview"></iframe>
+        </section>
+
+        <!-- ============ CAMPAIGN HISTORY ============ -->
+        <section class="dashboard-section">
+            <h2>Campaign History</h2>
+            <div class="table-wrapper">
+                <table class="admin-table">
+                    <thead>
+                        <tr>
+                            <th>Week</th>
+                            <th>Status</th>
+                            <th>Recipients</th>
+                            <th>Sent</th>
+                            <th>Failed</th>
+                            <th>Skip reason</th>
+                        </tr>
+                    </thead>
+                    <tbody id="campaignTableBody"></tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- ============ EMAIL OUTBOX ============ -->
+        <section class="dashboard-section">
+            <h2>Email Outbox</h2>
+            <div class="form-group">
+                <label for="outboxSearch">Search (order/subscriber id, email, or type)</label>
+                <input type="text" id="outboxSearch" placeholder="Search...">
+            </div>
+            <div class="table-wrapper">
+                <table class="admin-table">
+                    <thead>
+                        <tr>
+                            <th>Type</th>
+                            <th>Recipient</th>
+                            <th>Status</th>
+                            <th>Attempts</th>
+                            <th>Last error</th>
+                            <th>Updated</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody id="outboxTableBody"></tbody>
+                </table>
+            </div>
+        </section>
+
+    </main>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="../js/supabase.js"></script>
+<script src="../js/admin-shell.js"></script>
+<script src="../js/auth.js"></script>
+<script src="../js/layout.js"></script>
+<script src="../js/admin-email.js"></script>
+
+</body>
+</html>

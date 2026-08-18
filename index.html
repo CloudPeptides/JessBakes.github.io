@@ -74,11 +74,11 @@
         <h2>Stay Updated</h2>
 
         <p>
-            Be the first to know when new menu items,
-            seasonal specials, and weekly menus are available.
+            Submitting this form signs you up for the weekly Jess Bakes Sourdough
+            menu email — sent once a week with what's fresh and available to order.
         </p>
 
-      
+
 
         <form id="newsletterForm">
 
@@ -93,6 +93,26 @@
                 id="newsletterEmail"
                 placeholder="Enter your email"
                 required>
+
+            <!-- Honeypot: hidden from real visitors via CSS, never labeled
+                 for assistive tech, and not part of the visible tab order.
+                 A bot that fills every field trips this; a human never
+                 sees it. -->
+            <div class="newsletter-honeypot" aria-hidden="true">
+                <input
+                    type="text"
+                    id="newsletterWebsite"
+                    name="website"
+                    tabindex="-1"
+                    autocomplete="off">
+            </div>
+
+            <label class="newsletter-consent">
+                <input type="checkbox" id="newsletterConsent">
+                I'd like to receive the weekly menu email. See the
+                <a href="privacy.html">Privacy Notice</a>.
+            </label>
+
           <br>
           <br>
 
@@ -101,11 +121,6 @@
             </button>
 
         </form>
-
-        <p class="newsletter-note">
-            Signing up saves your email for occasional updates from Jess Bakes Sourdough —
-            it doesn't send an automatic confirmation email.
-        </p>
 
         <p id="newsletterMessage"></p>
 

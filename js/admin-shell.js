@@ -11,7 +11,7 @@
    and wires up a mobile off-canvas toggle.
 
    Groups navigation logically (Overview / Orders / Production / Catalog /
-   Inventory / Sales / Community), per the rebuild's UX goals -- the
+   Inventory / Sales / Community / Email), per the rebuild's UX goals -- the
    previous flat list mixed customer-facing content, operational tooling,
    and site administration with no visual grouping beyond two <hr>s.
 
@@ -81,6 +81,12 @@
                 { href: "suggestions.html", label: "Suggestions" },
                 { href: "subscribers.html", label: "Subscribers" },
                 { href: "gallery.html", label: "Gallery" }
+            ]
+        },
+        {
+            label: "Email",
+            items: [
+                { href: "email.html", label: "Email" }
             ]
         }
     ];

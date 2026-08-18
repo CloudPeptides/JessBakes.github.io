@@ -62,18 +62,44 @@
 
         </header>
 
+        <div id="settingsMessage" class="admin-inline-message" style="display:none;"></div>
+
         <section class="dashboard-section">
 
-            <h2>
-
-                Coming Soon
-
-            </h2>
+            <h2>Pickup Location <span class="admin-badge-private">Private</span></h2>
 
             <p>
+                Never shown on the public site or in any order-request email. It
+                only appears in the "order confirmed" email, once you've
+                approved an order and it's genuinely happening.
+            </p>
 
-                Bakery information, pickup hours, contact information, logo, social media links, and website preferences will be managed here.
+            <div class="form-group">
 
+                <label for="pickupLocation">Pickup address / location details</label>
+
+                <textarea
+                    id="pickupLocation"
+                    rows="3"
+                    placeholder="e.g. 123 Main St, Front porch — text on arrival"></textarea>
+
+            </div>
+
+            <button id="saveBakerySettingsBtn" class="primary-btn">
+                Save Pickup Location
+            </button>
+
+        </section>
+
+        <section class="dashboard-section">
+
+            <h2>Coming Soon</h2>
+
+            <p>
+                Bakery hours, contact information, logo, and social media links
+                will be managed here in a future update. Email settings (order
+                emails, the weekly newsletter, and sending) now live on the
+                <a href="email.html">Email</a> page.
             </p>
 
         </section>
