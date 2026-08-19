@@ -8,7 +8,7 @@
 // guard; sanitized-only error storage; retry backoff) is enforced
 // here once, not per call site.
 import { sendViaResend } from "./resend.ts";
-import { orderReceivedEmail, orderConfirmedEmail, orderCancelledEmail, newsletterWelcomeEmail, weeklyMenuEmail } from "./templates.mjs";
+import { orderReceivedEmail, orderConfirmedEmail, orderCancelledEmail, newsletterWelcomeEmail, weeklyMenuEmail, adminNewOrderEmail } from "./templates.mjs";
 import { resolveSendRecipient, isPermanentFailure, nextOutboxState } from "./retry.mjs";
 import { generateUnsubscribeToken, hashToken, buildUnsubscribeUrl } from "./token.mjs";
 
@@ -40,16 +40,43 @@ async function mintUnsubscribeLink(adminClient: any, subscriberId: string) {
  * order was somehow deleted) -- the caller marks the row 'skipped'
  * rather than retrying forever. */
 async function renderForRow(adminClient: any, row: any) {
-    if (row.email_type === "order_received" || row.email_type === "order_confirmed" || row.email_type === "order_cancelled") {
+    if (row.email_type === "order_received" || row.email_type === "order_confirmed" || row.email_type === "order_cancelled" || row.email_type === "admin_new_order") {
         const { data: order } = await adminClient
             .from("orders")
-            .select("id, customer_name, customer_email, order_type, pickup_date, notes, subtotal")
+            .select("id, customer_name, customer_email, customer_phone, preferred_contact, order_type, pickup_date, notes, subtotal, created_at")
             .eq("id", row.recipient_ref_id)
             .maybeSingle();
 
         if (!order) return null;
 
         const orderRef = shortOrderRef(order.id);
+
+        if (row.email_type === "admin_new_order") {
+            const { data: items } = await adminClient
+                .from("order_items")
+                .select("item_name, quantity, price_at_purchase, line_total")
+                .eq("order_id", order.id);
+
+            return {
+                from: ORDERS_FROM,
+                ...adminNewOrderEmail({
+                    customerName: order.customer_name,
+                    customerEmail: order.customer_email,
+                    customerPhone: order.customer_phone,
+                    preferredContact: order.preferred_contact,
+                    orderRef,
+                    orderType: order.order_type,
+                    pickupDate: order.pickup_date,
+                    items: (items || []).map((i: any) => ({
+                        name: i.item_name, quantity: i.quantity,
+                        unitPriceEur: i.price_at_purchase, lineTotalEur: i.line_total
+                    })),
+                    subtotalEur: order.subtotal,
+                    specialInstructions: order.notes,
+                    submittedAt: order.created_at
+                })
+            };
+        }
 
         if (row.email_type === "order_received") {
             const { data: items } = await adminClient

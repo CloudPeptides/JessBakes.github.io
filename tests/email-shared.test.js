@@ -29,12 +29,18 @@ test("idempotency: key builders match the exact format the DB triggers use", asy
         idem.weeklyRecipientKey("weekly_menu:2026-08-23", "sub-1"),
         "weekly_menu:2026-08-23:sub-1"
     );
+    assert.equal(idem.adminNewOrderKey("abc-123"), "admin_new_order:abc-123");
 });
 
 test("idempotency: different orders/consent events/campaigns never collide", async () => {
     const idem = await import(SHARED + "idempotency.mjs");
     assert.notEqual(idem.orderReceivedKey("a"), idem.orderReceivedKey("b"));
     assert.notEqual(idem.newsletterWelcomeKey("ev-1"), idem.newsletterWelcomeKey("ev-2"));
+    // admin_new_order and order_received are independent email types
+    // for the same order -- different keys, so a failure/retry of one
+    // can never collide with or block the other.
+    assert.notEqual(idem.adminNewOrderKey("order-1"), idem.orderReceivedKey("order-1"));
+    assert.notEqual(idem.adminNewOrderKey("a"), idem.adminNewOrderKey("b"));
 });
 
 /* ---------------- schedule.mjs (DST-safe) ---------------- */
@@ -451,6 +457,66 @@ test("templates: weeklyMenuEmail lists only the given items with EUR prices, a M
     assert.match(result.html, /unsubscribe\.html\?t=abc/);
 });
 
+test("templates: adminNewOrderEmail includes the required subject format, every requested field, unit prices, and an admin link", async () => {
+    const t = await import(SHARED + "templates.mjs");
+    const result = t.adminNewOrderEmail({
+        customerName: "Alex Example",
+        customerEmail: "alex@example.com",
+        customerPhone: "+1 (555) 010-0100",
+        preferredContact: "text",
+        orderRef: "ab12cd34",
+        orderType: "weekly",
+        pickupDate: "2026-08-23",
+        items: [
+            { name: "Sourdough Boule", quantity: 2, unitPriceEur: 9, lineTotalEur: 18 },
+            { name: "Sea Salt Cookie", quantity: 3, unitPriceEur: 3.5, lineTotalEur: 10.5 }
+        ],
+        subtotalEur: 28.5,
+        specialInstructions: "Please slice the boule",
+        submittedAt: "2026-08-19T14:05:00Z"
+    });
+
+    assert.equal(result.subject, "New Jess Bakes order — Alex Example");
+    assert.match(result.html, /ab12cd34/);
+    assert.match(result.html, /Alex Example/);
+    assert.match(result.html, /alex@example\.com/);
+    assert.match(result.html, /\+1 \(555\) 010-0100/);
+    assert.match(result.html, /Text/);
+    assert.match(result.html, /12:30 PM/);
+    assert.match(result.html, /Sourdough Boule/);
+    assert.match(result.html, /€9\.00 ea/); // unit price shown
+    assert.match(result.html, /€18\.00/);   // line total shown
+    assert.match(result.html, /€28\.50/);   // order total
+    assert.match(result.html, /Please slice the boule/);
+    assert.match(result.html, /admin\/orders\.html/);
+    assert.match(result.text, /admin\/orders\.html/);
+    assert.match(result.text, /€9\.00/);
+});
+
+test("templates: adminNewOrderEmail is independent from orderReceivedEmail -- same order data, two distinct emails", async () => {
+    const t = await import(SHARED + "templates.mjs");
+    const order = {
+        customerName: "Alex", orderRef: "abc123", orderType: "custom",
+        pickupDate: "2026-08-30"
+    };
+    const customerEmail = t.orderReceivedEmail({
+        ...order, items: [{ name: "Cookie", quantity: 1, lineTotalEur: 3.5 }], subtotalEur: 3.5
+    });
+    const ownerEmail = t.adminNewOrderEmail({
+        ...order,
+        customerEmail: "alex@example.com", customerPhone: "555-0100", preferredContact: "email",
+        items: [{ name: "Cookie", quantity: 1, unitPriceEur: 3.5, lineTotalEur: 3.5 }],
+        subtotalEur: 3.5, submittedAt: "2026-08-19T14:05:00Z"
+    });
+
+    assert.notEqual(customerEmail.subject, ownerEmail.subject);
+    assert.match(ownerEmail.subject, /^New Jess Bakes order/);
+    assert.doesNotMatch(customerEmail.subject, /^New Jess Bakes order/);
+    // The owner email is internal -- it says so, and is never marketed
+    // as something the customer receives.
+    assert.match(ownerEmail.text, /internal notification/i);
+});
+
 test("templates: every template escapes HTML in user-supplied fields (no injection via name/notes/menu text)", async () => {
     const t = await import(SHARED + "templates.mjs");
     const result = t.orderReceivedEmail({
@@ -465,4 +531,16 @@ test("templates: every template escapes HTML in user-supplied fields (no injecti
     assert.doesNotMatch(result.html, /<img src=x onerror/);
     assert.doesNotMatch(result.html, /<script>evil\(\)/);
     assert.match(result.html, /&lt;img/);
+
+    const owner = t.adminNewOrderEmail({
+        customerName: '<img src=x onerror=alert(1)>',
+        customerEmail: "a@b.com", customerPhone: "555", preferredContact: "text",
+        orderRef: "abc123", orderType: "weekly", pickupDate: "2026-08-23",
+        items: [{ name: "Cookie", quantity: 1, unitPriceEur: 3.5, lineTotalEur: 3.5 }],
+        subtotalEur: 3.5, specialInstructions: '"><script>evil()</script>',
+        submittedAt: "2026-08-19T14:05:00Z"
+    });
+    assert.doesNotMatch(owner.html, /<img src=x onerror/);
+    assert.doesNotMatch(owner.html, /<script>evil\(\)/);
+    assert.match(owner.html, /&lt;img/);
 });

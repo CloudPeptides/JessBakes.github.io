@@ -13,7 +13,7 @@ import { processOutboxRow } from "../_shared/processOutbox.ts";
 import { corsHeaders, handlePreflight } from "../_shared/cors.ts";
 import {
     orderReceivedEmail, orderConfirmedEmail, orderCancelledEmail,
-    newsletterWelcomeEmail, weeklyMenuEmail
+    newsletterWelcomeEmail, weeklyMenuEmail, adminNewOrderEmail
 } from "../_shared/templates.mjs";
 
 const BATCH_SIZE = 25;
@@ -46,6 +46,7 @@ async function processPending(adminClient: any) {
 
     for (const row of rows || []) {
         const isOrderType = row.email_type.startsWith("order_");
+        const isAdminOrderType = row.email_type === "admin_new_order";
         const isNewsletterType = row.email_type === "newsletter_welcome" || row.email_type === "weekly_menu";
 
         // Test rows (is_test:true) are exempt from the enabled-flag
@@ -53,8 +54,15 @@ async function processPending(adminClient: any) {
         // the pipeline works BEFORE flipping production sending on.
         // resolveSendRecipient() inside processOutboxRow() is what
         // actually keeps a test row from ever reaching a real
-        // recipient, regardless of this gate.
-        if (!row.is_test && ((isOrderType && !settings.order_emails_enabled) || (isNewsletterType && !settings.newsletter_enabled))) {
+        // recipient, regardless of this gate. admin_new_order has its
+        // own independent toggle (owner_notifications_enabled) --
+        // separate from order_emails_enabled, which only governs the
+        // customer-facing order_* emails.
+        if (!row.is_test && (
+            (isOrderType && !settings.order_emails_enabled) ||
+            (isAdminOrderType && !settings.owner_notifications_enabled) ||
+            (isNewsletterType && !settings.newsletter_enabled)
+        )) {
             continue; // left pending, tried again next run once enabled
         }
 
@@ -87,6 +95,8 @@ function renderPreview(emailType: string, sample: any) {
             return orderConfirmedEmail(sample);
         case "order_cancelled":
             return orderCancelledEmail(sample);
+        case "admin_new_order":
+            return adminNewOrderEmail(sample);
         case "newsletter_welcome":
             return newsletterWelcomeEmail({ ...sample, unsubscribeUrl: "https://jessbakessourdough.com/unsubscribe.html?t=preview" });
         case "weekly_menu":

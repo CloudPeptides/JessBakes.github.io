@@ -13,6 +13,7 @@ Five email types, all rendered fresh at send time (no rendered HTML is ever stor
 3. **Order cancelled** — enqueued by a trigger on `orders.status` transitioning to `cancelled`. Brief, with a Contact link.
 4. **Newsletter welcome** — single opt-in. Enqueued by the `newsletter-subscribe` Edge Function the moment a subscriber becomes (or becomes-again) `active`. Informational only — no verification link, no second step.
 5. **Weekly menu** — generated from the live `menu_items` table at send time by `weekly-scheduler`, sent Sunday 6:00 PM Europe/Berlin by default (admin-configurable), DST-safe.
+6. **Owner new-order notification** (`admin_new_order`, added 2026-08-19) — an internal email to the bakery owner, enqueued by the *same* trigger as order_received (so also only after all of an order's items are saved), as a fully independent outbox row/idempotency key/enabled toggle (`owner_notifications_enabled`, off by default). Sent to `email_settings.owner_notification_email` (editable on `/admin/email.html`, initially backfilled from `reply_to_email`). Includes every order/customer detail plus a direct link to `/admin/orders.html`. See `20260819120000_admin_new_order_notification.sql`.
 
 ## 2. Architecture
 

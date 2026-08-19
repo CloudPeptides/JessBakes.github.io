@@ -24,6 +24,13 @@ export function orderCancelledKey(orderId) {
     return `order_cancelled:${orderId}`;
 }
 
+/** Internal owner notification -- one per order, independent from
+ * orderReceivedKey (a different email_type, a different outbox row),
+ * so the two can succeed/fail/retry completely independently. */
+export function adminNewOrderKey(orderId) {
+    return `admin_new_order:${orderId}`;
+}
+
 /** Keyed by consent_event_id, not subscriber id, so a genuine
  * resubscribe (which mints a fresh consent_event_id -- see the
  * subscribers trigger) gets its own welcome email, while a

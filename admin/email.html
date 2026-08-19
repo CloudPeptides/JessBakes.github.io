@@ -42,6 +42,10 @@
                     <div class="value" id="statNewsletter">—</div>
                 </div>
                 <div class="email-status-card">
+                    <h3>Owner Order Notifications</h3>
+                    <div class="value" id="statOwnerNotifications">—</div>
+                </div>
+                <div class="email-status-card">
                     <h3>Resend API Key</h3>
                     <div class="value" id="statResendKey">—</div>
                 </div>
@@ -81,6 +85,26 @@
                     <input type="checkbox" id="orderEmailsEnabled">
                     Enabled
                 </label>
+            </div>
+        </section>
+
+        <!-- ============ OWNER ORDER NOTIFICATIONS ============ -->
+        <section class="dashboard-section">
+            <h2>Owner Order Notifications</h2>
+            <p>An internal email sent to you (not the customer) every time a new order is successfully placed. Independent from the customer's own order-request email above.</p>
+            <div class="email-toggle-row">
+                <div>
+                    <strong>Send me an email for every new order</strong>
+                    <p style="margin:4px 0 0 0;color:var(--accent);">Off by default until tested.</p>
+                </div>
+                <label>
+                    <input type="checkbox" id="ownerNotificationsEnabled">
+                    Enabled
+                </label>
+            </div>
+            <div class="form-group">
+                <label for="ownerNotificationEmail">New order notification email</label>
+                <input type="email" id="ownerNotificationEmail" placeholder="jessica.holsopple3@gmail.com">
             </div>
         </section>
 
@@ -170,6 +194,7 @@
                     <option value="order_received">Order request received</option>
                     <option value="order_confirmed">Order confirmed</option>
                     <option value="order_cancelled">Order cancelled</option>
+                    <option value="admin_new_order">Owner: new order notification</option>
                     <option value="newsletter_welcome">Newsletter welcome</option>
                     <option value="weekly_menu">Weekly menu</option>
                 </select>

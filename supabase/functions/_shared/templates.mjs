@@ -94,6 +94,24 @@ function itemsTextList(items) {
     return items.map(i => `  - ${i.name} x${i.quantity} — ${eur(i.lineTotalEur)}`).join("\n");
 }
 
+/** Same as itemsHtmlList/itemsTextList but also shows unit price --
+ * used only by the owner's internal admin_new_order notification,
+ * never a customer-facing template (customers don't need to see the
+ * per-unit price broken out, just the line total). */
+function itemsHtmlListDetailed(items) {
+    return items.map(i =>
+        `<tr>
+          <td style="padding:6px 0;border-bottom:1px solid #f1e7da;">${esc(i.name)} &times; ${esc(i.quantity)}</td>
+          <td style="padding:6px 0;border-bottom:1px solid #f1e7da;text-align:right;white-space:nowrap;color:${MUTED};">${eur(i.unitPriceEur)} ea</td>
+          <td style="padding:6px 0;border-bottom:1px solid #f1e7da;text-align:right;white-space:nowrap;">${eur(i.lineTotalEur)}</td>
+        </tr>`
+    ).join("");
+}
+
+function itemsTextListDetailed(items) {
+    return items.map(i => `  - ${i.name} x${i.quantity} @ ${eur(i.unitPriceEur)} = ${eur(i.lineTotalEur)}`).join("\n");
+}
+
 /* ============================
    1) Order request received
    ============================ */
@@ -332,6 +350,86 @@ ${textFooter([
                 { label: "Privacy", url: `${SITE_URL}/privacy.html` },
                 { label: "Unsubscribe", url: unsubscribeUrl }
             ]
+        }),
+        text
+    };
+}
+
+/* ============================
+   6) Admin: new order notification (internal, to the bakery owner)
+
+   Independent from orderReceivedEmail -- separate outbox row,
+   separate idempotency key, separate enabled toggle -- but rendered
+   from the exact same order/order_items data. Strictly internal:
+   never sent to a customer, never linked from any public page.
+   ============================ */
+export function adminNewOrderEmail({
+    customerName, customerEmail, customerPhone, preferredContact,
+    orderRef, orderType, pickupDate, items, subtotalEur,
+    specialInstructions, submittedAt
+}) {
+    const timeLine = orderType === "weekly"
+        ? "12:30 PM (weekly Sunday pickup)"
+        : "Not yet set -- confirm the exact time with the customer.";
+
+    const orderTypeLabel = orderType === "weekly" ? "Weekly" : "Custom";
+    const submittedLine = submittedAt ? new Date(submittedAt).toLocaleString("en-US", { dateStyle: "medium", timeStyle: "short" }) : "Unknown";
+
+    const notesHtml = specialInstructions
+        ? `<p style="margin:12px 0 0 0;"><strong>Notes:</strong> ${esc(specialInstructions)}</p>`
+        : "";
+    const notesText = specialInstructions ? `\nNotes: ${specialInstructions}\n` : "";
+
+    const bodyHtml = `
+<h1 style="font-size:20px;margin:0 0 4px 0;">New order — #${esc(orderRef)}</h1>
+<p style="margin:0 0 16px 0;color:${MUTED};">Submitted ${esc(submittedLine)}.</p>
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:0 0 16px 0;font-size:15px;">
+<tr><td style="padding:2px 0;color:${MUTED};width:130px;">Customer</td><td style="padding:2px 0;"><strong>${esc(customerName)}</strong></td></tr>
+<tr><td style="padding:2px 0;color:${MUTED};">Email</td><td style="padding:2px 0;">${esc(customerEmail || "—")}</td></tr>
+<tr><td style="padding:2px 0;color:${MUTED};">Phone</td><td style="padding:2px 0;">${esc(customerPhone || "—")}</td></tr>
+<tr><td style="padding:2px 0;color:${MUTED};">Prefers</td><td style="padding:2px 0;">${esc(preferredContact === "email" ? "Email" : "Text")}</td></tr>
+<tr><td style="padding:2px 0;color:${MUTED};">Order type</td><td style="padding:2px 0;">${esc(orderTypeLabel)}</td></tr>
+<tr><td style="padding:2px 0;color:${MUTED};">Pickup date</td><td style="padding:2px 0;">${esc(pickupDate)}</td></tr>
+<tr><td style="padding:2px 0;color:${MUTED};">Pickup time</td><td style="padding:2px 0;">${esc(timeLine)}</td></tr>
+</table>
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:0 0 12px 0;">
+${itemsHtmlListDetailed(items)}
+<tr><td style="padding:10px 0 0 0;font-weight:bold;" colspan="2">Total</td><td style="padding:10px 0 0 0;text-align:right;font-weight:bold;">${eur(subtotalEur)}</td></tr>
+</table>
+${notesHtml}
+<table role="presentation" cellpadding="0" cellspacing="0" style="margin:24px auto 0 auto;">
+<tr><td style="background:${BURGUNDY};border-radius:8px;">
+<a href="${SITE_URL}/admin/orders.html" style="display:inline-block;padding:12px 28px;color:#ffffff;text-decoration:none;font-weight:bold;">Open in Admin</a>
+</td></tr>
+</table>
+`;
+
+    const text = `New order — #${orderRef}
+
+Submitted ${submittedLine}.
+
+Customer: ${customerName}
+Email: ${customerEmail || "—"}
+Phone: ${customerPhone || "—"}
+Prefers: ${preferredContact === "email" ? "Email" : "Text"}
+Order type: ${orderTypeLabel}
+Pickup date: ${pickupDate}
+Pickup time: ${timeLine}
+
+Items:
+${itemsTextListDetailed(items)}
+
+Total: ${eur(subtotalEur)}
+${notesText}
+Open in admin: ${SITE_URL}/admin/orders.html
+${textFooter(["This is an internal notification -- not sent to the customer."])}`;
+
+    return {
+        subject: `New Jess Bakes order — ${customerName}`,
+        html: emailShell({
+            preheader: `New order from ${customerName} — ${eur(subtotalEur)}`,
+            bodyHtml,
+            footerLinks: [{ label: "Open in Admin", url: `${SITE_URL}/admin/orders.html` }]
         }),
         text
     };

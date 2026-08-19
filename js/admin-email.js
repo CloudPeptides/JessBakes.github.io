@@ -49,6 +49,11 @@ async function loadEmailSettings() {
     emailSettingsId = data.id;
 
     document.getElementById("orderEmailsEnabled").checked = data.order_emails_enabled;
+    document.getElementById("ownerNotificationsEnabled").checked = data.owner_notifications_enabled;
+    // Initially populated from the existing Reply-To/business email
+    // rather than hardcoded, whenever no owner notification address
+    // has been set yet.
+    document.getElementById("ownerNotificationEmail").value = data.owner_notification_email || data.reply_to_email || "";
     document.getElementById("newsletterEnabled").checked = data.newsletter_enabled;
     document.getElementById("weeklyWeekday").value = String(data.weekly_weekday);
     document.getElementById("weeklyLocalTime").value = data.weekly_local_time;
@@ -63,6 +68,7 @@ async function loadEmailSettings() {
 
     document.getElementById("statOrderEmails").textContent = data.order_emails_enabled ? "Enabled" : "Disabled";
     document.getElementById("statNewsletter").textContent = data.newsletter_enabled ? "Enabled" : "Disabled";
+    document.getElementById("statOwnerNotifications").textContent = data.owner_notifications_enabled ? "Enabled" : "Disabled";
 
     // Immediate, direct warning tied to the settings just loaded --
     // "the admin dashboard" per the requirement, computed the moment
@@ -76,9 +82,16 @@ async function saveEmailSettings() {
     const replyTo = document.getElementById("replyToEmail").value.trim();
     const newsletterEnabled = document.getElementById("newsletterEnabled").checked;
     const orderEmailsEnabled = document.getElementById("orderEmailsEnabled").checked;
+    const ownerNotificationsEnabled = document.getElementById("ownerNotificationsEnabled").checked;
+    const ownerNotificationEmail = document.getElementById("ownerNotificationEmail").value.trim();
 
     if ((newsletterEnabled || orderEmailsEnabled) && !replyTo) {
         showMessage("A reply-to address is required before enabling any sending.", "warning");
+        return;
+    }
+
+    if (ownerNotificationsEnabled && !ownerNotificationEmail) {
+        showMessage("A new order notification email is required before enabling owner notifications.", "warning");
         return;
     }
 
@@ -87,6 +100,8 @@ async function saveEmailSettings() {
 
     const payload = {
         order_emails_enabled: orderEmailsEnabled,
+        owner_notifications_enabled: ownerNotificationsEnabled,
+        owner_notification_email: ownerNotificationEmail || null,
         newsletter_enabled: newsletterEnabled,
         weekly_weekday: Number(document.getElementById("weeklyWeekday").value),
         weekly_local_time: document.getElementById("weeklyLocalTime").value,
@@ -245,6 +260,20 @@ function buildSampleData(emailType) {
             return { ...common, pickupLocation: "123 Bakery Lane" };
         case "order_cancelled":
             return common;
+        case "admin_new_order":
+            return {
+                ...common,
+                customerEmail: "alex@example.com",
+                customerPhone: "+1 (555) 010-0100",
+                preferredContact: "text",
+                items: [
+                    { name: "Sourdough Boule", quantity: 1, unitPriceEur: 9, lineTotalEur: 9 },
+                    { name: "Sea Salt Cookie", quantity: 3, unitPriceEur: 3.5, lineTotalEur: 10.5 }
+                ],
+                subtotalEur: 19.5,
+                specialInstructions: "Please slice the boule",
+                submittedAt: new Date().toISOString()
+            };
         case "newsletter_welcome":
             return { name: "Alex" };
         case "weekly_menu":
