@@ -6,7 +6,8 @@ const fs = require("node:fs");
 const path = require("node:path");
 const AdminShell = require("../js/admin-shell.js");
 
-const ADMIN_DIR = path.join(__dirname, "..", "admin");
+const REPO_ROOT = path.join(__dirname, "..");
+const ADMIN_DIR = path.join(REPO_ROOT, "admin");
 const REAL_PAGES = fs.readdirSync(ADMIN_DIR).filter(f => f.endsWith(".html"));
 
 /* ==========================================
@@ -120,7 +121,14 @@ test("12. every admin/*.html page's <link>/<script> src/href attributes resolve 
         while ((m = attrRe.exec(html))) {
             const url = m[1];
             if (!url || url.startsWith("#") || /^https?:/.test(url) || url.startsWith("mailto:") || url.startsWith("tel:") || url.startsWith("data:")) continue;
-            const resolved = path.normalize(path.join(ADMIN_DIR, url));
+            // A leading "/" is a site-root-absolute path (e.g. the PWA
+            // manifest/icon links, deliberately absolute so they
+            // resolve identically from admin.html at the repo root AND
+            // every one-level-deep admin/*.html page) -- resolve those
+            // against the repo root, not the admin/ directory.
+            const resolved = url.startsWith("/")
+                ? path.normalize(path.join(REPO_ROOT, url))
+                : path.normalize(path.join(ADMIN_DIR, url));
             assert.ok(fs.existsSync(resolved), `${page} references missing file: ${url}`);
         }
     }
