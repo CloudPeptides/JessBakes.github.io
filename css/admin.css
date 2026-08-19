@@ -767,11 +767,23 @@ body {
 }
 
 .order-status-card {
+    display: block;
+    width: 100%;
     background: #fff;
     border: 1px solid var(--line);
     border-radius: 16px;
     padding: 18px;
     text-align: center;
+    font: inherit;
+    color: inherit;
+    cursor: pointer;
+    transition: border-color .2s ease, box-shadow .2s ease;
+}
+
+.order-status-card:hover,
+.order-status-card:focus-visible {
+    border-color: var(--accent);
+    box-shadow: 0 4px 14px rgba(123,43,34,.12);
 }
 
 .order-status-card strong {

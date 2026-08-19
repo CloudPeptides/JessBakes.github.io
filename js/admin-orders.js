@@ -111,26 +111,6 @@ async function loadOrderManager() {
 
     const safeOrders = orders || [];
 
-    setText(
-        "pendingCount",
-        safeOrders.filter(order => order.status === "pending").length
-    );
-
-    setText(
-        "confirmedCount",
-        safeOrders.filter(order => order.status === "confirmed").length
-    );
-
-    setText(
-        "readyCount",
-        safeOrders.filter(order => order.status === "ready").length
-    );
-
-    setText(
-        "completedCount",
-        safeOrders.filter(order => order.status === "completed").length
-    );
-
     renderOrderManager(safeOrders);
 
 }
@@ -165,30 +145,30 @@ function renderOrderManager(orders) {
     container.innerHTML = `
         <div class="orders-overview">
 
-            <div class="order-status-card">
+            <button type="button" class="order-status-card" onclick="focusOrderSection('pending-orders')">
                 <strong>Pending</strong>
                 <span>${pending.length}</span>
-            </div>
+            </button>
 
-            <div class="order-status-card">
+            <button type="button" class="order-status-card" onclick="focusOrderSection('confirmed-orders')">
                 <strong>Confirmed</strong>
                 <span>${confirmed.length}</span>
-            </div>
+            </button>
 
-            <div class="order-status-card">
+            <button type="button" class="order-status-card" onclick="focusOrderSection('ready-for-pickup')">
                 <strong>Ready</strong>
                 <span>${ready.length}</span>
-            </div>
+            </button>
 
-            <div class="order-status-card">
+            <button type="button" class="order-status-card" onclick="focusOrderSection('completed')">
                 <strong>Completed</strong>
                 <span>${completed.length}</span>
-            </div>
+            </button>
 
-            <div class="order-status-card">
+            <button type="button" class="order-status-card" onclick="focusOrderSection('cancelled')">
                 <strong>Cancelled</strong>
                 <span>${cancelled.length}</span>
-            </div>
+            </button>
 
         </div>
 
@@ -243,6 +223,27 @@ function renderOrderSection(title, orders) {
 
         </section>
     `;
+
+}
+
+/* Clicking a status-summary card (Pending/Confirmed/Ready/Completed/
+   Cancelled) jumps to and opens that status's section below --
+   always ENSURES it's open (never closes an already-open section the
+   way toggleOrderSection does), then scrolls it into view. This is
+   the one status/filter grid left after consolidating the old
+   duplicate display-only summary that used to sit above it. */
+function focusOrderSection(id) {
+
+    const section = document.getElementById(id);
+    const icon = document.getElementById(id + "-icon");
+    const header = icon ? icon.closest(".order-section-header") : null;
+
+    if (!section) return;
+
+    section.style.display = "block";
+    if (icon) icon.textContent = "▼";
+
+    (header || section).scrollIntoView({ behavior: "smooth", block: "start" });
 
 }
 

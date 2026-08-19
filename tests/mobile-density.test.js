@@ -116,3 +116,65 @@ test(".table-wrapper contains table overflow instead of letting it blow out the 
     const css = read("css/admin.css");
     assert.match(css, /\.table-wrapper\s*{[^}]*overflow-x:\s*auto/s);
 });
+
+/* ---------------- Orders page: one consolidated status/filter grid ---------------- */
+
+test("admin/orders.html no longer has the duplicate display-only status summary", () => {
+    const html = read("admin/orders.html");
+    assert.doesNotMatch(html, /class="overview-grid"/, "the old static Pending/Confirmed/Ready/Completed header block must be removed");
+    assert.doesNotMatch(html, /id="pendingCount"/);
+    assert.doesNotMatch(html, /id="confirmedCount"/);
+    assert.doesNotMatch(html, /id="readyCount"/);
+    assert.doesNotMatch(html, /id="completedCount"/);
+});
+
+test("js/admin-orders.js no longer writes into the removed duplicate summary's ids", () => {
+    const source = read("js/admin-orders.js");
+    assert.doesNotMatch(source, /setText\(\s*"pendingCount"/);
+    assert.doesNotMatch(source, /setText\(\s*"confirmedCount"/);
+    assert.doesNotMatch(source, /setText\(\s*"readyCount"/);
+    assert.doesNotMatch(source, /setText\(\s*"completedCount"/);
+});
+
+test("the one remaining status grid covers all 5 statuses with live counts, each wired to jump to its real order section", () => {
+    const source = read("js/admin-orders.js");
+
+    const expected = [
+        ["Pending", "pending.length", "pending-orders"],
+        ["Confirmed", "confirmed.length", "confirmed-orders"],
+        ["Ready", "ready.length", "ready-for-pickup"],
+        ["Completed", "completed.length", "completed"],
+        ["Cancelled", "cancelled.length", "cancelled"]
+    ];
+
+    for (const [label, countExpr, sectionId] of expected) {
+        const re = new RegExp(
+            `onclick="focusOrderSection\\('${sectionId}'\\)"[\\s\\S]{0,80}?<strong>${label}</strong>[\\s\\S]{0,40}?\\$\\{${countExpr.replace(".", "\\.")}\\}`
+        );
+        assert.match(source, re, `${label} card must call focusOrderSection('${sectionId}') and show ${countExpr}`);
+    }
+
+    // The section ids referenced above must be exactly the ones
+    // renderOrderSection() actually produces (title -> kebab-case),
+    // so a click always finds a real, existing section.
+    assert.match(source, /renderOrderSection\("Pending Orders"/);
+    assert.match(source, /renderOrderSection\("Confirmed Orders"/);
+    assert.match(source, /renderOrderSection\("Ready for Pickup"/);
+    assert.match(source, /renderOrderSection\("Completed"/);
+    assert.match(source, /renderOrderSection\("Cancelled"/);
+});
+
+test("focusOrderSection always ENSURES the target section is open (never toggles it closed), then scrolls to it", () => {
+    const source = read("js/admin-orders.js");
+    const fnMatch = source.match(/function focusOrderSection\([^)]*\)\s*\{[\s\S]*?\n\}/);
+    assert.ok(fnMatch, "focusOrderSection must exist");
+    assert.match(fnMatch[0], /display\s*=\s*"block"/);
+    assert.match(fnMatch[0], /scrollIntoView/);
+    assert.doesNotMatch(fnMatch[0], /display\s*===\s*"none"/, "must not toggle -- always opens, never closes based on current state");
+});
+
+test("existing per-status accordion toggling (toggleOrderSection) is unchanged and still present", () => {
+    const source = read("js/admin-orders.js");
+    assert.match(source, /function toggleOrderSection\(id\)/);
+    assert.match(source, /onclick="toggleOrderSection\('\$\{sectionId\}'\)"/);
+});
