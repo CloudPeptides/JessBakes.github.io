@@ -160,18 +160,25 @@
         }
     }
 
-    // Mobile off-canvas toggle: a button + backdrop injected once, wired to
-    // toggle a `sidebar-open` class on <body> (see css/admin.css's
-    // "Grouped navigation + mobile toggle" section for the responsive CSS).
-    // Both are appended to <body> (not .admin-shell, which is a CSS grid --
-    // an extra direct child there would become an unwanted third grid
-    // item) and are `position: fixed` in CSS, so their DOM placement
-    // doesn't affect the shell's 2-column layout at all. The toggle state
-    // lives on <body> specifically so body-level siblings (the backdrop,
-    // the toggle button itself) and .sidebar (nested inside .admin-shell)
-    // can all be styled from the same one ancestor selector.
+    // Mobile off-canvas toggle: a compact sticky app bar + backdrop,
+    // wired to toggle a `sidebar-open` class on <body> (see
+    // css/admin.css's mobile density system for the responsive CSS).
+    //
+    // The app bar (containing the toggle button) is inserted as the
+    // FIRST CHILD of .admin-content -- real document flow, not a
+    // `position: fixed` overlay -- specifically so it can be
+    // `position: sticky`. A sticky element reserves its own space and
+    // everything after it in the DOM simply cannot scroll behind/
+    // under it, unlike a fixed-position button floating over the
+    // page (the previous design, which a real device test showed
+    // covering page content while scrolling). The backdrop stays
+    // `position: fixed`, appended to <body> -- that IS supposed to
+    // overlay everything while the off-canvas nav is open.
     function setupMobileToggle(shellEl) {
         if (!shellEl || document.querySelector(".sidebar-toggle")) return;
+
+        const appbar = document.createElement("div");
+        appbar.className = "mobile-appbar";
 
         const toggle = document.createElement("button");
         toggle.type = "button";
@@ -179,6 +186,7 @@
         toggle.setAttribute("aria-label", "Toggle navigation menu");
         toggle.setAttribute("aria-expanded", "false");
         toggle.innerHTML = `<span class="sidebar-toggle-icon" aria-hidden="true">☰</span> Menu`;
+        appbar.appendChild(toggle);
 
         const backdrop = document.createElement("div");
         backdrop.className = "sidebar-backdrop";
@@ -204,8 +212,9 @@
             link.addEventListener("click", () => setOpen(false));
         });
 
+        const contentEl = shellEl.querySelector(".admin-content") || shellEl;
+        contentEl.insertBefore(appbar, contentEl.firstChild);
         document.body.appendChild(backdrop);
-        document.body.appendChild(toggle);
     }
 
     // ---- PWA bootstrap (every admin page, including the login gate) ----

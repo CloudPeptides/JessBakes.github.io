@@ -292,11 +292,9 @@ body {
 }
 }
 
-@media (max-width:650px) {
-.overview-grid {
-    grid-template-columns: 1fr;
-}
-}
+/* .overview-grid deliberately stays at 2 columns all the way down to
+   phone widths -- see the consolidated mobile density system near
+   the end of this file. */
 
 /* ==========================================
    BALLOT MANAGER
@@ -971,21 +969,15 @@ body {
 }
 
 @media (max-width:700px) {
-.orders-overview {
-    grid-template-columns: 1fr;
-}
-
-.order-meta {
-    grid-template-columns: 1fr;
-}
+/* .orders-overview and .order-meta deliberately keep their 2-column
+   layout from the 1100px breakpoint above all the way down to phone
+   widths -- see the consolidated mobile density system near the end
+   of this file for the compact sizing that makes 2 columns work at
+   320px+. Forcing 1 column here was the direct cause of "several
+   screen lengths per order" on a real device. */
 
 .order-card-header {
     flex-direction: column;
-}
-
-.order-item-row {
-    flex-direction: column;
-    align-items: flex-start;
 }
 }
 
@@ -1169,6 +1161,10 @@ body {
     color: #9b8578;
 }
 
+.mobile-appbar {
+    display: none;
+}
+
 .sidebar-toggle {
     display: none;
 }
@@ -1178,32 +1174,45 @@ body {
 }
 
 @media (max-width: 1000px) {
+    /* A real element in normal document flow (the first child of
+       .admin-content -- see js/admin-shell.js), not a floating
+       overlay, so it can be `position: sticky`: it reserves its own
+       height and stays pinned at the top of the scroll area once
+       reached, but everything below it in the DOM can never scroll
+       BEHIND it the way a `position: fixed` button could. */
+    .mobile-appbar {
+        display: flex;
+        align-items: center;
+        position: sticky;
+        top: 0;
+        z-index: 50;
+        margin: 0 -16px 16px;
+        padding: max(10px, env(safe-area-inset-top)) 16px 10px;
+        background: rgba(247, 243, 238, .92);
+        backdrop-filter: saturate(160%) blur(6px);
+        -webkit-backdrop-filter: saturate(160%) blur(6px);
+        border-bottom: 1px solid var(--line);
+    }
+
     .sidebar-toggle {
         display: inline-flex;
         align-items: center;
-        gap: 10px;
-        position: fixed;
-        top: 16px;
-        left: 16px;
-        z-index: 50;
-        padding: 10px 16px;
+        gap: 8px;
+        height: 40px;
+        padding: 0 14px;
         border: 1px solid var(--line);
-        border-radius: 12px;
+        border-radius: 10px;
         background: #ffffff;
         color: #5b2018;
         font: inherit;
+        font-size: .92rem;
         font-weight: 700;
         cursor: pointer;
-        box-shadow: 0 8px 20px rgba(40,18,10,.12);
     }
 
     .sidebar-toggle-icon {
-        font-size: 1.1rem;
+        font-size: 1rem;
         line-height: 1;
-    }
-
-    .admin-content {
-        padding-top: 76px;
     }
 
     .admin-shell {
@@ -1217,8 +1226,10 @@ body {
         bottom: 0;
         width: 280px;
         max-width: 82vw;
-        z-index: 40;
+        z-index: 60;
         overflow-y: auto;
+        padding-top: max(32px, env(safe-area-inset-top));
+        padding-bottom: max(22px, env(safe-area-inset-bottom));
         transform: translateX(-100%);
         transition: transform .25s ease;
         box-shadow: 0 20px 50px rgba(0,0,0,.25);
@@ -1233,7 +1244,7 @@ body {
         position: fixed;
         inset: 0;
         background: rgba(30,15,10,.35);
-        z-index: 30;
+        z-index: 55;
         opacity: 0;
         pointer-events: none;
         transition: opacity .25s ease;
@@ -1276,16 +1287,11 @@ body {
     min-width: 0;
 }
 
-/* Re-assert the mobile top-clearance from the (max-width:1000px) block
-   above -- it shares equal specificity with the unconditional .admin-content
-   rule immediately above, and this rule's later position in the cascade
-   made it always win regardless of viewport, pinning padding-top at 42px
-   and letting page titles run under the fixed .sidebar-toggle button. */
-@media (max-width: 1000px) {
-    .admin-content {
-        padding-top: 76px;
-    }
-}
+/* No extra top padding needed at mobile widths any more -- the mobile
+   app bar (js/admin-shell.js's .mobile-appbar) is `position: sticky`
+   and the first real child of .admin-content, so it already reserves
+   its own space in normal document flow instead of needing the page
+   to guess how much room to leave under a floating fixed button. */
 
 .admin-header {
     margin-bottom: 36px;
@@ -2051,7 +2057,7 @@ body {
 }
 
 .dashboard-home-kpis, .dashboard-home-actions {
-    grid-template-columns: 1fr;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
 .dashboard-home-order {
@@ -2135,7 +2141,7 @@ body {
 }
 
 .dashboard-home-kpis, .dashboard-home-actions {
-    grid-template-columns: 1fr;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
 .dashboard-home-order {
@@ -3666,4 +3672,495 @@ MENU CARD REDESIGN
         flex-direction: column;
         align-items: flex-start;
     }
+}
+
+/* ==========================================
+   MOBILE DENSITY SYSTEM (~600px and below)
+   ==========================================
+
+   ONE consolidated mobile section, loaded last so it wins the
+   cascade over any older, narrower per-component media query above
+   -- rather than scattering more one-off overrides throughout the
+   file. Covers every admin page (all use this one shared stylesheet
+   + the shared .admin-shell/.sidebar/.admin-content/.admin-header
+   structure from js/admin-shell.js), with extra density rules for
+   the Orders page's bespoke components.
+
+   Desktop styling above this point is completely unchanged -- every
+   rule here is inside this single max-width:600px query. Tables that
+   cannot reasonably compact (.sales-table-row, .admin-table) get a
+   smaller/tighter type scale plus horizontal-scroll containment
+   rather than being redesigned into cards, so the page itself never
+   overflows horizontally.
+
+   Any tablet-width behavior between 600px and ~1100px (the existing
+   900/1000/1100px breakpoints above) is untouched -- only the
+   ~600px-and-below phone breakpoint the requirements target.
+   ========================================== */
+
+html {
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
+}
+
+@media (max-width: 600px) {
+
+    /* ---------- Layout shell ---------- */
+
+    .admin-content {
+        padding: 16px;
+        padding-bottom: max(24px, env(safe-area-inset-bottom));
+    }
+
+    .admin-header {
+        margin-bottom: 18px;
+    }
+
+    .admin-header h1 {
+        font-size: 1.85rem;
+        line-height: 1.15;
+    }
+
+    .admin-header p {
+        margin-top: 6px;
+        font-size: .92rem;
+    }
+
+    .dashboard-section,
+    .dashboard-home-section,
+    .order-section,
+    section.orders-page > * {
+        margin-bottom: 18px;
+    }
+
+    .dashboard-section h2,
+    .panel-header h2,
+    .dashboard-card-header h2,
+    .order-section h3 {
+        font-size: 1.25rem;
+    }
+
+    body {
+        font-size: 15px;
+    }
+
+    /* ---------- Buttons, inputs, touch targets ---------- */
+
+    .primary-btn,
+    .secondary-btn,
+    .approve-btn,
+    .delete-btn,
+    .remove-option-btn,
+    .add-option-btn,
+    .edit-option-btn,
+    .logout-btn,
+    .login-btn {
+        min-height: 44px;
+        padding-top: 0;
+        padding-bottom: 0;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-size: .92rem;
+    }
+
+    input,
+    select,
+    textarea {
+        font-size: 16px; /* prevents iOS Safari's automatic zoom-on-focus */
+    }
+
+    .form-group input,
+    .form-group select,
+    .form-group textarea,
+    .modal-body input,
+    .modal-body select,
+    .modal-body textarea {
+        padding: 12px 14px;
+    }
+
+    /* ---------- Compact summary grids (status counts) ---------- */
+
+    .overview-grid,
+    .orders-overview,
+    .dashboard-home-kpis {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 10px;
+    }
+
+    .overview-card,
+    .order-status-card {
+        padding: 12px 14px;
+        border-radius: 14px;
+    }
+
+    /* .overview-card h3/span (undated, unused by any current page --
+       every real page uses .overview-label + h2 below) intentionally
+       gets no mobile override here: `.overview-card span`'s higher
+       selector specificity would otherwise silently beat
+       `.overview-label` on the exact same <span> element, which is
+       what happened during testing. */
+
+    /* .overview-label + h2 is the pattern actually used by Orders,
+       Analytics, Gallery, Inventory, Menu, Packaging, Sales, and
+       Suggestions -- narrower letter-spacing so a longer status word
+       ("Confirmed", "Completed") never breaks mid-word inside a
+       2-column mobile card. */
+    /* Specificity note: the legacy, unused-today `.overview-card span`
+       rule (desktop-only, font-size:2rem) has specificity (0,1,1) --
+       higher than a bare `.overview-label` class selector (0,1,0), so
+       it would silently win even from this later, mobile-scoped
+       block. Matching its specificity here (element + class) is what
+       actually makes this override take effect. */
+    span.overview-label {
+        letter-spacing: .04em;
+        font-size: .66rem;
+        margin-bottom: 6px;
+    }
+
+    .overview-card h2 {
+        margin: 0;
+        font-size: 1.5rem;
+    }
+
+    .order-status-card strong {
+        font-size: .68rem;
+        margin-bottom: 4px;
+    }
+
+    .order-status-card span {
+        font-size: 1.5rem;
+    }
+
+    .email-status-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 10px;
+    }
+
+    .email-status-card {
+        padding: 12px 14px;
+    }
+
+    .email-status-card .value {
+        font-size: 1.25rem;
+    }
+
+    /* ---------- Header actions (e.g. Orders' "+ New Order") ---------- */
+
+    .button-row {
+        margin-bottom: 16px !important;
+    }
+
+    .button-row .primary-btn,
+    .button-row .secondary-btn {
+        width: 100%;
+    }
+
+    /* ---------- Order cards ---------- */
+
+    .order-card {
+        padding: 16px;
+        margin-bottom: 12px;
+        border-radius: 16px;
+    }
+
+    .order-card-header {
+        gap: 4px;
+        margin-bottom: 14px;
+    }
+
+    .order-card-header h3 {
+        font-size: 1.05rem;
+        margin: 0 0 4px;
+    }
+
+    .order-card-header .customer-contact {
+        font-size: .85rem;
+        word-break: break-word;
+    }
+
+    .order-type-badge {
+        font-size: .72rem;
+    }
+
+    .status-badge {
+        min-width: 0;
+        padding: 5px 12px;
+        font-size: .7rem;
+    }
+
+    .order-meta {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 10px 14px;
+        margin-bottom: 14px;
+    }
+
+    .order-meta strong {
+        font-size: .66rem;
+        margin-bottom: 3px;
+    }
+
+    .order-meta p {
+        font-size: .92rem;
+    }
+
+    /* A value too long to share a column comfortably (dates with a
+       time on a second line, etc.) may take the full row. */
+    .order-meta > div:first-child {
+        grid-column: 1 / -1;
+    }
+
+    .order-notes {
+        padding: 10px 12px;
+        margin-bottom: 14px;
+        border-radius: 10px;
+    }
+
+    .order-notes strong {
+        font-size: .78rem;
+        margin-bottom: 4px;
+    }
+
+    .order-notes p {
+        font-size: .88rem;
+    }
+
+    .order-items {
+        padding-top: 12px;
+    }
+
+    .order-items > strong {
+        font-size: .85rem;
+        margin-bottom: 8px;
+    }
+
+    .order-item-row {
+        padding: 10px 12px;
+        gap: 10px;
+    }
+
+    .order-item-left {
+        gap: 8px;
+        min-width: 0;
+    }
+
+    .order-item-qty {
+        width: 26px;
+        height: 26px;
+        font-size: .78rem;
+    }
+
+    .order-item-name {
+        font-size: .9rem;
+    }
+
+    .order-item-right {
+        font-size: .9rem;
+        white-space: nowrap;
+    }
+
+    .builder-order-details {
+        margin-top: 4px;
+    }
+
+    .builder-order-line {
+        font-size: .78rem;
+    }
+
+    .order-actions {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 8px;
+        margin-top: 16px;
+    }
+
+    .order-actions button {
+        min-height: 44px;
+        width: 100%;
+        margin: 0;
+        font-size: .88rem;
+    }
+
+    /* An odd one out (e.g. a lone "Complete" button) still reads as
+       a single full-width action rather than a half-empty grid. */
+    .order-actions button:only-child {
+        grid-column: 1 / -1;
+    }
+
+    /* ---------- Collapsible order-status sections ---------- */
+
+    .order-section-header {
+        padding: 12px 14px;
+        border-radius: 12px;
+    }
+
+    .order-section-header h3 {
+        font-size: .98rem;
+    }
+
+    .order-section-header small {
+        font-size: .78rem;
+    }
+
+    /* ---------- Dashboard (Overview) home ---------- */
+
+    .dashboard-home {
+        padding: 16px !important;
+    }
+
+    .dashboard-home-hero {
+        padding: 18px !important;
+        border-radius: 18px;
+        gap: 14px;
+    }
+
+    .dashboard-home-hero h1 {
+        font-size: 2rem !important;
+        margin: 2px 0 4px;
+    }
+
+    .dashboard-greeting {
+        font-size: .7rem;
+    }
+
+    .dashboard-home-summary {
+        font-size: .9rem;
+    }
+
+    .dashboard-month-card {
+        padding: 14px;
+    }
+
+    .dashboard-home-kpi {
+        padding: 14px;
+        gap: 10px;
+        border-radius: 16px;
+    }
+
+    .dashboard-home-kpi-icon {
+        width: 44px;
+        height: 44px;
+        flex-basis: 44px;
+        border-radius: 14px;
+    }
+
+    .dashboard-home-kpi-icon img {
+        width: 30px;
+        height: 30px;
+    }
+
+    .dashboard-home-kpi h2 {
+        font-size: 1.2rem;
+        margin: 3px 0 2px;
+    }
+
+    .dashboard-home-kpi span {
+        font-size: .6rem;
+    }
+
+    .dashboard-home-kpi small {
+        font-size: .66rem;
+    }
+
+    .dashboard-home-section {
+        margin-bottom: 20px;
+    }
+
+    .dashboard-home-section-heading h2 {
+        font-size: 1.2rem;
+    }
+
+    .dashboard-home-action {
+        padding: 14px;
+        border-radius: 14px;
+    }
+
+    .dashboard-home-grid {
+        gap: 14px;
+    }
+
+    .dashboard-home-card {
+        padding: 16px;
+        border-radius: 16px;
+    }
+
+    /* ---------- Modals ---------- */
+
+    .modal-card,
+    .modal-overlay .modal-card {
+        width: 100%;
+        max-height: calc(100vh - 32px);
+        max-height: calc(100dvh - 32px);
+        padding: 18px;
+        border-radius: 18px;
+    }
+
+    .modal-header,
+    .modal-body,
+    .modal-footer,
+    .modal-buttons {
+        margin-bottom: 14px;
+    }
+
+    .modal-footer,
+    .modal-buttons {
+        margin-top: 16px;
+        margin-bottom: 0;
+    }
+
+    .modal-checkboxes {
+        gap: 16px;
+        flex-wrap: wrap;
+    }
+
+    /* ---------- Tables: contain overflow, don't force a redesign ---------- */
+
+    .table-wrapper {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .admin-table {
+        font-size: .82rem;
+    }
+
+    .admin-table th,
+    .admin-table td {
+        padding: 8px 10px;
+        white-space: nowrap;
+    }
+
+    .sales-table-row {
+        font-size: .78rem;
+        gap: 6px;
+        padding: 10px 0;
+    }
+
+    /* ---------- General card density (menu/inventory/packaging/
+       gallery/sales/other pages sharing this component pattern) ---------- */
+
+    .menu-admin-item,
+    .ingredient-card,
+    .packaging-profile-card,
+    .sale-card,
+    .gallery-card-body,
+    .customer-card,
+    .admin-review-card {
+        padding: 14px;
+        border-radius: 14px;
+    }
+
+    .inventory-category-header,
+    .menu-category-header,
+    .packaging-modal-section-header {
+        padding: 12px 14px;
+    }
+}
+
+/* Table horizontal-scroll containment applies at every width -- it's
+   a safety net (never activates unless content genuinely doesn't
+   fit), not a mobile-only layout change. */
+.table-wrapper {
+    max-width: 100%;
+    overflow-x: auto;
 }
