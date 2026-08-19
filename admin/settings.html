@@ -93,6 +93,56 @@
 
         <section class="dashboard-section">
 
+            <h2>App &amp; Notifications</h2>
+
+            <p>
+                Install this dashboard on your iPhone Home Screen and get a push
+                notification the moment a new order comes in.
+            </p>
+
+            <div id="pushMessage" class="admin-inline-message" style="display:none;"></div>
+
+            <div class="email-status-grid">
+                <div class="email-status-card">
+                    <h3>Installed as App</h3>
+                    <div class="value" id="pushStatInstalled">—</div>
+                </div>
+                <div class="email-status-card">
+                    <h3>Push Support</h3>
+                    <div class="value" id="pushStatSupport">—</div>
+                </div>
+                <div class="email-status-card">
+                    <h3>Notification Permission</h3>
+                    <div class="value" id="pushStatPermission">—</div>
+                </div>
+                <div class="email-status-card">
+                    <h3>This Device</h3>
+                    <div class="value" id="pushStatSubscription">—</div>
+                </div>
+            </div>
+
+            <div id="pushInstallInstructions" class="admin-inline-message is-warning" style="display:none;">
+                <strong>Install this app first:</strong>
+                <ol style="margin:8px 0 0 20px;padding:0;">
+                    <li>Open this page in <strong>Safari</strong> on your iPhone.</li>
+                    <li>Tap the <strong>Share</strong> button.</li>
+                    <li>Tap <strong>Add to Home Screen</strong>.</li>
+                    <li>Open <strong>Jess Bakes Admin</strong> from your Home Screen.</li>
+                    <li>Sign in, then come back to this Settings page.</li>
+                    <li>Tap <strong>Enable Order Notifications</strong>.</li>
+                </ol>
+            </div>
+
+            <div class="email-actions-row">
+                <button id="pushEnableBtn" class="primary-btn">Enable Order Notifications</button>
+                <button id="pushTestBtn" class="secondary-btn">Send Test Notification</button>
+                <button id="pushDisableBtn" class="secondary-btn">Disable Notifications on This Device</button>
+            </div>
+
+        </section>
+
+        <section class="dashboard-section">
+
             <h2>Coming Soon</h2>
 
             <p>
@@ -118,6 +168,7 @@
 <script src="../js/layout.js"></script>
 
 <script src="../js/admin-settings.js"></script>
+<script src="../js/admin-push.js"></script>
 
 </body>
 

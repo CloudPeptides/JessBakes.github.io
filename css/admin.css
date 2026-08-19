@@ -813,6 +813,14 @@ body {
     padding: 24px;
     margin-bottom: 22px;
     box-shadow: 0 6px 18px rgba(0,0,0,.05);
+    transition: box-shadow .3s ease, border-color .3s ease;
+}
+
+/* Momentary highlight for a push-notification deep link (?order=<id>)
+   landing on this card -- see js/admin-orders.js handleOrderDeepLink(). */
+.order-card.order-card-highlight {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(123,43,34,.25), 0 6px 18px rgba(0,0,0,.05);
 }
 
 .order-card-header {

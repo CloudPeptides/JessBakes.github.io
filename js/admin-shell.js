@@ -208,7 +208,71 @@
         document.body.appendChild(toggle);
     }
 
+    // ---- PWA bootstrap (every admin page, including the login gate) ----
+    //
+    // Installable-app tags are injected via JS rather than hand-copied
+    // into all 14 admin HTML files, for the same reason the nav itself
+    // is centralized here (see the file header) -- one source of
+    // truth, no risk of drift between pages. Absolute paths ("/...")
+    // so this works identically from the root-level admin.html and
+    // every one-level-deep admin/*.html page. Safe to run before the
+    // user is authenticated -- none of this touches any private data.
+    function injectPwaHeadTags() {
+        if (document.querySelector('link[rel="manifest"]')) return; // already present
+
+        const head = document.head;
+
+        const manifestLink = document.createElement("link");
+        manifestLink.rel = "manifest";
+        manifestLink.href = "/manifest.webmanifest";
+        head.appendChild(manifestLink);
+
+        const appleTouchIcon = document.createElement("link");
+        appleTouchIcon.rel = "apple-touch-icon";
+        appleTouchIcon.href = "/images/icons/apple-touch-icon.png";
+        head.appendChild(appleTouchIcon);
+
+        const capable = document.createElement("meta");
+        capable.name = "apple-mobile-web-app-capable";
+        capable.content = "yes";
+        head.appendChild(capable);
+
+        const statusBar = document.createElement("meta");
+        statusBar.name = "apple-mobile-web-app-status-bar-style";
+        statusBar.content = "black-translucent";
+        head.appendChild(statusBar);
+
+        const appleTitle = document.createElement("meta");
+        appleTitle.name = "apple-mobile-web-app-title";
+        appleTitle.content = "Jess Bakes";
+        head.appendChild(appleTitle);
+
+        const themeColor = document.createElement("meta");
+        themeColor.name = "theme-color";
+        themeColor.content = "#7b2b22";
+        head.appendChild(themeColor);
+    }
+
+    // Registered from every admin page so it's active before the
+    // admin ever presses "Enable Order Notifications" on Settings --
+    // scope "/" (this file is served from the site root), matching
+    // the manifest's scope, so it covers both the root-level login
+    // gate and every /admin/* page. Safe/idempotent to call on every
+    // load: the browser no-ops if the same script+scope is already
+    // registered, and only actually re-fetches sw.js when its bytes
+    // change (standard service-worker update behavior).
+    function registerServiceWorker() {
+        if (typeof navigator === "undefined" || !("serviceWorker" in navigator)) return;
+        navigator.serviceWorker.register("/sw.js", { scope: "/" }).catch(() => {
+            // Never fatal -- e.g. unsupported browser, or served over
+            // plain HTTP in local dev without a secure context.
+        });
+    }
+
     function init() {
+        injectPwaHeadTags();
+        registerServiceWorker();
+
         const navEl = document.querySelector("nav.sidebar-nav");
         if (!navEl) return; // e.g. the login gate, which has no sidebar
 

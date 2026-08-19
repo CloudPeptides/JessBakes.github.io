@@ -1,0 +1,34 @@
+name: Deploy Push Notification Edge Function
+
+# Manual trigger only, deliberately -- same reasoning as
+# deploy-email-functions.yml: deploying a function is a real,
+# user-facing change and should be a conscious action.
+#
+# Uses the SAME repository secret as the email deploy workflow
+# (SUPABASE_ACCESS_TOKEN) -- no new GitHub secret is needed for this
+# workflow specifically.
+on:
+  workflow_dispatch: {}
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: supabase/setup-cli@v1
+        with:
+          version: latest
+
+      - name: Link project
+        run: supabase link --project-ref fbfvqiuhwqfhhxufgmla
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+
+      # JWT-verified: callable by an authenticated admin session (the
+      # Settings page) or the service-role JWT (pg_cron). See
+      # _shared/supabaseAdmin.ts.
+      - name: Deploy send-push
+        run: supabase functions deploy send-push
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}

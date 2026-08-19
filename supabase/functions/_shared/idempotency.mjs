@@ -31,6 +31,15 @@ export function adminNewOrderKey(orderId) {
     return `admin_new_order:${orderId}`;
 }
 
+/** Web Push "new order" event -- one push_outbox row per order,
+ * independent of both order_received and admin_new_order (a separate
+ * table/queue entirely; see 20260819140000_web_push_notifications.sql).
+ * The row is fanned out to every active admin device at send time,
+ * so it never needs to be re-keyed per subscription. */
+export function pushOrderNewKey(orderId) {
+    return `push_order_new:${orderId}`;
+}
+
 /** Keyed by consent_event_id, not subscriber id, so a genuine
  * resubscribe (which mints a fresh consent_event_id -- see the
  * subscribers trigger) gets its own welcome email, while a

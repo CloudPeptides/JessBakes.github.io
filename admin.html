@@ -78,6 +78,15 @@
 
     <script src="js/supabase.js"></script>
 
+    <!-- Registers the installable-app manifest/service worker from
+         the login gate too (see js/admin-shell.js's PWA bootstrap) --
+         this is the first page a signed-out admin lands on, including
+         right after "Add to Home Screen", so the app needs to behave
+         like an installed app here as well, not only once signed in.
+         Its nav-rendering code no-ops here (no .sidebar-nav on this
+         page). -->
+    <script src="js/admin-shell.js"></script>
+
     <script src="js/login.js"></script>
 
 </body>

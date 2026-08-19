@@ -10,6 +10,19 @@ async function requireAuth() {
 
     if (!session) {
 
+        // Preserve a push-notification deep link (?order=<id>) across
+        // the login round-trip, so tapping a notification while signed
+        // out still lands back on the right order afterward -- see
+        // login.js, which reads this same key on successful sign-in.
+        // Session-scoped and same-origin only; never touches the URL
+        // itself, so no token/credential ever appears in it.
+        if (window.location.search) {
+            sessionStorage.setItem(
+                "jb_admin_return_to",
+                window.location.pathname + window.location.search
+            );
+        }
+
         window.location.href = "../admin.html";
 
         return null;

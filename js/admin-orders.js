@@ -12,7 +12,31 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     await loadOrderManager();
 
+    handleOrderDeepLink();
+
 });
+
+/* ==========================================
+   ORDER DEEP-LINKING (push-notification taps, ?order=<id>)
+
+   Safe by construction: the id is only ever used as a CSS selector
+   target for an id the page itself already rendered (see
+   renderOrderCard's `id="order-..."`) -- never written into the DOM
+   as HTML, never sent anywhere. If no order-card with that id exists
+   (wrong id, order since deleted, still loading), this simply no-ops.
+   ========================================== */
+function handleOrderDeepLink() {
+
+    const orderId = new URLSearchParams(window.location.search).get("order");
+    if (!orderId) return;
+
+    const card = document.getElementById(`order-${orderId}`);
+    if (!card) return;
+
+    card.scrollIntoView({ behavior: "smooth", block: "center" });
+    card.classList.add("order-card-highlight");
+    setTimeout(() => card.classList.remove("order-card-highlight"), 4000);
+}
 
 let menuItems = [];
 let manualOrderItems = {};
@@ -258,7 +282,7 @@ function renderOrderCard(order) {
     );
 
     return `
-        <article class="order-card">
+        <article class="order-card" id="order-${escapeHtml(order.id)}">
 
             <div class="order-card-header">
 
